@@ -6,7 +6,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mlightcad/cad-viewer"
+    "url": "https://github.com/wolairirini2/cad-viewer"
   },
   "workspaces": [
     "packages/*"
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@mlightcad/common": "1.2.5",
+    "@mlightcad/data-model": "^1.3.16",
     "@mlightcad/geometry-engine": "3.0.7",
     "@mlightcad/graphic-interface": "3.0.9"
   },

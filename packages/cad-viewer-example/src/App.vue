@@ -1,18 +1,11 @@
 <template>
   <div id="app-root">
-    <!-- Upload screen when no file is selected -->
-    <div v-if="!selectedFile" class="upload-screen">
-      <FileUpload @file-select="handleFileSelect" />
-    </div>
-
-    <!-- CAD viewer when file is selected -->
-    <div v-else>
-      <MlCadViewer
-        locale="en"
-        :local-file="selectedFile"
-        base-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/"
-      />
-    </div>
+   
+    <MlCadViewer
+      locale="en"
+      url="https://mlightcad.gitlab.io/cad-data/data/anteen.dwg"
+      base-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/"
+    />
   </div>
 </template>
 
