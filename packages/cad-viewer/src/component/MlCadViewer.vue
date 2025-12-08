@@ -16,7 +16,7 @@
             <!-- Header section with main menu and language selector -->
             <header>
               <ml-main-menu />
-              <ml-language-selector :current-locale="effectiveLocale" />
+              <!-- <ml-language-selector :current-locale="effectiveLocale" /> -->
             </header>
 
             <!-- Main content area with CAD viewing tools and controls -->
@@ -74,167 +74,283 @@
 
         <!-- 侧边栏内容 -->
         <div class="panel-content" v-if="!isPanelCollapsed">
-          <!-- 标题和统计 -->
+          <!-- 标题 -->
           <div class="panel-header">
             <h3>AI审查报告</h3>
-            <div class="report-stats">
-              <span class="stat-item">
-                <span class="stat-value">{{ totalViolations }}</span>
-                <span class="stat-label">违规项</span>
-              </span>
-              <span class="stat-item">
-                <span class="stat-value">{{ reportData.rules.length }}</span>
-                <span class="stat-label">规范</span>
-              </span>
-            </div>
           </div>
 
-          <!-- 搜索和筛选 -->
-          <div class="panel-filters">
-            <el-input
-              v-model="searchText"
-              placeholder="搜索规范或条目..."
-              clearable
-              size="small"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-            </el-input>
-            <div class="filter-buttons">
-              <el-button
-                :type="filterRisk === null ? 'primary' : 'default'"
-                size="small"
-                @click="filterRisk = null"
-              >
-                全部
-              </el-button>
-              <el-button
-                :type="filterRisk === 'high' ? 'danger' : 'default'"
-                size="small"
-                @click="filterRisk = 'high'"
-              >
-                高风险
-              </el-button>
-              <el-button
-                :type="filterRisk === 'medium' ? 'warning' : 'default'"
-                size="small"
-                @click="filterRisk = 'medium'"
-              >
-                中风险
-              </el-button>
-            </div>
-          </div>
-
-          <!-- 规范列表 -->
-          <div class="regulation-list">
-            <div
-              v-for="rule in filteredRules"
-              :key="rule.code"
-              class="rule-panel"
-            >
-              <!-- 规范标题 -->
-              <div class="rule-header" @click="toggleRule(rule.code)">
-                <div class="rule-info">
-                  <div class="rule-name">{{ rule.name }}</div>
-                  <div class="rule-code">{{ rule.code }}</div>
-                  <div class="rule-category">{{ rule.category }}</div>
-                </div>
-                <div class="rule-meta">
-                  <span class="violation-count">
-                    {{ getRuleViolationCount(rule) }} 项违规
-                  </span>
-                  <el-icon :class="rule.expanded ? 'expanded' : ''">
-                    <ArrowDown />
-                  </el-icon>
-                </div>
-              </div>
-
-              <!-- 规范内容（可折叠） -->
-              <div class="rule-content" v-if="rule.expanded">
-                <div
-                  v-for="article in rule.articles"
-                  :key="article.id"
-                  class="article-panel"
-                >
-                  <!-- 条目标题 -->
-                  <div
-                    class="article-header"
-                    @click="toggleArticle(article.id)"
+          <!-- Tabs切换 -->
+          <div class="panel-tabs">
+            <el-tabs v-model="activeTab" stretch>
+              <el-tab-pane label="违规列表" name="violations">
+                <!-- 筛选按钮 -->
+                <div class="violation-filters">
+                  <el-button
+                    :type="filterRisk === null ? 'primary' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = null"
                   >
-                    <div class="article-info">
-                      <div class="article-title">{{ article.title }}</div>
-                      <div class="article-id">条目 {{ article.id }}</div>
-                    </div>
-                    <el-icon :class="article.expanded ? 'expanded' : ''">
-                      <ArrowDown />
-                    </el-icon>
-                  </div>
+                    全部
+                    <span class="filter-count">{{ totalViolations }}</span>
+                  </el-button>
+                  <el-button
+                    :type="filterRisk === 'high' ? 'danger' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = 'high'"
+                  >
+                    高风险
+                    <span class="filter-count">{{ riskCounts.high }}</span>
+                  </el-button>
+                  <el-button
+                    :type="filterRisk === 'medium' ? 'warning' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = 'medium'"
+                  >
+                    中风险
+                    <span class="filter-count">{{ riskCounts.medium }}</span>
+                  </el-button>
+                  <el-button
+                    :type="filterRisk === 'low' ? 'success' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = 'low'"
+                  >
+                    低风险
+                    <span class="filter-count">{{ riskCounts.low }}</span>
+                  </el-button>
+                </div>
 
-                  <!-- 条目内容（可折叠） -->
-                  <div class="article-content" v-if="article.expanded">
-                    <div class="article-description">
-                      {{ article.content }}
-                    </div>
-
-                    <!-- 违规项列表 -->
-                    <div
-                      v-for="(violation, index) in getFilteredViolations(
-                        article
-                      )"
-                      :key="index"
-                      class="violation-item"
+                <!-- 违规项表格 -->
+                <div class="violation-table">
+                  <el-table
+                    :data="sortedViolations"
+                    height="100%"
+                    style="width: 100%"
+                    empty-text="未发现违规项"
+                  >
+                    <el-table-column
+                      prop="risk_level"
+                      label="风险等级"
+                      width="100"
                     >
-                      <div class="violation-header">
-                        <div class="violation-title">{{ violation.title }}</div>
+                      <template #default="{ row }">
                         <el-tag
-                          :type="getRiskTagType(violation.risk_level)"
+                          :type="getRiskTagType(row.risk_level)"
                           size="small"
                         >
-                          {{ getRiskText(violation.risk_level) }}
+                          {{ getRiskText(row.risk_level) }}
                         </el-tag>
-                      </div>
-
-                      <div class="violation-description">
-                        {{ violation.description }}
-                      </div>
-
-                      <div class="violation-suggestion">
-                        <strong>建议：</strong>{{ violation.suggestion }}
-                      </div>
-
-                      <!-- 几何信息 -->
-                      <div
-                        v-if="violation.geometry_ref"
-                        class="violation-geometry"
-                      >
-                        <div class="geometry-info">
-                          <span>坐标范围：</span>
-                          <span>
-                            ({{ violation.geometry_ref.extents.min_point.x }},
-                            {{ violation.geometry_ref.extents.min_point.y }}) -
-                            ({{ violation.geometry_ref.extents.max_point.x }},
-                            {{ violation.geometry_ref.extents.max_point.y }})
-                          </span>
-                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column
+                      prop="title"
+                      label="违规标题"
+                      min-width="120"
+                    />
+                    <el-table-column
+                      prop="description"
+                      label="描述"
+                      min-width="150"
+                      show-overflow-tooltip
+                    />
+                    <el-table-column
+                      prop="suggestion"
+                      label="建议"
+                      min-width="150"
+                      show-overflow-tooltip
+                    />
+                    <el-table-column label="操作" width="100" fixed="right">
+                      <template #default="{ row }">
                         <el-button
+                          v-if="row.geometry_ref"
                           type="primary"
                           size="small"
-                          @click="locateInDrawing(violation.geometry_ref)"
+                          @click="locateInDrawing(row.geometry_ref)"
                         >
-                          定位到图纸
+                          定位
                         </el-button>
+                        <el-tooltip v-else content="无几何信息" placement="top">
+                          <el-button size="small" disabled>定位</el-button>
+                        </el-tooltip>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+              </el-tab-pane>
+
+              <el-tab-pane label="规范详情" name="regulations">
+                <!-- 筛选按钮 -->
+                <div class="regulation-filters">
+                  <el-button
+                    :type="filterRisk === null ? 'primary' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = null"
+                  >
+                    全部
+                    <span class="filter-count">{{ totalViolations }}</span>
+                  </el-button>
+                  <el-button
+                    :type="filterRisk === 'high' ? 'danger' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = 'high'"
+                  >
+                    高风险
+                    <span class="filter-count">{{ riskCounts.high }}</span>
+                  </el-button>
+                  <el-button
+                    :type="filterRisk === 'medium' ? 'warning' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = 'medium'"
+                  >
+                    中风险
+                    <span class="filter-count">{{ riskCounts.medium }}</span>
+                  </el-button>
+                  <el-button
+                    :type="filterRisk === 'low' ? 'success' : 'default'"
+                    size="small"
+                    class="filter-button"
+                    @click="filterRisk = 'low'"
+                  >
+                    低风险
+                    <span class="filter-count">{{ riskCounts.low }}</span>
+                  </el-button>
+                </div>
+
+                <!-- 规范列表 -->
+                <div class="regulation-list">
+                  <div
+                    v-for="rule in filteredRules"
+                    :key="rule.code"
+                    class="rule-panel"
+                  >
+                    <!-- 规范标题 -->
+                    <div class="rule-header" @click="toggleRule(rule.code)">
+                      <div class="rule-info">
+                        <div class="rule-name">{{ rule.name }}</div>
+                        <div class="rule-code">{{ rule.code }}</div>
+                        <div class="rule-category">{{ rule.category }}</div>
+                      </div>
+                      <div class="rule-meta">
+                        <span class="violation-count">
+                          {{ getRuleViolationCount(rule) }} 项违规
+                        </span>
+                        <el-icon :class="rule.expanded ? 'expanded' : ''">
+                          <ArrowDown />
+                        </el-icon>
+                      </div>
+                    </div>
+
+                    <!-- 规范内容（可折叠） -->
+                    <div class="rule-content" v-if="rule.expanded">
+                      <div
+                        v-for="article in rule.articles"
+                        :key="article.id"
+                        class="article-panel"
+                      >
+                        <!-- 条目标题 -->
+                        <div
+                          class="article-header"
+                          @click="toggleArticle(article.id)"
+                        >
+                          <div class="article-info">
+                            <div class="article-title">{{ article.title }}</div>
+                            <div class="article-id">条目 {{ article.id }}</div>
+                          </div>
+                          <el-icon :class="article.expanded ? 'expanded' : ''">
+                            <ArrowDown />
+                          </el-icon>
+                        </div>
+
+                        <!-- 条目内容（可折叠） -->
+                        <div class="article-content" v-if="article.expanded">
+                          <div class="article-description">
+                            {{ article.content }}
+                          </div>
+
+                          <!-- 违规项列表 -->
+                          <div
+                            v-for="(violation, index) in getFilteredViolations(
+                              article
+                            )"
+                            :key="index"
+                            class="violation-item"
+                          >
+                            <div class="violation-header">
+                              <div class="violation-title">
+                                {{ violation.title }}
+                              </div>
+                              <el-tag
+                                :type="getRiskTagType(violation.risk_level)"
+                                size="small"
+                              >
+                                {{ getRiskText(violation.risk_level) }}
+                              </el-tag>
+                            </div>
+
+                            <div class="violation-description">
+                              {{ violation.description }}
+                            </div>
+
+                            <div class="violation-suggestion">
+                              <strong>建议：</strong>{{ violation.suggestion }}
+                            </div>
+
+                            <!-- 几何信息 -->
+                            <div
+                              v-if="violation.geometry_ref"
+                              class="violation-geometry"
+                            >
+                              <div class="geometry-info">
+                                <span>坐标范围：</span>
+                                <span>
+                                  ({{
+                                    violation.geometry_ref.extents.min_point.x.toFixed(
+                                      2
+                                    )
+                                  }},
+                                  {{
+                                    violation.geometry_ref.extents.min_point.y.toFixed(
+                                      2
+                                    )
+                                  }}) - ({{
+                                    violation.geometry_ref.extents.max_point.x.toFixed(
+                                      2
+                                    )
+                                  }},
+                                  {{
+                                    violation.geometry_ref.extents.max_point.y.toFixed(
+                                      2
+                                    )
+                                  }})
+                                </span>
+                              </div>
+                              <el-button
+                                type="primary"
+                                size="small"
+                                @click="locateInDrawing(violation.geometry_ref)"
+                              >
+                                定位到图纸
+                              </el-button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            <!-- 无结果提示 -->
-            <div v-if="filteredRules.length === 0" class="no-results">
-              <el-empty description="未找到匹配的规范" />
-            </div>
+                  <!-- 无结果提示 -->
+                  <div v-if="filteredRules.length === 0" class="no-results">
+                    <el-empty description="未找到匹配的规范" />
+                  </div>
+                </div>
+              </el-tab-pane>
+            </el-tabs>
           </div>
         </div>
       </div>
@@ -252,11 +368,16 @@ import {
   ElButton,
   ElTag,
   ElIcon,
-  ElEmpty
+  ElEmpty,
+  ElTable,
+  ElTableColumn,
+  ElTabs,
+  ElTabPane,
+  ElTooltip
 } from 'element-plus'
 import { computed, onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Search, ArrowDown } from '@element-plus/icons-vue'
+import { ArrowDown } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
 import { useLocale, useNotificationCenter } from '../composable'
@@ -304,7 +425,7 @@ const props = withDefaults(defineProps<Props>(), {
   background: undefined,
   baseUrl: undefined,
   useMainThreadDraw: false,
-  theme: 'dark',
+  theme: 'light',
   showRegulationPanel: true
 })
 
@@ -329,8 +450,8 @@ const showNotificationCenter = ref(false)
 
 // 审查报告相关状态
 const isPanelCollapsed = ref(false)
-const searchText = ref('')
-const filterRisk = ref<null | 'high' | 'medium'>(null)
+const activeTab = ref('violations') // 默认显示违规列表
+const filterRisk = ref<null | 'high' | 'medium' | 'low'>(null)
 
 // 审查报告数据
 const reportData = ref({
@@ -564,46 +685,68 @@ const totalViolations = computed(() => {
   return count
 })
 
-// 过滤后的规则
+// 计算各风险等级的违规项数
+const riskCounts = computed(() => {
+  const counts = { high: 0, medium: 0, low: 0 }
+  reportData.value.rules.forEach(rule => {
+    rule.articles.forEach(article => {
+      article.violations.forEach(violation => {
+        if (violation.risk_level === 'high') counts.high++
+        else if (violation.risk_level === 'medium') counts.medium++
+        else if (violation.risk_level === 'low') counts.low++
+      })
+    })
+  })
+  return counts
+})
+
+// 扁平化的违规项列表（用于表格展示）
+const flattenedViolations = computed(() => {
+  const violations: any[] = []
+  reportData.value.rules.forEach(rule => {
+    rule.articles.forEach(article => {
+      article.violations.forEach(violation => {
+        violations.push({
+          ...violation,
+          ruleName: rule.name,
+          ruleCode: rule.code,
+          articleId: article.id,
+          articleTitle: article.title
+        })
+      })
+    })
+  })
+  return violations
+})
+
+// 排序后的违规项列表（高风险 > 中风险 > 低风险）
+const sortedViolations = computed(() => {
+  const riskOrder = { high: 3, medium: 2, low: 1 }
+  return flattenedViolations.value
+    .filter(violation => {
+      if (filterRisk.value === null) return true
+      return violation.risk_level === filterRisk.value
+    })
+    .sort((a, b) => {
+      return riskOrder[b.risk_level] - riskOrder[a.risk_level]
+    })
+})
+
+// 过滤后的规则（用于规范详情tab）
 const filteredRules = computed(() => {
-  if (!searchText.value && filterRisk.value === null) {
+  if (filterRisk.value === null) {
     return reportData.value.rules
   }
 
   return reportData.value.rules
     .map(rule => {
-      // 深拷贝规则以避免修改原始数据
       const filteredRule = { ...rule }
       filteredRule.articles = rule.articles
         .map(article => {
           const filteredArticle = { ...article }
-
-          // 如果有关键词搜索，检查是否匹配
-          if (searchText.value) {
-            const searchLower = searchText.value.toLowerCase()
-            const matchesSearch =
-              rule.name.toLowerCase().includes(searchLower) ||
-              rule.code.toLowerCase().includes(searchLower) ||
-              article.title.toLowerCase().includes(searchLower) ||
-              article.content.toLowerCase().includes(searchLower) ||
-              article.violations.some(
-                v =>
-                  v.title.toLowerCase().includes(searchLower) ||
-                  v.description.toLowerCase().includes(searchLower)
-              )
-
-            if (!matchesSearch) {
-              filteredArticle.violations = []
-            }
-          }
-
-          // 如果按风险等级过滤
-          if (filterRisk.value) {
-            filteredArticle.violations = filteredArticle.violations.filter(
-              v => v.risk_level === filterRisk.value
-            )
-          }
-
+          filteredArticle.violations = article.violations.filter(
+            v => v.risk_level === filterRisk.value
+          )
           return filteredArticle
         })
         .filter(article => article.violations.length > 0)
@@ -1226,10 +1369,19 @@ watch(
   flex-shrink: 0;
 }
 
-.filter-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
+/* 违规项表格 */
+.violation-table {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+}
+
+:deep(.el-table) {
+  height: 100%;
+}
+
+:deep(.el-table__body-wrapper) {
+  overflow-y: auto;
 }
 
 /* 规范列表 */
@@ -1458,6 +1610,56 @@ watch(
 
 .regulation-list::-webkit-scrollbar-thumb:hover {
   background: #bfbfbf;
+}
+
+/* Tabs区域 */
+.panel-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+:deep(.el-tabs) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.el-tabs__content) {
+  flex: 1;
+  overflow: hidden;
+}
+
+:deep(.el-tab-pane) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 筛选按钮区域 */
+.violation-filters,
+.regulation-filters {
+  padding: 0 12px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+:deep(.filter-button) {
+  padding: 4px 4px!important;
+}
+
+.filter-count {
+  margin-left: 4px;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  font-size: 12px;
 }
 
 /* 响应式调整 */
