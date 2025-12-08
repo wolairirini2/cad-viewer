@@ -271,6 +271,7 @@ import {
 import { MlNotificationCenter } from './notification'
 import { MlPaletteManager } from './palette'
 import { MlStatusBar } from './statusBar'
+import { AcGeBox2d } from '@mlightcad/data-model'
 
 // Define component props with their purposes
 interface Props {
@@ -887,15 +888,134 @@ const getRiskText = (level: string) => {
   }
 }
 
-// 定位到图纸（暂时不实现功能）
+// 定位到图纸 - 实际实现
 const locateInDrawing = (geometry: any) => {
-  ElMessage({
-    message: `定位到坐标: (${geometry.extents.min_point.x}, ${geometry.extents.min_point.y})`,
-    type: 'info'
-  })
-  // TODO: 后续实现与CAD查看器的交互
-  console.log('定位到几何体:', geometry)
+  try {
+    if (!geometry?.extents) {
+      ElMessage.warning('无法获取几何信息')
+      return
+    }
+
+    // 提取坐标范围
+    const { min_point, max_point } = geometry.extents
+
+    // 创建边界框
+    const box = new AcGeBox2d(
+      { x: min_point.x, y: min_point.y },
+      { x: max_point.x, y: max_point.y }
+    )
+
+    // 获取CAD查看器实例
+    const docManager = AcApDocManager.instance
+
+    if (!docManager || !docManager.curView) {
+      ElMessage.warning('CAD查看器未初始化')
+      return
+    }
+
+    // 清除当前选择
+    // docManager.editor.selectionSet.clear()
+
+    // 高亮相关实体（如果有句柄信息）
+    if (geometry.handles && geometry.handles.length > 0) {
+      try {
+        // 尝试通过句柄获取对象ID并高亮显示
+        highlightEntitiesByHandles(geometry.handles)
+      } catch (error) {
+        console.warn('高亮实体失败:', error)
+      }
+    }
+
+    // 定位到违规区域
+    docManager.curView.zoomTo(box, 1.5) // 1.5倍边距，让区域更明显
+
+    // 可选：添加临时标注
+    addTemporaryMark(box)
+
+    ElMessage.success({
+      message: `已定位到违规区域 (${min_point.x.toFixed(2)}, ${min_point.y.toFixed(2)})`,
+      duration: 2000
+    })
+  } catch (error) {
+    console.error('定位失败:', error)
+    ElMessage.error('定位失败，请稍后重试')
+  }
 }
+
+// 通过句柄高亮实体
+const highlightEntitiesByHandles = (handles: string[]) => {
+  try {
+    const docManager = AcApDocManager.instance
+    const database = docManager.curDocument?.database
+
+    if (!database) return
+
+    const objectIds: any[] = []
+
+    // 遍历句柄，获取对象ID
+    handles.forEach(handle => {
+      try {
+        // 这里需要根据你的CAD库API来获取对象ID
+        // 假设有一个方法可以根据句柄获取对象ID
+        const objectId = database.getObjectIdFromHandle?.(handle)
+        if (objectId) {
+          objectIds.push(objectId)
+        }
+      } catch (error) {
+        console.warn(`句柄 ${handle} 获取失败:`, error)
+      }
+    })
+
+    if (objectIds.length > 0) {
+      // 高亮显示这些实体
+      docManager.curView.highlight(objectIds)
+
+      // 也可以添加到选择集
+      // docManager.editor.selectionSet.add(objectIds);
+    }
+  } catch (error) {
+    console.error('高亮实体失败:', error)
+  }
+}
+
+// 添加临时标注（可选）
+const addTemporaryMark = (box: AcGeBox2d) => {
+  try {
+    const docManager = AcApDocManager.instance
+    const view = docManager.curView
+
+    // 创建一个临时的矩形边界显示
+    const { min: minPoint, max: maxPoint } = box
+
+    console.log('minPoint:', box)
+    // 计算矩形中心
+    const centerX = (minPoint.x + maxPoint.x) / 2
+    const centerY = (minPoint.y + maxPoint.y) / 2
+
+    // 计算宽度和高度
+    const width = maxPoint.x - minPoint.x
+    const height = maxPoint.y - minPoint.y
+
+    // 这里可以添加临时图形，如矩形框
+    // 注意：需要根据你的CAD库API来创建临时实体
+
+    // 示例：发送一个事件，让其他组件处理标注
+    eventBus.emit('highlight-area', {
+      center: { x: centerX, y: centerY },
+      width,
+      height,
+      box
+    })
+  } catch (error) {
+    console.warn('添加临时标注失败:', error)
+  }
+}
+
+// 监听高亮区域事件
+eventBus.on('highlight-area', (params: any) => {
+  // 可以在这里实现动画效果或临时标注
+  console.log('需要高亮的区域:', params)
+})
 
 // 在onMounted或watch中添加：
 watch(
