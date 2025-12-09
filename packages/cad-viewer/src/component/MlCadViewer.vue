@@ -1276,12 +1276,12 @@ watch(
 }
 
 .regulation-panel.collapsed {
-  width: 48px;
+  width: 20px;
 }
 
 /* 折叠按钮 */
 .panel-toggle {
-  width: 48px;
+  width: 20px;
   background: #ffffff;
   border-right: 1px solid #e8e8e8;
   display: flex;
@@ -1317,7 +1317,7 @@ watch(
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  min-width: 432px; /* 480px - 48px折叠按钮宽度 */
+  min-width: 460px; /* 480px - 48px折叠按钮宽度 */
 }
 
 /* 标题区域 */
@@ -1666,7 +1666,7 @@ watch(
   }
 
   .panel-content {
-    min-width: 352px; /* 400px - 48px折叠按钮宽度 */
+    min-width: 380px; /* 400px - 48px折叠按钮宽度 */
   }
 }
 </style>
