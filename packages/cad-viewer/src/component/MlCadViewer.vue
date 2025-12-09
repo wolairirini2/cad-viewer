@@ -82,20 +82,6 @@
           <!-- 标题 -->
           <div class="panel-header">
             <h3>AI审查报告</h3>
-            <div class="report-stats">
-              <div class="stat-item">
-                <span class="stat-value">{{ totalViolations }}</span>
-                <span class="stat-label">违规项</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value risk-high">{{ riskCounts.high }}</span>
-                <span class="stat-label">高风险</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value risk-medium">{{ riskCounts.medium }}</span>
-                <span class="stat-label">中风险</span>
-              </div>
-            </div>
           </div>
 
           <!-- Tabs切换 -->
@@ -119,7 +105,7 @@
                     class="filter-button"
                     @click="filterRisk = 'high'"
                   >
-                    高风险
+                    重大
                     <span class="filter-count">{{ riskCounts.high }}</span>
                   </el-button>
                   <el-button
@@ -128,7 +114,7 @@
                     class="filter-button"
                     @click="filterRisk = 'medium'"
                   >
-                    中风险
+                    一般
                     <span class="filter-count">{{ riskCounts.medium }}</span>
                   </el-button>
                   <el-button
@@ -137,7 +123,7 @@
                     class="filter-button"
                     @click="filterRisk = 'low'"
                   >
-                    低风险
+                    轻微
                     <span class="filter-count">{{ riskCounts.low }}</span>
                   </el-button>
                 </div>
@@ -149,6 +135,7 @@
                     height="100%"
                     style="width: 100%"
                     empty-text="未发现违规项"
+                    @row-click="handleRowClick"
                   >
                     <el-table-column
                       prop="risk_level"
@@ -218,7 +205,7 @@
                     class="filter-button"
                     @click="filterRisk = 'high'"
                   >
-                    高风险
+                    重大
                     <span class="filter-count">{{ riskCounts.high }}</span>
                   </el-button>
                   <el-button
@@ -227,7 +214,7 @@
                     class="filter-button"
                     @click="filterRisk = 'medium'"
                   >
-                    中风险
+                    一般
                     <span class="filter-count">{{ riskCounts.medium }}</span>
                   </el-button>
                   <el-button
@@ -236,7 +223,7 @@
                     class="filter-button"
                     @click="filterRisk = 'low'"
                   >
-                    低风险
+                    轻微
                     <span class="filter-count">{{ riskCounts.low }}</span>
                   </el-button>
                 </div>
@@ -328,9 +315,25 @@
                               <div class="geometry-info">
                                 <span>坐标范围：</span>
                                 <span>
-                                  ({{ violation.geometry_ref.extents.min_point.x.toFixed(2) }},
-                                  {{ violation.geometry_ref.extents.min_point.y.toFixed(2) }}) - ({{ violation.geometry_ref.extents.max_point.x.toFixed(2) }},
-                                  {{ violation.geometry_ref.extents.max_point.y.toFixed(2) }})
+                                  ({{
+                                    violation.geometry_ref.extents.min_point.x.toFixed(
+                                      2
+                                    )
+                                  }},
+                                  {{
+                                    violation.geometry_ref.extents.min_point.y.toFixed(
+                                      2
+                                    )
+                                  }}) - ({{
+                                    violation.geometry_ref.extents.max_point.x.toFixed(
+                                      2
+                                    )
+                                  }},
+                                  {{
+                                    violation.geometry_ref.extents.max_point.y.toFixed(
+                                      2
+                                    )
+                                  }})
                                 </span>
                               </div>
                               <el-button
@@ -359,6 +362,115 @@
       </div>
     </div>
   </div>
+
+  <!-- 添加违规详情对话框 -->
+  <el-dialog
+    v-model="showViolationDetail"
+    :title="selectedViolation?.title || '违规详情'"
+    width="600px"s
+  >
+    <div v-if="selectedViolation" class="violation-detail-dialog">
+      <!-- 基本信息 -->
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="detail-label">风险等级:</span>
+          <el-tag
+            :type="getRiskTagType(selectedViolation.risk_level)"
+            size="small"
+          >
+            {{ getRiskText(selectedViolation.risk_level) }}
+          </el-tag>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">规范标准:</span>
+          <span>{{ selectedViolation.ruleCode }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">条目编号:</span>
+          <span>{{ selectedViolation.articleId }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">条目标题:</span>
+          <span>{{ selectedViolation.articleTitle }}</span>
+        </div>
+      </div>
+
+      <!-- 详细描述 -->
+      <div class="detail-section">
+        <h4>问题描述</h4>
+        <div class="detail-content">{{ selectedViolation.description }}</div>
+      </div>
+
+      <!-- 修改建议 -->
+      <div class="detail-section">
+        <h4>修改建议</h4>
+        <div class="detail-content suggestion">
+          {{ selectedViolation.suggestion }}
+        </div>
+      </div>
+
+      <!-- 几何信息 -->
+      <div v-if="selectedViolation.geometry_ref" class="detail-section">
+        <h4>图纸位置</h4>
+        <div class="geometry-info">
+          <div class="coordinate">
+            <span class="coordinate-label">最小坐标:</span>
+            <span class="coordinate-value">
+              ({{
+                selectedViolation.geometry_ref.extents.min_point.x.toFixed(2)
+              }},
+              {{
+                selectedViolation.geometry_ref.extents.min_point.y.toFixed(2)
+              }})
+            </span>
+          </div>
+          <div class="coordinate">
+            <span class="coordinate-label">最大坐标:</span>
+            <span class="coordinate-value">
+              ({{
+                selectedViolation.geometry_ref.extents.max_point.x.toFixed(2)
+              }},
+              {{
+                selectedViolation.geometry_ref.extents.max_point.y.toFixed(2)
+              }})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 相关条目 -->
+      <div class="detail-section">
+        <h4>相关规范条文</h4>
+        <div class="related-article">
+          <div class="article-title">
+            {{
+              getArticleContent(selectedViolation.articleId)?.title ||
+              '未找到条文信息'
+            }}
+          </div>
+          <div class="article-content">
+            {{ getArticleContent(selectedViolation.articleId)?.content || '' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="showViolationDetail = false">关闭</el-button>
+        <el-button
+          v-if="selectedViolation?.geometry_ref"
+          type="primary"
+          @click="locateInDrawing(selectedViolation.geometry_ref)"
+        >
+          定位到图纸
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -716,7 +828,7 @@ const flattenedViolations = computed(() => {
   return violations
 })
 
-// 排序后的违规项列表（高风险 > 中风险 > 低风险）
+// 排序后的违规项列表（重大 > 一般 > 轻微）
 const sortedViolations = computed(() => {
   const riskOrder = { high: 3, medium: 2, low: 1 }
   return flattenedViolations.value
@@ -1021,11 +1133,11 @@ const getRiskTagType = (level: string) => {
 const getRiskText = (level: string) => {
   switch (level) {
     case 'high':
-      return '高风险'
+      return '重大'
     case 'medium':
-      return '中风险'
+      return '一般'
     case 'low':
-      return '低风险'
+      return '轻微'
     default:
       return level
   }
@@ -1151,6 +1263,28 @@ watch(
   },
   { immediate: true }
 )
+
+// 在响应式变量部分添加
+const showViolationDetail = ref(false)
+const selectedViolation = ref<any>(null)
+
+// 添加行点击处理函数
+const handleRowClick = (row: any) => {
+  selectedViolation.value = row
+  showViolationDetail.value = true
+}
+
+// 根据articleId获取条文内容
+const getArticleContent = (articleId: string) => {
+  for (const rule of reportData.value.rules) {
+    for (const article of rule.articles) {
+      if (article.id === articleId) {
+        return article
+      }
+    }
+  }
+  return null
+}
 </script>
 
 <style scoped>
@@ -1229,7 +1363,6 @@ watch(
   z-index: 1;
 }
 
-
 /* 审查报告侧边栏 */
 .regulation-panel {
   width: 480px;
@@ -1249,7 +1382,6 @@ watch(
   border-left: none;
   overflow: visible; /* 确保按钮可见 */
 }
-
 
 /* 折叠按钮 - 改为小图标按钮 */
 .panel-toggle-btn {
@@ -1621,25 +1753,147 @@ watch(
 }
 
 :deep(.filter-button) {
-  padding: 4px 4px !important;
+  padding: 4px 8px !important;
 }
 
 .filter-count {
-  margin-left: 4px;
+  margin-left: 2px;
   padding: 1px 6px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   font-size: 12px;
 }
 
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .regulation-panel:not(.collapsed) {
-    width: 400px;
-  }
+/* 违规详情对话框样式 */
+.violation-detail-dialog {
+  padding-right: 8px;
+}
 
-  .panel-content {
-    min-width: 380px; /* 400px - 48px折叠按钮宽度 */
-  }
+.violation-detail-dialog::-webkit-scrollbar {
+  width: 6px;
+}
+
+.violation-detail-dialog::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.violation-detail-dialog::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  width: 80px;
+  font-weight: 500;
+  color: #595959;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.detail-content {
+  line-height: 1.6;
+  color: #595959;
+  text-align: justify;
+}
+
+.detail-content.suggestion {
+  color: #1890ff;
+  background: #e6f7ff;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid #1890ff;
+}
+
+.geometry-info {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+.coordinate {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.coordinate:last-child {
+  margin-bottom: 0;
+}
+
+.coordinate-label {
+  width: 80px;
+  font-weight: 500;
+  color: #595959;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.coordinate-value {
+  font-family: monospace;
+  color: #8c8c8c;
+}
+
+.related-article {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 4px;
+  border-left: 3px solid #52c41a;
+}
+
+.article-title {
+  font-weight: 500;
+  color: #262626;
+  margin-bottom: 8px;
+}
+
+.article-content {
+  font-size: 14px;
+  color: #595959;
+  line-height: 1.5;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 添加行悬停效果 */
+:deep(.el-table__body tr:hover > td) {
+  background-color: #f5f7fa;
+  cursor: pointer;
+}
+
+:deep(.el-table__body tr.current-row > td) {
+  background-color: #e6f7ff;
 }
 </style>
