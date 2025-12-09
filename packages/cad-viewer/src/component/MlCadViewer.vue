@@ -83,51 +83,53 @@
           <div class="panel-header">
             <h3>AI审查报告</h3>
           </div>
-
+          <!-- 筛选按钮 -->
+          <div class="violation-filters">
+            <el-button
+              type="primary"
+              :plain="filterRisk === null ? false : true"
+              size="small"
+              class="filter-button"
+              @click="filterRisk = null"
+            >
+              全部
+              <span class="filter-count">{{ totalViolations }}</span>
+            </el-button>
+            <el-button
+              type="danger"
+              :plain="filterRisk === 'high' ? false : true"
+              size="small"
+              class="filter-button"
+              @click="filterRisk = 'high'"
+            >
+              重大
+              <span class="filter-count">{{ riskCounts.high }}</span>
+            </el-button>
+            <el-button
+              type="warning"
+              :plain="filterRisk === 'medium' ? false : true"
+              size="small"
+              class="filter-button"
+              @click="filterRisk = 'medium'"
+            >
+              一般
+              <span class="filter-count">{{ riskCounts.medium }}</span>
+            </el-button>
+            <el-button
+              type="success"
+              :plain="filterRisk === 'low' ? false : true"
+              size="small"
+              class="filter-button"
+              @click="filterRisk = 'low'"
+            >
+              轻微
+              <span class="filter-count">{{ riskCounts.low }}</span>
+            </el-button>
+          </div>
           <!-- Tabs切换 -->
           <div class="panel-tabs">
             <el-tabs v-model="activeTab" stretch>
               <el-tab-pane label="违规列表" name="violations">
-                <!-- 筛选按钮 -->
-                <div class="violation-filters">
-                  <el-button
-                    :type="filterRisk === null ? 'primary' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = null"
-                  >
-                    全部
-                    <span class="filter-count">{{ totalViolations }}</span>
-                  </el-button>
-                  <el-button
-                    :type="filterRisk === 'high' ? 'danger' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = 'high'"
-                  >
-                    重大
-                    <span class="filter-count">{{ riskCounts.high }}</span>
-                  </el-button>
-                  <el-button
-                    :type="filterRisk === 'medium' ? 'warning' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = 'medium'"
-                  >
-                    一般
-                    <span class="filter-count">{{ riskCounts.medium }}</span>
-                  </el-button>
-                  <el-button
-                    :type="filterRisk === 'low' ? 'success' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = 'low'"
-                  >
-                    轻微
-                    <span class="filter-count">{{ riskCounts.low }}</span>
-                  </el-button>
-                </div>
-
                 <!-- 违规项表格 -->
                 <div class="violation-table">
                   <el-table
@@ -174,7 +176,7 @@
                           v-if="row.geometry_ref"
                           type="primary"
                           size="small"
-                          @click="locateInDrawing(row.geometry_ref)"
+                          @click.stop="locateInDrawing(row.geometry_ref)"
                         >
                           定位
                         </el-button>
@@ -188,46 +190,6 @@
               </el-tab-pane>
 
               <el-tab-pane label="规范详情" name="regulations">
-                <!-- 筛选按钮 -->
-                <div class="regulation-filters">
-                  <el-button
-                    :type="filterRisk === null ? 'primary' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = null"
-                  >
-                    全部
-                    <span class="filter-count">{{ totalViolations }}</span>
-                  </el-button>
-                  <el-button
-                    :type="filterRisk === 'high' ? 'danger' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = 'high'"
-                  >
-                    重大
-                    <span class="filter-count">{{ riskCounts.high }}</span>
-                  </el-button>
-                  <el-button
-                    :type="filterRisk === 'medium' ? 'warning' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = 'medium'"
-                  >
-                    一般
-                    <span class="filter-count">{{ riskCounts.medium }}</span>
-                  </el-button>
-                  <el-button
-                    :type="filterRisk === 'low' ? 'success' : 'default'"
-                    size="small"
-                    class="filter-button"
-                    @click="filterRisk = 'low'"
-                  >
-                    轻微
-                    <span class="filter-count">{{ riskCounts.low }}</span>
-                  </el-button>
-                </div>
-
                 <!-- 规范列表 -->
                 <div class="regulation-list">
                   <div
@@ -367,7 +329,7 @@
   <el-dialog
     v-model="showViolationDetail"
     :title="selectedViolation?.title || '违规详情'"
-    width="600px"s
+    width="600px"
   >
     <div v-if="selectedViolation" class="violation-detail-dialog">
       <!-- 基本信息 -->
@@ -1419,7 +1381,7 @@ const getArticleContent = (articleId: string) => {
 
 /* 标题区域 */
 .panel-header {
-  padding: 16px;
+  padding: 16px 16px 0;
   background: #fafafa;
   border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
@@ -1743,7 +1705,7 @@ const getArticleContent = (articleId: string) => {
 /* 筛选按钮区域 */
 .violation-filters,
 .regulation-filters {
-  padding: 0 12px 12px;
+  padding: 12px 12px;
   background: #ffffff;
   border-bottom: 1px solid #e8e8e8;
   display: flex;
