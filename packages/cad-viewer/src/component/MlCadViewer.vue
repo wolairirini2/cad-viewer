@@ -364,7 +364,6 @@ import { AcDbOpenDatabaseOptions } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import {
   ElMessage,
-  ElInput,
   ElButton,
   ElTag,
   ElIcon,
@@ -383,12 +382,7 @@ import { initializeCadViewer, store } from '../app'
 import { useLocale, useNotificationCenter } from '../composable'
 import { LocaleProp } from '../locale'
 import { MlDialogManager, MlFileReader } from './common'
-import {
-  MlEntityInfo,
-  MlLanguageSelector,
-  MlMainMenu,
-  MlToolBars
-} from './layout'
+import { MlEntityInfo, MlMainMenu, MlToolBars } from './layout'
 import { MlNotificationCenter } from './notification'
 import { MlPaletteManager } from './palette'
 import { MlStatusBar } from './statusBar'
@@ -430,7 +424,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { t } = useI18n()
-const { effectiveLocale, elementPlusLocale } = useLocale(props.locale)
+const { elementPlusLocale } = useLocale(props.locale)
 const { info, warning, error, success } = useNotificationCenter()
 
 // Canvas element reference
@@ -728,7 +722,10 @@ const sortedViolations = computed(() => {
       return violation.risk_level === filterRisk.value
     })
     .sort((a, b) => {
-      return riskOrder[b.risk_level] - riskOrder[a.risk_level]
+      return (
+        riskOrder[b.risk_level as keyof typeof riskOrder] -
+        riskOrder[a.risk_level as keyof typeof riskOrder]
+      )
     })
 })
 
@@ -1073,7 +1070,7 @@ const locateInDrawing = (geometry: any) => {
     docManager.curView.zoomTo(box, 1.5) // 1.5倍边距，让区域更明显
 
     // 可选：添加临时标注
-    addTemporaryMark(box)
+    // addTemporaryMark(box)
 
     ElMessage.success({
       message: `已定位到违规区域 (${min_point.x.toFixed(2)}, ${min_point.y.toFixed(2)})`,
@@ -1100,10 +1097,10 @@ const highlightEntitiesByHandles = (handles: string[]) => {
       try {
         // 这里需要根据你的CAD库API来获取对象ID
         // 假设有一个方法可以根据句柄获取对象ID
-        const objectId = database.getObjectIdFromHandle?.(handle)
-        if (objectId) {
-          objectIds.push(objectId)
-        }
+        // const objectId = database.getObjectIdFromHandle?.(handle)
+        // if (objectId) {
+        //   objectIds.push(objectId)
+        // }
       } catch (error) {
         console.warn(`句柄 ${handle} 获取失败:`, error)
       }
@@ -1122,43 +1119,43 @@ const highlightEntitiesByHandles = (handles: string[]) => {
 }
 
 // 添加临时标注（可选）
-const addTemporaryMark = (box: AcGeBox2d) => {
-  try {
-    const docManager = AcApDocManager.instance
-    const view = docManager.curView
+// const addTemporaryMark = (box: AcGeBox2d) => {
+//   try {
+//     const docManager = AcApDocManager.instance
+//     const view = docManager.curView
 
-    // 创建一个临时的矩形边界显示
-    const { min: minPoint, max: maxPoint } = box
+//     // 创建一个临时的矩形边界显示
+//     const { min: minPoint, max: maxPoint } = box
 
-    console.log('minPoint:', box)
-    // 计算矩形中心
-    const centerX = (minPoint.x + maxPoint.x) / 2
-    const centerY = (minPoint.y + maxPoint.y) / 2
+//     console.log('minPoint:', box)
+//     // 计算矩形中心
+//     const centerX = (minPoint.x + maxPoint.x) / 2
+//     const centerY = (minPoint.y + maxPoint.y) / 2
 
-    // 计算宽度和高度
-    const width = maxPoint.x - minPoint.x
-    const height = maxPoint.y - minPoint.y
+//     // 计算宽度和高度
+//     const width = maxPoint.x - minPoint.x
+//     const height = maxPoint.y - minPoint.y
 
-    // 这里可以添加临时图形，如矩形框
-    // 注意：需要根据你的CAD库API来创建临时实体
+//     // 这里可以添加临时图形，如矩形框
+//     // 注意：需要根据你的CAD库API来创建临时实体
 
-    // 示例：发送一个事件，让其他组件处理标注
-    eventBus.emit('highlight-area', {
-      center: { x: centerX, y: centerY },
-      width,
-      height,
-      box
-    })
-  } catch (error) {
-    console.warn('添加临时标注失败:', error)
-  }
-}
+//     // 示例：发送一个事件，让其他组件处理标注
+//     eventBus.emit('highlight-area', {
+//       center: { x: centerX, y: centerY },
+//       width,
+//       height,
+//       box
+//     })
+//   } catch (error) {
+//     console.warn('添加临时标注失败:', error)
+//   }
+// }
 
 // 监听高亮区域事件
-eventBus.on('highlight-area', (params: any) => {
-  // 可以在这里实现动画效果或临时标注
-  console.log('需要高亮的区域:', params)
-})
+// eventBus.on('highlight-area', (params: any) => {
+//   // 可以在这里实现动画效果或临时标注
+//   console.log('需要高亮的区域:', params)
+// })
 
 // 在onMounted或watch中添加：
 watch(
@@ -1651,7 +1648,7 @@ watch(
 }
 
 :deep(.filter-button) {
-  padding: 4px 4px!important;
+  padding: 4px 4px !important;
 }
 
 .filter-count {

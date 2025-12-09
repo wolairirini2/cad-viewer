@@ -12,9 +12,9 @@
 <script setup lang="ts">
 // import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
-import { ref } from 'vue'
+// import { ref } from 'vue'
 
-import FileUpload from './components/FileUpload.vue'
+// import FileUpload from './components/FileUpload.vue'
 
 // Decide whether to show command line vertical toolbar at the right side,
 // performance stats, coordinates in status bar, etc.
@@ -24,12 +24,12 @@ import FileUpload from './components/FileUpload.vue'
 // AcApSettingManager.instance.isShowCoordinate = false
 
 // State for file selection
-const selectedFile = ref<File | null>(null)
+// const selectedFile = ref<File | null>(null)
 
 // Handle file selection from upload component
-const handleFileSelect = (file: File) => {
-  selectedFile.value = file
-}
+// const handleFileSelect = (file: File) => {
+//   selectedFile.value = file
+// }
 </script>
 
 <style scoped>
