@@ -66,17 +66,36 @@
         class="regulation-panel"
         :class="{ collapsed: isPanelCollapsed }"
       >
-        <!-- 折叠/展开按钮 -->
-        <div class="panel-toggle" @click="togglePanel">
-          <span class="toggle-icon">{{ isPanelCollapsed ? '◀' : '▶' }}</span>
-          <span class="toggle-label" v-if="isPanelCollapsed">报告</span>
-        </div>
+        <!-- 折叠/展开按钮 - 改为小图标按钮 -->
+        <el-button
+          class="panel-toggle-btn"
+          :class="{ collapsed: isPanelCollapsed }"
+          :icon="isPanelCollapsed ? ArrowRight : ArrowLeft"
+          circle
+          size="small"
+          @click="togglePanel"
+          :title="isPanelCollapsed ? '展开报告' : '收起报告'"
+        />
 
         <!-- 侧边栏内容 -->
         <div class="panel-content" v-if="!isPanelCollapsed">
           <!-- 标题 -->
           <div class="panel-header">
             <h3>AI审查报告</h3>
+            <div class="report-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ totalViolations }}</span>
+                <span class="stat-label">违规项</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value risk-high">{{ riskCounts.high }}</span>
+                <span class="stat-label">高风险</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value risk-medium">{{ riskCounts.medium }}</span>
+                <span class="stat-label">中风险</span>
+              </div>
+            </div>
           </div>
 
           <!-- Tabs切换 -->
@@ -309,25 +328,9 @@
                               <div class="geometry-info">
                                 <span>坐标范围：</span>
                                 <span>
-                                  ({{
-                                    violation.geometry_ref.extents.min_point.x.toFixed(
-                                      2
-                                    )
-                                  }},
-                                  {{
-                                    violation.geometry_ref.extents.min_point.y.toFixed(
-                                      2
-                                    )
-                                  }}) - ({{
-                                    violation.geometry_ref.extents.max_point.x.toFixed(
-                                      2
-                                    )
-                                  }},
-                                  {{
-                                    violation.geometry_ref.extents.max_point.y.toFixed(
-                                      2
-                                    )
-                                  }})
+                                  ({{ violation.geometry_ref.extents.min_point.x.toFixed(2) }},
+                                  {{ violation.geometry_ref.extents.min_point.y.toFixed(2) }}) - ({{ violation.geometry_ref.extents.max_point.x.toFixed(2) }},
+                                  {{ violation.geometry_ref.extents.max_point.y.toFixed(2) }})
                                 </span>
                               </div>
                               <el-button
@@ -376,7 +379,7 @@ import {
 } from 'element-plus'
 import { computed, onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowDown } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowRight, ArrowLeft } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
 import { useLocale, useNotificationCenter } from '../composable'
@@ -1118,45 +1121,6 @@ const highlightEntitiesByHandles = (handles: string[]) => {
   }
 }
 
-// 添加临时标注（可选）
-// const addTemporaryMark = (box: AcGeBox2d) => {
-//   try {
-//     const docManager = AcApDocManager.instance
-//     const view = docManager.curView
-
-//     // 创建一个临时的矩形边界显示
-//     const { min: minPoint, max: maxPoint } = box
-
-//     console.log('minPoint:', box)
-//     // 计算矩形中心
-//     const centerX = (minPoint.x + maxPoint.x) / 2
-//     const centerY = (minPoint.y + maxPoint.y) / 2
-
-//     // 计算宽度和高度
-//     const width = maxPoint.x - minPoint.x
-//     const height = maxPoint.y - minPoint.y
-
-//     // 这里可以添加临时图形，如矩形框
-//     // 注意：需要根据你的CAD库API来创建临时实体
-
-//     // 示例：发送一个事件，让其他组件处理标注
-//     eventBus.emit('highlight-area', {
-//       center: { x: centerX, y: centerY },
-//       width,
-//       height,
-//       box
-//     })
-//   } catch (error) {
-//     console.warn('添加临时标注失败:', error)
-//   }
-// }
-
-// 监听高亮区域事件
-// eventBus.on('highlight-area', (params: any) => {
-//   // 可以在这里实现动画效果或临时标注
-//   console.log('需要高亮的区域:', params)
-// })
-
 // 在onMounted或watch中添加：
 watch(
   () => isPanelCollapsed.value,
@@ -1196,6 +1160,7 @@ watch(
   height: 100vh;
   overflow: hidden;
 }
+
 /* Flex容器 - 核心：让子元素（CAD和侧边栏）在同一层横向排列 */
 .content-container {
   display: flex; /* 启用Flex布局 */
@@ -1213,6 +1178,7 @@ watch(
   background: #1e1e1e; /* CAD背景色 */
   overflow: hidden; /* 防止内容溢出 */
 }
+
 /* CAD区域 - 占据整个容器 */
 .cad-area {
   position: absolute;
@@ -1222,6 +1188,7 @@ watch(
   height: 100%;
   z-index: 1;
 }
+
 /* Canvas元素 - 改为块级元素，填充CAD容器 */
 .ml-cad-canvas {
   display: block;
@@ -1262,6 +1229,7 @@ watch(
   z-index: 1;
 }
 
+
 /* 审查报告侧边栏 */
 .regulation-panel {
   width: 480px;
@@ -1273,43 +1241,40 @@ watch(
   z-index: 100;
   flex-shrink: 0; /* 防止侧边栏被压缩 */
   height: 100%;
+  position: relative;
 }
 
 .regulation-panel.collapsed {
-  width: 20px;
+  width: 0;
+  border-left: none;
+  overflow: visible; /* 确保按钮可见 */
 }
 
-/* 折叠按钮 */
-.panel-toggle {
-  width: 20px;
-  background: #ffffff;
-  border-right: 1px solid #e8e8e8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+
+/* 折叠按钮 - 改为小图标按钮 */
+.panel-toggle-btn {
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 101;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  border: 1px solid #e8e8e8;
   transition: all 0.3s ease;
-  user-select: none;
 }
 
-.panel-toggle:hover {
-  background: #f5f5f5;
+.panel-toggle-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) scale(1.1);
 }
 
-.toggle-icon {
-  font-size: 12px;
-  color: #666;
+/* 当侧边栏收起时，调整按钮位置 */
+.panel-toggle-btn.collapsed {
+  left: -12px; /* 当侧边栏收起时，按钮显示在CAD区域右侧 */
+  top: 50%;
+  transform: translateY(-50%) rotate(180deg); /* 旋转图标方向 */
 }
-
-.toggle-label {
-  font-size: 12px;
-  color: #666;
-  margin-top: 8px;
-  writing-mode: vertical-lr;
-  text-align: center;
-}
-
 /* 侧边栏内容 */
 .panel-content {
   flex: 1;
@@ -1317,7 +1282,7 @@ watch(
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  min-width: 460px; /* 480px - 48px折叠按钮宽度 */
+  width: 100%;
 }
 
 /* 标题区域 */
@@ -1350,6 +1315,14 @@ watch(
   font-size: 24px;
   font-weight: 600;
   color: #1890ff;
+}
+
+.stat-value.risk-high {
+  color: #ff4d4f;
+}
+
+.stat-value.risk-medium {
+  color: #faad14;
 }
 
 .stat-label {
