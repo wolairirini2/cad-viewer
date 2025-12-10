@@ -620,9 +620,9 @@ export class AcTrView2d extends AcEdBaseView {
     this.toggleStatsVisibility(stats, show)
     return stats
   }
-public updateSize(): void {
-  this.onWindowResize();
-}
+  public updateSize(): void {
+    this.onWindowResize()
+  }
   protected onWindowResize() {
     super.onWindowResize()
     this._renderer.setSize(this.width, this.height)

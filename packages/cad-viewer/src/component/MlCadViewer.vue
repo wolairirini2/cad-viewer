@@ -1035,6 +1035,8 @@ const closeNotificationCenter = () => {
 
 // 切换侧边栏展开/收起
 const togglePanel = () => {
+    const view = AcApDocManager.instance.curView as any
+  view.updateSize()
   isPanelCollapsed.value = !isPanelCollapsed.value
 }
 
