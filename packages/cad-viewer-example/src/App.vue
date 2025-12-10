@@ -34,8 +34,7 @@ import { MlCadViewer } from '@mlightcad/cad-viewer'
 <style scoped>
 #app-root {
   width: 100%;
-  height: 100vh;
-  /* position: fixed; */
+  height: 100%;
   display: flex;
 }
 

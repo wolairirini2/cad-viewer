@@ -1253,7 +1253,7 @@ const getArticleContent = (articleId: string) => {
 /* 主包装器，使用flex布局 */
 .ml-cad-viewer-wrapper {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -1277,7 +1277,6 @@ const getArticleContent = (articleId: string) => {
 
 /* CAD区域 - 占据整个容器 */
 .cad-area {
-  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -1335,7 +1334,6 @@ const getArticleContent = (articleId: string) => {
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   z-index: 100;
   flex-shrink: 0; /* 防止侧边栏被压缩 */
-  height: 100%;
   position: relative;
 }
 
