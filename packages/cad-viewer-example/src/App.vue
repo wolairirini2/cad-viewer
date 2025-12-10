@@ -1,6 +1,5 @@
 <template>
   <div id="app-root">
-   
     <MlCadViewer
       locale="zh"
       url="https://mlightcad.gitlab.io/cad-data/data/anteen.dwg"
@@ -34,8 +33,10 @@ import { MlCadViewer } from '@mlightcad/cad-viewer'
 
 <style scoped>
 #app-root {
+  width: 100%;
   height: 100vh;
-  position: fixed;
+  /* position: fixed; */
+  display: flex;
 }
 
 .upload-screen {
