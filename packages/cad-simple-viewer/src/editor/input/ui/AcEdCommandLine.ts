@@ -155,7 +155,7 @@ export class AcEdCommandLine {
     const style = document.createElement('style')
     style.textContent = `
       .ml-cli-container {
-        position: fixed;
+        position: absolute;
         bottom: 45px;
         left: 50%;
         transform: translateX(-50%);

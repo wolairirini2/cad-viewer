@@ -71,7 +71,7 @@ const properties = computed(() => {
   left: 2px;
   top: 55px;
   width: 400px;
-  height: 400px!important;
+  height: 500px;
 }
 
 .ml-layer-list-wrapper {

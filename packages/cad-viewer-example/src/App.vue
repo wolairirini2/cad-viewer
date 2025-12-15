@@ -1,5 +1,6 @@
 <template>
   <div id="app-root">
+    <div class="left-menu" style="width: 200px;"></div>
     <MlCadViewer
       locale="zh"
       url="https://mlightcad.gitlab.io/cad-data/data/anteen.dwg"
