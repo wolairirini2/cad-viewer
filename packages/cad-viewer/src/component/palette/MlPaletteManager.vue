@@ -67,10 +67,11 @@ const properties = computed(() => {
 
 <style scoped>
 .ml-layer-manager {
+  position: absolute!important;
   left: 2px;
   top: 55px;
   width: 400px;
-  height: 500px;
+  height: 400px!important;
 }
 
 .ml-layer-list-wrapper {
