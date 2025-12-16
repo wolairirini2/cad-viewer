@@ -21,14 +21,17 @@
 import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
 import { AcDbEntityProperties } from '@mlightcad/data-model'
 import { MlToolPalette, MlToolPaletteTab } from '@mlightcad/ui-components'
-import { computed, ref } from 'vue'
+import { computed, ref ,onMounted} from 'vue'
 
 import { store } from '../../app'
 import { useSelectionSet } from '../../composable'
 import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
 import MlEntityProperties from './MlEntityProperties.vue'
 import MlLayerList from './MlLayerList.vue'
-
+import { fixToolPaletteDragBug } from '../../utils/fixDragBug'
+onMounted(() => {
+  fixToolPaletteDragBug()
+})
 /**
  * Properties of MlLayerList component
  */
@@ -67,7 +70,7 @@ const properties = computed(() => {
 
 <style scoped>
 .ml-layer-manager {
-  position: absolute!important;
+  position: absolute !important;
   left: 2px;
   top: 55px;
   width: 400px;
