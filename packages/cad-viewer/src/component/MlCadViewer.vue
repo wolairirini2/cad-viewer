@@ -923,6 +923,66 @@ onMounted(async () => {
 
     // Set the editor reference after initialization
     editorRef.value = AcApDocManager.instance
+
+    // 获取canvas元素
+    const canvas = canvasRef.value
+
+    // 修正鼠标事件的函数
+    const fixMouseCoordinates = (event: MouseEvent) => {
+      // 获取canvas相对于视口的精确位置
+      const rect = canvas.getBoundingClientRect()
+
+      // 创建一个新事件，替换clientX/clientY为相对于canvas的坐标
+      // 这会影响eventBus和内部鼠标位置计算
+      Object.defineProperty(event, 'clientX', {
+        value: event.clientX - rect.left,
+        writable: false
+      })
+      Object.defineProperty(event, 'clientY', {
+        value: event.clientY - rect.top,
+        writable: false
+      })
+
+      // 同时修正pageX/pageY（某些CAD操作可能使用）
+      Object.defineProperty(event, 'pageX', {
+        value: event.pageX - rect.left,
+        writable: false
+      })
+      Object.defineProperty(event, 'pageY', {
+        value: event.pageY - rect.top,
+        writable: false
+      })
+
+      return event
+    }
+
+    // 拦截所有鼠标事件（捕获阶段）
+    const eventsToIntercept = [
+      'mousedown',
+      'mousemove',
+      'mouseup',
+      'click',
+      'dblclick',
+      'wheel',
+      'contextmenu'
+    ]
+
+    eventsToIntercept.forEach(eventType => {
+      canvas.addEventListener(
+        eventType,
+        e => {
+          fixMouseCoordinates(e)
+        },
+        { capture: true, passive: false }
+      )
+    })
+
+    // 强制首次更新尺寸和偏移
+    nextTick(() => {
+      if (AcApDocManager.instance.curView) {
+        AcApDocManager.instance.curView.updateSize()
+      }
+    })
   }
 
   // If URL prop is provided, automatically load the file on mount
@@ -1035,7 +1095,7 @@ const closeNotificationCenter = () => {
 
 // 切换侧边栏展开/收起
 const togglePanel = () => {
-    const view = AcApDocManager.instance.curView as any
+  const view = AcApDocManager.instance.curView as any
   view.updateSize()
   isPanelCollapsed.value = !isPanelCollapsed.value
 }
