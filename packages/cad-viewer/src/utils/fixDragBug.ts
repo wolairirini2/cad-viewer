@@ -40,122 +40,118 @@ export function fixToolPaletteDragBug() {
   return observer
 }
 
-// utils/fixDragBug.ts
 function fixSinglePalette(element: HTMLElement) {
-  const titleBar = element.querySelector('.ml-tool-palette-title-bar')
-  if (!titleBar) return
-
-  // 标记已经修复过
-  if ((element as any)._dragFixed) return
+  const titleBar = element.querySelector(
+    '.ml-tool-palette-title-bar'
+  ) as HTMLElement
+  if (!titleBar || (element as any)._dragFixed) return
   ;(element as any)._dragFixed = true
 
   let isDragging = false
+  let isClick = false
   let startX = 0
   let startY = 0
-  let initialLeft = 0
-  let initialTop = 0
+  let startTime = 0
 
-  // 清除原有的事件监听器
-  const newTitleBar = titleBar.cloneNode(true) as HTMLElement
-  titleBar.parentNode?.replaceChild(newTitleBar, titleBar)
+  // 使用事件委托，不替换元素
+  titleBar.addEventListener(
+    'mousedown',
+    (e: MouseEvent) => {
+      const target = e.target as HTMLElement
 
-  // 添加新的事件监听
-  newTitleBar.addEventListener('mousedown', (e: MouseEvent) => {
-    // 检查是否点击了图标
-    const target = e.target as HTMLElement
-    if (
-      target.closest('.ml-tool-palette-dialog-icon') ||
-      target.closest('.ml-collapse')
-    ) {
-      return // 让图标正常处理点击
-    }
+      // 检查是否是按钮
+      const isButton =
+        target.closest('.el-icon') ||
+        target.closest('.ml-collapse') ||
+        target.closest('.ml-tool-palette-dialog-icon')
 
-    e.preventDefault()
-    e.stopPropagation()
+      if (isButton) {
+        console.log('Mouse down on button, allow click')
+        isClick = true
+        return // 让按钮正常处理点击
+      }
 
-    // 关键修复：获取元素当前的 left/top 值
-    // 使用 computedStyle 而不是 getBoundingClientRect
-    const computedStyle = window.getComputedStyle(element)
+      // 对于非按钮区域，准备拖拽
+      if (e.button !== 0) return
 
-    // 注意：getBoundingClientRect() 返回的是相对于视口的绝对位置
-    // 而我们需要的是元素相对于其定位容器的位置（left/top）
-    const rect = element.getBoundingClientRect()
+      e.preventDefault()
+      e.stopPropagation()
 
-    // 记录鼠标初始位置
-    startX = e.clientX
-    startY = e.clientY
+      // 记录开始时间和位置
+      startTime = Date.now()
+      startX = e.clientX
+      startY = e.clientY
 
-    // 记录元素初始位置 - 这里的关键是使用 getBoundingClientRect()
-    initialLeft = rect.left
-    initialTop = rect.top
+      // 获取元素当前位置
+      const computedStyle = window.getComputedStyle(element)
+      const currentLeft =
+        parseFloat(computedStyle.left) || element.getBoundingClientRect().left
+      const currentTop =
+        parseFloat(computedStyle.top) || element.getBoundingClientRect().top
 
-    // 获取元素的当前 left/top 样式值（如果有的话）
-    let currentLeft = parseFloat(computedStyle.left) || initialLeft
-    let currentTop = parseFloat(computedStyle.top) || initialTop
+      const initialLeft = currentLeft
+      const initialTop = currentTop
 
-    // 如果元素之前没有设置 left/top，我们需要设置它
-    if (computedStyle.left === 'auto' || computedStyle.left === '') {
-      element.style.left = `${initialLeft}px`
-      currentLeft = initialLeft
-    }
+      element.style.transition = 'none'
+      element.style.zIndex = '10000'
 
-    if (computedStyle.top === 'auto' || computedStyle.top === '') {
-      element.style.top = `${initialTop}px`
-      currentTop = initialTop
-    }
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        // 计算移动距离
+        const deltaX = Math.abs(moveEvent.clientX - startX)
+        const deltaY = Math.abs(moveEvent.clientY - startY)
 
-    isDragging = true
+        // 如果移动距离超过阈值，认为是拖拽而不是点击
+        if (deltaX > 3 || deltaY > 3) {
+          isDragging = true
+        }
 
-    // 设置拖拽样式
-    element.style.transition = 'none'
-    element.style.zIndex = '10000'
-    element.style.cursor = 'move'
+        if (isDragging) {
+          const newLeft = initialLeft + (moveEvent.clientX - startX)
+          const newTop = initialTop + (moveEvent.clientY - startY)
 
-    // 鼠标移动事件
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      if (!isDragging) return
+          // 边界约束
+          const constrainedPos = constrainPosition(newLeft, newTop, element)
 
-      // 计算移动距离
-      const deltaX = moveEvent.clientX - startX
-      const deltaY = moveEvent.clientY - startY
+          element.style.left = `${constrainedPos.left}px`
+          element.style.top = `${constrainedPos.top}px`
+        }
+      }
 
-      // 计算新的绝对位置
-      const newLeft = currentLeft + deltaX
-      const newTop = currentTop + deltaY
+      const onMouseUp = () => {
+        const elapsedTime = Date.now() - startTime
 
-      // 应用边界约束
-      const constrainedPos = constrainPosition(newLeft, newTop, element)
+        // 如果不是拖拽且时间很短，可能是按钮点击
+        if (!isDragging && elapsedTime < 200) {
+          console.log('Short click, might be a button click')
+        }
 
-      // 直接应用 left/top，不要使用 transform
-      element.style.left = `${constrainedPos.left}px`
-      element.style.top = `${constrainedPos.top}px`
+        isDragging = false
+        isClick = false
+        element.style.transition = ''
+        element.style.zIndex = ''
 
-      // 更新拖拽位置，用于下一次计算
-      startX = moveEvent.clientX
-      startY = moveEvent.clientY
-      currentLeft = constrainedPos.left
-      currentTop = constrainedPos.top
-    }
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUp)
+      }
 
-    // 鼠标抬起事件 - 简化版本
-    const onMouseUp = () => {
-      if (!isDragging) return
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    },
+    true
+  ) // 使用捕获阶段
 
-      isDragging = false
-
-      // 清理样式
-      element.style.transition = ''
-      element.style.zIndex = ''
-      element.style.cursor = ''
-
-      // 移除事件监听
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
-    }
-
-    // 添加事件监听
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+  // 阻止按钮区域的拖拽事件冒泡
+  const buttons = titleBar.querySelectorAll(
+    '.el-icon, .ml-collapse, .ml-tool-palette-dialog-icon'
+  )
+  buttons.forEach(button => {
+    button.addEventListener(
+      'mousedown',
+      e => {
+        e.stopPropagation() // 阻止事件冒泡到标题栏
+      },
+      true
+    )
   })
 }
 
