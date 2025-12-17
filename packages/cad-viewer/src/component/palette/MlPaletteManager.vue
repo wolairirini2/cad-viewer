@@ -71,8 +71,8 @@ const properties = computed(() => {
 <style scoped>
 .ml-layer-manager {
   position: absolute !important;
-  left: 2px;
-  top: 55px;
+  left: 2px !important;
+  top: 55px !important;
   width: 400px;
   height: 500px;
 }

@@ -1,24 +1,41 @@
 // utils/fixDragBug.ts
+
+const PALETTE_POSITION_KEY = 'ml_palette_transform_offsets'
+let globalObserver: MutationObserver | null = null
+
+// 保存/读取偏移量函数（保持不变）
+function saveOffset(paletteId: string, offsetX: number, offsetY: number) {
+  const offsets = JSON.parse(localStorage.getItem(PALETTE_POSITION_KEY) || '{}')
+  offsets[paletteId] = { x: offsetX, y: offsetY }
+  localStorage.setItem(PALETTE_POSITION_KEY, JSON.stringify(offsets))
+}
+
+function getOffset(paletteId: string) {
+  const offsets = JSON.parse(localStorage.getItem(PALETTE_POSITION_KEY) || '{}')
+  return offsets[paletteId]
+}
+
 export function fixToolPaletteDragBug() {
-  // 使用 MutationObserver 监听 DOM 变化
-  const observer = new MutationObserver(mutations => {
+  if (globalObserver) {
+    globalObserver.disconnect()
+  }
+
+  globalObserver = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach(node => {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as HTMLElement
-            // 检查是否是工具面板
             if (element.classList?.contains('ml-tool-palette-dialog')) {
-              // 延迟修复，确保组件完全加载
-              setTimeout(() => fixSinglePalette(element), 100)
+              // 关键：立即修复，不延迟
+              fixSinglePalette(element)
             }
 
-            // 检查子元素
             const toolPalettes = element.querySelectorAll?.(
               '.ml-tool-palette-dialog'
             )
-            toolPalettes.forEach(palette => {
-              setTimeout(() => fixSinglePalette(palette as HTMLElement), 100)
+            toolPalettes?.forEach(palette => {
+              fixSinglePalette(palette as HTMLElement)
             })
           }
         })
@@ -26,18 +43,16 @@ export function fixToolPaletteDragBug() {
     })
   })
 
-  // 开始观察整个文档
-  observer.observe(document.body, {
+  globalObserver.observe(document.body, {
     childList: true,
     subtree: true
   })
 
-  // 修复已存在的面板
   document.querySelectorAll('.ml-tool-palette-dialog').forEach(palette => {
-    setTimeout(() => fixSinglePalette(palette as HTMLElement), 100)
+    fixSinglePalette(palette as HTMLElement)
   })
 
-  return observer
+  return globalObserver
 }
 
 function fixSinglePalette(element: HTMLElement) {
@@ -45,84 +60,96 @@ function fixSinglePalette(element: HTMLElement) {
     '.ml-tool-palette-title-bar'
   ) as HTMLElement
   if (!titleBar || (element as any)._dragFixed) return
+
   ;(element as any)._dragFixed = true
 
+  const paletteId =
+    element.id || element.getAttribute('data-palette-id') || 'default'
+  if (!element.id) element.id = paletteId
+
+  // 核心优化：预先隐藏并定位
+  const savedOffset = getOffset(paletteId)
+
+  if (savedOffset) {
+    // 1. 立即隐藏元素（防止闪现）
+    const originalTransition = element.style.transition
+    element.style.transition = 'none'
+    element.style.opacity = '0'
+
+    // 2. 立即应用变换到目标位置
+    element.style.transform = `translate(${savedOffset.x}px, ${savedOffset.y}px)`
+    ;(element as any)._offset = savedOffset
+
+    // 3. 在下一帧恢复可见性（确保在渲染前完成）
+    requestAnimationFrame(() => {
+      element.style.opacity = ''
+      // 延迟恢复transition，避免影响初次显示
+      setTimeout(() => {
+        element.style.transition = originalTransition
+      }, 0)
+    })
+  } else {
+    ;(element as any)._offset = { x: 0, y: 0 }
+  }
+
+  // 拖拽逻辑（保持不变）
   let isDragging = false
   let isClick = false
   let startX = 0
   let startY = 0
-  let startTime = 0
+  let startOffsetX = 0
+  let startOffsetY = 0
 
-  // 使用事件委托，不替换元素
   titleBar.addEventListener(
     'mousedown',
     (e: MouseEvent) => {
       const target = e.target as HTMLElement
-
-      // 检查是否是按钮
       const isButton =
         target.closest('.el-icon') ||
         target.closest('.ml-collapse') ||
         target.closest('.ml-tool-palette-dialog-icon')
-
       if (isButton) {
-        console.log('Mouse down on button, allow click')
         isClick = true
-        return // 让按钮正常处理点击
+        return
       }
 
-      // 对于非按钮区域，准备拖拽
       if (e.button !== 0) return
 
       e.preventDefault()
       e.stopPropagation()
 
-      // 记录开始时间和位置
-      startTime = Date.now()
       startX = e.clientX
       startY = e.clientY
-
-      // 获取元素当前位置
-      const computedStyle = window.getComputedStyle(element)
-      const currentLeft =
-        parseFloat(computedStyle.left) || element.getBoundingClientRect().left
-      const currentTop =
-        parseFloat(computedStyle.top) || element.getBoundingClientRect().top
-
-      const initialLeft = currentLeft
-      const initialTop = currentTop
+      const currentOffset = (element as any)._offset || { x: 0, y: 0 }
+      startOffsetX = currentOffset.x
+      startOffsetY = currentOffset.y
+      isDragging = false
 
       element.style.transition = 'none'
       element.style.zIndex = '10000'
 
       const onMouseMove = (moveEvent: MouseEvent) => {
-        // 计算移动距离
         const deltaX = Math.abs(moveEvent.clientX - startX)
         const deltaY = Math.abs(moveEvent.clientY - startY)
 
-        // 如果移动距离超过阈值，认为是拖拽而不是点击
         if (deltaX > 3 || deltaY > 3) {
           isDragging = true
         }
 
         if (isDragging) {
-          const newLeft = initialLeft + (moveEvent.clientX - startX)
-          const newTop = initialTop + (moveEvent.clientY - startY)
+          const newOffsetX = startOffsetX + (moveEvent.clientX - startX)
+          const newOffsetY = startOffsetY + (moveEvent.clientY - startY)
 
-          // 边界约束
-          const constrainedPos = constrainPosition(newLeft, newTop, element)
-
-          element.style.left = `${constrainedPos.left}px`
-          element.style.top = `${constrainedPos.top}px`
+          const constrained = constrainOffset(newOffsetX, newOffsetY, element)
+          element.style.transform = `translate(${constrained.x}px, ${constrained.y}px)`
+          ;(element as any)._offset = constrained
         }
       }
 
       const onMouseUp = () => {
-        const elapsedTime = Date.now() - startTime
-
-        // 如果不是拖拽且时间很短，可能是按钮点击
-        if (!isDragging && elapsedTime < 200) {
-          console.log('Short click, might be a button click')
+        if (isDragging) {
+          const offset = (element as any)._offset
+          saveOffset(paletteId, offset.x, offset.y)
         }
 
         isDragging = false
@@ -138,9 +165,8 @@ function fixSinglePalette(element: HTMLElement) {
       document.addEventListener('mouseup', onMouseUp)
     },
     true
-  ) // 使用捕获阶段
+  )
 
-  // 阻止按钮区域的拖拽事件冒泡
   const buttons = titleBar.querySelectorAll(
     '.el-icon, .ml-collapse, .ml-tool-palette-dialog-icon'
   )
@@ -148,34 +174,45 @@ function fixSinglePalette(element: HTMLElement) {
     button.addEventListener(
       'mousedown',
       e => {
-        e.stopPropagation() // 阻止事件冒泡到标题栏
+        e.stopPropagation()
       },
       true
     )
   })
 }
 
-// 修复边界约束函数
-function constrainPosition(left: number, top: number, element: HTMLElement) {
+function constrainOffset(
+  offsetX: number,
+  offsetY: number,
+  element: HTMLElement
+) {
   const rect = element.getBoundingClientRect()
   const windowWidth = window.innerWidth
   const windowHeight = window.innerHeight
 
-  // 确保元素不会移出窗口
-  let constrainedLeft = left
-  let constrainedTop = top
+  const computedStyle = window.getComputedStyle(element)
+  const originalLeft = parseFloat(computedStyle.left) || 0
+  const originalTop = parseFloat(computedStyle.top) || 0
 
-  // 检查左边和上边边界
-  if (constrainedLeft < 0) constrainedLeft = 0
-  if (constrainedTop < 0) constrainedTop = 0
+  const actualLeft = originalLeft + offsetX
+  const actualTop = originalTop + offsetY
+  const actualRight = actualLeft + rect.width
+  const actualBottom = actualTop + rect.height
 
-  // 检查右边和下边边界
-  if (constrainedLeft + rect.width > windowWidth) {
-    constrainedLeft = windowWidth - rect.width
+  let adjustX = 0
+  let adjustY = 0
+
+  if (actualLeft < 0) adjustX = -actualLeft
+  if (actualTop < 0) adjustY = -actualTop
+  if (actualRight > windowWidth) adjustX = windowWidth - actualRight
+  if (actualBottom > windowHeight) adjustY = windowHeight - actualBottom
+
+  return { x: offsetX + adjustX, y: offsetY + adjustY }
+}
+
+export function cleanupDragBugFix() {
+  if (globalObserver) {
+    globalObserver.disconnect()
+    globalObserver = null
   }
-  if (constrainedTop + rect.height > windowHeight) {
-    constrainedTop = windowHeight - rect.height
-  }
-
-  return { left: constrainedLeft, top: constrainedTop }
 }
