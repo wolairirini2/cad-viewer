@@ -970,8 +970,11 @@ onMounted(async () => {
     eventsToIntercept.forEach(eventType => {
       canvas.addEventListener(
         eventType,
-        e => {
-          fixMouseCoordinates(e)
+        (e: Event) => {
+          // 只处理鼠标事件
+          if (e instanceof MouseEvent) {
+            fixMouseCoordinates(e)
+          }
         },
         { capture: true, passive: false }
       )

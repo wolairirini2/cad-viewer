@@ -94,7 +94,6 @@ function fixSinglePalette(element: HTMLElement) {
 
   // 拖拽逻辑（保持不变）
   let isDragging = false
-  let isClick = false
   let startX = 0
   let startY = 0
   let startOffsetX = 0
@@ -109,7 +108,6 @@ function fixSinglePalette(element: HTMLElement) {
         target.closest('.ml-collapse') ||
         target.closest('.ml-tool-palette-dialog-icon')
       if (isButton) {
-        isClick = true
         return
       }
 
@@ -153,7 +151,6 @@ function fixSinglePalette(element: HTMLElement) {
         }
 
         isDragging = false
-        isClick = false
         element.style.transition = ''
         element.style.zIndex = ''
 
