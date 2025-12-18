@@ -1056,10 +1056,11 @@ eventBus.on('fonts-not-loaded', params => {
 
 // Handle failure that fonts can't be found in remote font repository
 eventBus.on('fonts-not-found', params => {
+  console.log('找不到字体', params)
   const message = t('main.message.fontsNotFound', {
     fonts: params.fonts.join(', ')
   })
-  warning(t('main.notification.title.fontNotFound', message))
+  warning(t('main.notification.title.fontsNotFound', message))
 })
 
 // Handle failures when trying to get available fonts from the system
