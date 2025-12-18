@@ -22,7 +22,9 @@
             <!-- Main content area with CAD viewing tools and controls -->
             <main>
               <!-- Display current filename at the top center -->
-              <div class="ml-file-name">{{ store.fileName }}</div>
+              <div class="ml-file-name">
+                {{ decodeFileName(store.fileName) }}
+              </div>
 
               <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
               <ml-tool-bars />
@@ -707,12 +709,10 @@ const decodeFileName = (fileName: string): string => {
  * @param fileName - Name of the uploaded file
  * @param fileContent - File content as string (DXF) or ArrayBuffer (DWG)
  */
-// 修改handleFileRead函数
 const handleFileRead = async (fileName: string, fileContent: ArrayBuffer) => {
   const options: AcDbOpenDatabaseOptions = { minimumChunkSize: 1000 }
   await AcApDocManager.instance.openDocument(fileName, fileContent, options)
-  // 对docTitle进行解码
-  store.fileName = decodeFileName(AcApDocManager.instance.curDocument.docTitle)
+  store.fileName = AcApDocManager.instance.curDocument.docTitle
 }
 
 /**
@@ -743,13 +743,12 @@ const openFileFromUrl = async (url: string) => {
  *
  * @param file - Local File object containing the CAD file
  */
-
-// 修改openLocalFile函数
 const openLocalFile = async (file: File) => {
   try {
     const reader = new FileReader()
     reader.readAsArrayBuffer(file)
 
+    // Wait for file reading to complete
     const fileContent = await new Promise<ArrayBuffer>((resolve, reject) => {
       reader.onload = event => {
         const result = event.target?.result
@@ -762,10 +761,10 @@ const openLocalFile = async (file: File) => {
       reader.onerror = () => reject(new Error('Failed to read file'))
     })
 
+    // Open the file using the document manager
     const options: AcDbOpenDatabaseOptions = { minimumChunkSize: 1000 }
     await AcApDocManager.instance.openDocument(file.name, fileContent, options)
-    // 使用传入的file.name而不是docTitle，并进行解码
-    store.fileName = decodeFileName(file.name)
+    store.fileName = AcApDocManager.instance.curDocument.docTitle
   } catch (error) {
     console.error('Failed to open local file:', error)
     ElMessage({
