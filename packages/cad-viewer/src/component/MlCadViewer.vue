@@ -667,6 +667,35 @@ const isDark = useDark({
 const toggleDark = useToggle(isDark)
 
 /**
+ * 解码文件名中的URL编码和HTML实体编码
+ * @param fileName 可能包含编码的文件名
+ * @returns 解码后的文件名
+ */
+const decodeFileName = (fileName: string): string => {
+  if (!fileName) return ''
+
+  try {
+    // 第一步：解码HTML实体（如 &#x7535;）
+    const txt = document.createElement('textarea')
+    txt.innerHTML = fileName
+    let decoded = txt.value
+
+    // 第二步：解码URL编码（如 %E7%94%B5）
+    // 尝试解码，如果失败则返回原字符串
+    try {
+      decoded = decodeURIComponent(decoded)
+    } catch (e) {
+      // 如果decodeURIComponent失败，说明不是URL编码，保留原值
+    }
+
+    return decoded
+  } catch (error) {
+    console.warn('文件名解码失败:', error)
+    return fileName
+  }
+}
+
+/**
  * Handles file read events from the file reader component
  * Opens the file content using the document manager
  *
@@ -678,10 +707,12 @@ const toggleDark = useToggle(isDark)
  * @param fileName - Name of the uploaded file
  * @param fileContent - File content as string (DXF) or ArrayBuffer (DWG)
  */
+// 修改handleFileRead函数
 const handleFileRead = async (fileName: string, fileContent: ArrayBuffer) => {
   const options: AcDbOpenDatabaseOptions = { minimumChunkSize: 1000 }
   await AcApDocManager.instance.openDocument(fileName, fileContent, options)
-  store.fileName = AcApDocManager.instance.curDocument.docTitle
+  // 对docTitle进行解码
+  store.fileName = decodeFileName(AcApDocManager.instance.curDocument.docTitle)
 }
 
 /**
@@ -712,12 +743,13 @@ const openFileFromUrl = async (url: string) => {
  *
  * @param file - Local File object containing the CAD file
  */
+
+// 修改openLocalFile函数
 const openLocalFile = async (file: File) => {
   try {
     const reader = new FileReader()
     reader.readAsArrayBuffer(file)
 
-    // Wait for file reading to complete
     const fileContent = await new Promise<ArrayBuffer>((resolve, reject) => {
       reader.onload = event => {
         const result = event.target?.result
@@ -730,10 +762,10 @@ const openLocalFile = async (file: File) => {
       reader.onerror = () => reject(new Error('Failed to read file'))
     })
 
-    // Open the file using the document manager
     const options: AcDbOpenDatabaseOptions = { minimumChunkSize: 1000 }
     await AcApDocManager.instance.openDocument(file.name, fileContent, options)
-    store.fileName = AcApDocManager.instance.curDocument.docTitle
+    // 使用传入的file.name而不是docTitle，并进行解码
+    store.fileName = decodeFileName(file.name)
   } catch (error) {
     console.error('Failed to open local file:', error)
     ElMessage({
