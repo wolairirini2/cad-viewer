@@ -489,6 +489,9 @@ interface Props {
   theme?: 'light' | 'dark'
   /** 是否显示审查报告侧边栏 */
   showRegulationPanel?: boolean
+
+  /** 审查报告数据，如果提供则使用此数据而不是静态数据 */
+  reviewReportData?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -499,7 +502,8 @@ const props = withDefaults(defineProps<Props>(), {
   baseUrl: undefined,
   useMainThreadDraw: false,
   theme: 'light',
-  showRegulationPanel: true
+  showRegulationPanel: true,
+  reviewReportData: undefined
 })
 
 const { t } = useI18n()
@@ -526,137 +530,15 @@ const isPanelCollapsed = ref(false)
 const activeTab = ref('violations') // 默认显示违规列表
 const filterRisk = ref<null | 'high' | 'medium' | 'low'>(null)
 
-// 审查报告数据
-const reportData = ref({
-  success: true,
-  message: 'CAD防火审查完成，发现3个规范违规项',
-  project_id: '项目1',
-  rules: [
-    {
-      type: '国标',
-      category: '建筑防火',
-      name: '建筑设计防火规范',
-      code: 'GB 50016-2014(2022)',
-      expanded: true,
-      articles: [
-        {
-          id: '3.3.1',
-          title: '厂房的防火分区面积',
-          content: '一般防火分区面积不能超过2000m2',
-          expanded: true,
-          violations: [
-            {
-              title: '防火分区超限',
-              risk_level: 'high',
-              description:
-                '该防火分区实际面积4500㎡，超出规范允许的4000㎡，超出12.5%。火灾蔓延风险增加，不符合甲类厂房防火要求',
-              suggestion: '调整防火分区边界，将面积控制在4000㎡以内',
-              geometry_ref: {
-                handles: ['1A2B3C', '2D3E4F'],
-                extents: {
-                  min_point: { x: 12450.5, y: 8765.2 },
-                  max_point: { x: 13789.3, y: 9876.7 }
-                }
-              }
-            }
-          ]
-        },
-        {
-          id: '3.7.1',
-          title: '疏散距离要求',
-          content: '厂房内任一点至最近安全出口的直线距离不应大于60m',
-          expanded: true,
-          violations: [
-            {
-              title: '疏散距离超标',
-              risk_level: 'medium',
-              description:
-                '发现2处疏散路径长度超过规范要求，最大疏散距离75m，超出规范限制25%',
-              suggestion:
-                '增加安全出口或调整工作区域布局，确保疏散距离控制在60m以内',
-              geometry_ref: {
-                handles: ['5G6H7I', '8J9K0L'],
-                extents: {
-                  min_point: { x: 11200.0, y: 7500.0 },
-                  max_point: { x: 14500.0, y: 9200.0 }
-                }
-              }
-            }
-          ]
-        },
-        {
-          id: '3.8.2',
-          title: '安全出口设置要求',
-          content:
-            '每个防火分区应至少设置2个安全出口，且安全出口间距不应小于5m',
-          expanded: true,
-          violations: [
-            {
-              title: '安全出口数量不足',
-              risk_level: 'high',
-              description:
-                '防火分区A仅设置1个安全出口，不满足规范要求的至少2个安全出口。紧急情况下疏散风险极高',
-              suggestion:
-                '在防火分区A增设至少1个安全出口，确保满足双向疏散要求',
-              geometry_ref: {
-                handles: ['9M0N1O'],
-                extents: {
-                  min_point: { x: 12800.0, y: 8100.0 },
-                  max_point: { x: 13200.0, y: 8500.0 }
-                }
-              }
-            },
-            {
-              title: '安全出口间距不足',
-              risk_level: 'medium',
-              description:
-                '防火分区B的两个安全出口间距仅3.2m，不满足规范要求的最小5m间距',
-              suggestion: '调整安全出口位置，确保两个安全出口间距不小于5m',
-              geometry_ref: {
-                handles: ['2P3Q4R', '5S6T7U'],
-                extents: {
-                  min_point: { x: 15000.0, y: 7800.0 },
-                  max_point: { x: 15800.0, y: 8600.0 }
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      type: '国标',
-      category: '消防设施',
-      name: '消防给水及消火栓系统技术规范',
-      code: 'GB 50974-2014',
-      expanded: false,
-      articles: [
-        {
-          id: '7.4.1',
-          title: '室内消火栓设置',
-          content:
-            '室内消火栓应保证同一防火分区内的任何部位都能有两支水枪的充实水柱同时到达',
-          expanded: false,
-          violations: [
-            {
-              title: '消火栓保护范围不足',
-              risk_level: 'medium',
-              description:
-                '防火分区C东北角区域超出消火栓保护范围，无法保证两支水枪同时到达',
-              suggestion: '在该区域增设室内消火栓，确保全覆盖保护',
-              geometry_ref: {
-                handles: ['8V9W0X'],
-                extents: {
-                  min_point: { x: 13500.0, y: 9000.0 },
-                  max_point: { x: 14200.0, y: 9800.0 }
-                }
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+// 修改reportData，优先使用props传入的数据
+const reportData = computed(() => {
+  if (props.reviewReportData) {
+    return props.reviewReportData
+  }
+  // 返回空数据
+  return {
+    rules: []
+  }
 })
 
 const isDark = useDark({
@@ -779,8 +661,8 @@ const openLocalFile = async (file: File) => {
 // 计算总违规项数
 const totalViolations = computed(() => {
   let count = 0
-  reportData.value.rules.forEach(rule => {
-    rule.articles.forEach(article => {
+  reportData.value.rules.forEach((rule: any) => {
+    rule.articles.forEach((article: any) => {
       count += article.violations.length
     })
   })
@@ -790,9 +672,9 @@ const totalViolations = computed(() => {
 // 计算各风险等级的违规项数
 const riskCounts = computed(() => {
   const counts = { high: 0, medium: 0, low: 0 }
-  reportData.value.rules.forEach(rule => {
-    rule.articles.forEach(article => {
-      article.violations.forEach(violation => {
+  reportData.value.rules.forEach((rule: any) => {
+    rule.articles.forEach((article: any) => {
+      article.violations.forEach((violation: any) => {
         if (violation.risk_level === 'high') counts.high++
         else if (violation.risk_level === 'medium') counts.medium++
         else if (violation.risk_level === 'low') counts.low++
@@ -805,9 +687,9 @@ const riskCounts = computed(() => {
 // 扁平化的违规项列表（用于表格展示）
 const flattenedViolations = computed(() => {
   const violations: any[] = []
-  reportData.value.rules.forEach(rule => {
-    rule.articles.forEach(article => {
-      article.violations.forEach(violation => {
+  reportData.value.rules.forEach((rule: any) => {
+    rule.articles.forEach((article: any) => {
+      article.violations.forEach((violation: any) => {
         violations.push({
           ...violation,
           ruleName: rule.name,
@@ -844,17 +726,17 @@ const filteredRules = computed(() => {
   }
 
   return reportData.value.rules
-    .map(rule => {
+    .map((rule: any) => {
       const filteredRule = { ...rule }
       filteredRule.articles = rule.articles
-        .map(article => {
+        .map((article: any) => {
           const filteredArticle = { ...article }
           filteredArticle.violations = article.violations.filter(
-            v => v.risk_level === filterRisk.value
+            (v: any) => v.risk_level === filterRisk.value
           )
           return filteredArticle
         })
-        .filter(article => article.violations.length > 0)
+        .filter((article: any) => article.violations.length > 0)
 
       return filteredRule.articles.length > 0 ? filteredRule : null
     })
@@ -1137,7 +1019,7 @@ const togglePanel = () => {
 
 // 切换规范展开/收起
 const toggleRule = (code: string) => {
-  const rule = reportData.value.rules.find(r => r.code === code)
+  const rule = reportData.value.rules.find((r: any) => r.code === code)
   if (rule) {
     rule.expanded = !rule.expanded
   }
@@ -1146,7 +1028,7 @@ const toggleRule = (code: string) => {
 // 切换条目展开/收起
 const toggleArticle = (id: string) => {
   for (const rule of reportData.value.rules) {
-    const article = rule.articles.find(a => a.id === id)
+    const article = rule.articles.find((a: any) => a.id === id)
     if (article) {
       article.expanded = !article.expanded
       break
