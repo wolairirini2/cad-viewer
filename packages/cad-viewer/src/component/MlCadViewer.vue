@@ -6,7 +6,12 @@
       <div class="cad-container">
         <!-- Canvas现在和UI层在同一层级 -->
         <div class="cad-area">
-          <canvas ref="canvasRef" class="ml-cad-canvas"></canvas>
+          <canvas
+            v-if="currentFileId"
+            ref="canvasRef"
+            class="ml-cad-canvas"
+          ></canvas>
+          <el-empty v-else style="height: 100%" />
         </div>
 
         <!-- UI层覆盖在canvas上 -->
@@ -175,10 +180,11 @@
                     <el-table-column label="操作" width="100" fixed="right">
                       <template #default="{ row }">
                         <el-button
-                          v-if="row.geometry_ref"
+                          v-if="row.geometry_ref?.file_id"
                           type="primary"
                           size="small"
-                          @click.stop="locateInDrawing(row.geometry_ref)"
+                          @click.stop="handleLocateClick(row.geometry_ref)"
+                          :loading="locating[row.violation_id]"
                         >
                           定位
                         </el-button>
@@ -426,9 +432,10 @@
       <div class="dialog-footer">
         <el-button @click="showViolationDetail = false">关闭</el-button>
         <el-button
-          v-if="selectedViolation?.geometry_ref"
+          v-if="selectedViolation?.geometry_ref?.file_id"
           type="primary"
-          @click="locateInDrawing(selectedViolation.geometry_ref)"
+          @click="handleLocateClick(selectedViolation.geometry_ref)"
+          :loading="locating[selectedViolation.violation_id]"
         >
           定位到图纸
         </el-button>
@@ -492,6 +499,7 @@ interface Props {
 
   /** 审查报告数据，如果提供则使用此数据而不是静态数据 */
   reviewReportData?: any
+  currentFileId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -503,8 +511,48 @@ const props = withDefaults(defineProps<Props>(), {
   useMainThreadDraw: false,
   theme: 'light',
   showRegulationPanel: true,
-  reviewReportData: undefined
+  reviewReportData: undefined,
+  currentFileId: undefined
 })
+
+const emit = defineEmits<{
+  switchDrawing: [fileId: string]
+}>()
+const locating = ref<Record<string, boolean>>({}) // 定位加载状态
+
+// 修改定位函数，添加file_id校验
+const handleLocateClick = async (geometry: any) => {
+  if (!geometry?.file_id) {
+    ElMessage.warning('无法获取图纸信息')
+    return
+  }
+
+  try {
+    // 设置加载状态
+    if (geometry.violation_id) {
+      locating.value[geometry.violation_id] = true
+    }
+
+    // 检查是否需要切换图纸
+    if (props.currentFileId !== geometry.file_id) {
+      ElMessage.info('正在切换图纸...')
+      await emit('switchDrawing', geometry.file_id)
+
+      // 等待图纸加载完成（简单延迟，实际可用事件监听）
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    // 执行定位
+    await locateInDrawing(geometry)
+  } catch (error) {
+    console.error('定位失败:', error)
+    ElMessage.error('定位失败，请稍后重试')
+  } finally {
+    if (geometry.violation_id) {
+      locating.value[geometry.violation_id] = false
+    }
+  }
+}
 
 const { t } = useI18n()
 const { elementPlusLocale } = useLocale(props.locale)
@@ -1658,7 +1706,7 @@ const getArticleContent = (articleId: string) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 :deep(.el-tabs) {
