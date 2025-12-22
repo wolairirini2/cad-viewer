@@ -338,6 +338,8 @@
     v-model="showViolationDetail"
     :title="selectedViolation?.title || '违规详情'"
     width="600px"
+    class="violation-detail-dialog-wrapper"
+    :style="{ maxHeight: '85vh' }"
   >
     <div v-if="selectedViolation" class="violation-detail-dialog">
       <!-- 基本信息 -->
@@ -585,7 +587,132 @@ const reportData = computed(() => {
   }
   // 返回空数据
   return {
-    rules: []
+    rules: [
+      {
+        type: '国标',
+        category: '建筑防火',
+        name: '建筑设计防火规范',
+        code: 'GB 50016-2014(2022)',
+        expanded: true,
+        articles: [
+          {
+            id: '3.3.1',
+            title: '厂房的防火分区面积',
+            content: '一般防火分区面积不能超过2000m2',
+            expanded: true,
+            violations: [
+              {
+                title: '防火分区超限',
+                risk_level: 'high',
+                description:
+                  '该防火分区实际面积4500㎡，超出规范允许的4000㎡，超出12.5%。火灾蔓延风险增加，不符合甲类厂房防火要求',
+                suggestion: '调整防火分区边界，将面积控制在4000㎡以内',
+                geometry_ref: {
+                  handles: ['1A2B3C', '2D3E4F'],
+                  extents: {
+                    min_point: { x: 12450.5, y: 8765.2 },
+                    max_point: { x: 13789.3, y: 9876.7 }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            id: '3.7.1',
+            title: '疏散距离要求',
+            content: '厂房内任一点至最近安全出口的直线距离不应大于60m',
+            expanded: true,
+            violations: [
+              {
+                title: '疏散距离超标',
+                risk_level: 'medium',
+                description:
+                  '发现2处疏散路径长度超过规范要求，最大疏散距离75m，超出规范限制25%',
+                suggestion:
+                  '增加安全出口或调整工作区域布局，确保疏散距离控制在60m以内',
+                geometry_ref: {
+                  handles: ['5G6H7I', '8J9K0L'],
+                  extents: {
+                    min_point: { x: 11200.0, y: 7500.0 },
+                    max_point: { x: 14500.0, y: 9200.0 }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            id: '3.8.2',
+            title: '安全出口设置要求',
+            content:
+              '每个防火分区应至少设置2个安全出口，且安全出口间距不应小于5m',
+            expanded: true,
+            violations: [
+              {
+                title: '安全出口数量不足',
+                risk_level: 'high',
+                description:
+                  '防火分区A仅设置1个安全出口，不满足规范要求的至少2个安全出口。紧急情况下疏散风险极高',
+                suggestion:
+                  '在防火分区A增设至少1个安全出口，确保满足双向疏散要求',
+                geometry_ref: {
+                  handles: ['9M0N1O'],
+                  extents: {
+                    min_point: { x: 12800.0, y: 8100.0 },
+                    max_point: { x: 13200.0, y: 8500.0 }
+                  }
+                }
+              },
+              {
+                title: '安全出口间距不足',
+                risk_level: 'medium',
+                description:
+                  '防火分区B的两个安全出口间距仅3.2m，不满足规范要求的最小5m间距',
+                suggestion: '调整安全出口位置，确保两个安全出口间距不小于5m',
+                geometry_ref: {
+                  handles: ['2P3Q4R', '5S6T7U'],
+                  extents: {
+                    min_point: { x: 15000.0, y: 7800.0 },
+                    max_point: { x: 15800.0, y: 8600.0 }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        type: '国标',
+        category: '消防设施',
+        name: '消防给水及消火栓系统技术规范',
+        code: 'GB 50974-2014',
+        expanded: false,
+        articles: [
+          {
+            id: '7.4.1',
+            title: '室内消火栓设置',
+            content:
+              '室内消火栓应保证同一防火分区内的任何部位都能有两支水枪的充实水柱同时到达',
+            expanded: false,
+            violations: [
+              {
+                title: '消火栓保护范围不足',
+                risk_level: 'medium',
+                description:
+                  '防火分区C东北角区域超出消火栓保护范围，无法保证两支水枪同时到达',
+                suggestion: '在该区域增设室内消火栓，确保全覆盖保护',
+                geometry_ref: {
+                  handles: ['8V9W0X'],
+                  extents: {
+                    min_point: { x: 13500.0, y: 9000.0 },
+                    max_point: { x: 14200.0, y: 9800.0 }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 })
 
@@ -1752,10 +1879,33 @@ const getArticleContent = (articleId: string) => {
 }
 
 /* 违规详情对话框样式 */
-.violation-detail-dialog {
-  padding-right: 8px;
+/* 弹窗整体容器 */
+:global(.violation-detail-dialog-wrapper) {
+  max-height: 85vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin-top: 5vh !important; /* 使弹窗垂直居中 */
 }
 
+/* 弹窗主体内容区域 - 关键：设置可滚动 */
+:global(.violation-detail-dialog-wrapper .el-dialog__body) {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  max-height: calc(85vh - 120px); /* 减去header和footer的高度 */
+}
+/* 确保footer固定在底部 */
+:global(.violation-detail-dialog-wrapper .el-dialog__footer) {
+  flex-shrink: 0;
+  border-top: 1px solid var(--el-border-color-light);
+  padding: 12px 20px;
+}
+.violation-detail-dialog {
+  padding-right: 8px;
+  max-height: none; /* 移除之前的限制 */
+  overflow: visible; /* 改为由dialog body控制滚动 */
+}
 .violation-detail-dialog::-webkit-scrollbar {
   width: 6px;
 }
