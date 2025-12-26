@@ -2,63 +2,104 @@
   <div ref="viewerRoot" class="ml-cad-viewer-wrapper">
     <!-- 新增Flex容器，包裹CAD区域和侧边栏 -->
     <div class="content-container">
-      <!-- 主容器，包含canvas和UI层 -->
+      <!-- 左侧，包含canvas和UI层 -->
       <div class="cad-container">
-        <!-- Canvas现在和UI层在同一层级 -->
-        <div class="cad-area">
-          <canvas
-            v-if="currentFileId"
-            ref="canvasRef"
-            class="ml-cad-canvas"
-          ></canvas>
-          <el-empty v-else style="height: 100%" />
-        </div>
+        <!-- 根据文件类型自动选择查看器 -->
+        <template v-if="fileType">
+          <!-- CAD文件 -->
+          <div v-if="fileType === 'cad'" class="cad-area">
+            <canvas
+              v-if="currentFileId"
+              ref="canvasRef"
+              class="ml-cad-canvas"
+            ></canvas>
+            <el-empty v-else style="height: 100%; width: 100%" />
+          </div>
 
-        <!-- UI层覆盖在canvas上 -->
-        <div v-if="editorRef" class="ui-overlay">
-          <!-- Element Plus configuration provider for internationalization -->
+          <!-- PDF文件 -->
+          <div v-else-if="fileType === 'pdf'" class="preview-area">
+            <div class="preview-toolbar">
+              <el-button-group>
+                <el-button size="small" @click="pdfPage > 1 && pdfPage--">
+                  <el-icon><ArrowLeft /></el-icon>上一页
+                </el-button>
+                <span class="page-info">{{ pdfPage }} / {{ pdfPages }}</span>
+                <el-button
+                  size="small"
+                  @click="pdfPage < pdfPages && pdfPage++"
+                >
+                  下一页<el-icon><ArrowRight /></el-icon>
+                </el-button>
+              </el-button-group>
+            </div>
+            <VuePdfEmbed
+              :source="previewUrl"
+              :page="pdfPage"
+              @loaded="onPdfLoaded"
+              class="preview-iframe"
+            />
+          </div>
+
+          <!-- Office文档 -->
+          <div v-else-if="fileType === 'office'" class="preview-area">
+            <iframe
+              :src="officeViewerUrl"
+              frameborder="0"
+              class="preview-iframe"
+              @load="handlePreviewLoad"
+            ></iframe>
+            <div class="preview-hint">
+              文档预览由 Microsoft Office Online 提供
+            </div>
+          </div>
+
+          <!-- 图片文件 -->
+          <div v-else-if="fileType === 'image'" class="preview-area">
+            <img :src="previewUrl" class="preview-image" alt="预览图片" />
+          </div>
+
+          <!-- 不支持的格式 -->
+          <div v-else class="preview-area unsupported">
+            <el-empty description="不支持的文件格式">
+              <template #default>
+                <el-button type="primary" @click="downloadFile">
+                  下载文件
+                </el-button>
+              </template>
+            </el-empty>
+          </div>
+        </template>
+
+        <!-- 无文件 -->
+        <el-empty
+          v-else
+          style="height: 100%; width: 100%"
+          description="暂无文件"
+        />
+
+        <!-- CAD UI层（仅在CAD模式下显示） -->
+        <div v-if="fileType === 'cad' && editorRef" class="ui-overlay">
           <el-config-provider :locale="elementPlusLocale">
-            <!-- Header section with main menu and language selector -->
             <header>
               <ml-main-menu />
-              <!-- <ml-language-selector :current-locale="effectiveLocale" /> -->
             </header>
-
-            <!-- Main content area with CAD viewing tools and controls -->
             <main>
-              <!-- Display current filename at the top center -->
               <div class="ml-file-name">
                 {{ decodeFileName(store.fileName) }}
               </div>
-
-              <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
               <ml-tool-bars />
-
-              <!-- Layer manager palette and entity properties palette for controlling entity visibility and properties -->
               <ml-palette-manager :editor="editor" />
-
-              <!-- Dialog manager for modal dialogs and settings -->
               <ml-dialog-manager />
             </main>
-
-            <!-- Footer section with command line and status information -->
             <footer>
-              <!-- Status bar with progress, settings, and theme controls -->
               <ml-status-bar
                 :is-dark="isDark"
                 :toggle-dark="toggleDark"
                 @toggle-notification-center="toggleNotificationCenter"
               />
             </footer>
-
-            <!-- Hidden components for file handling and entity information -->
-            <!-- File reader for local file uploads -->
             <ml-file-reader @file-read="handleFileRead" />
-
-            <!-- Entity info panel for displaying object properties -->
             <ml-entity-info />
-
-            <!-- Notification center -->
             <ml-notification-center
               v-if="showNotificationCenter"
               @close="closeNotificationCenter"
@@ -483,11 +524,6 @@
           </div>
         </div>
       </div>
-      <div v-else-if="selectedViolation.geometry_ref" class="detail-section">
-        <!-- ✅ 新增：有geometry_ref但无extents的情况 -->
-        <h4>图纸位置</h4>
-        <div class="detail-content">未提供坐标范围信息</div>
-      </div>
 
       <!-- 相关条目 -->
       <div class="detail-section">
@@ -554,6 +590,7 @@ import { MlNotificationCenter } from './notification'
 import { MlPaletteManager } from './palette'
 import { MlStatusBar } from './statusBar'
 import { AcGeBox2d } from '@mlightcad/data-model'
+import VuePdfEmbed from 'vue-pdf-embed'
 
 // Define component props with their purposes
 interface Props {
@@ -581,6 +618,10 @@ interface Props {
   /** 审查报告数据，如果提供则使用此数据而不是静态数据 */
   reviewReportData?: any
   currentFileId?: string | null
+  /** 新增：文档预览URL，如果提供则显示iframe预览器 */
+  previewUrl?: string
+  /** 文件名，用于判断文件类型 */
+  fileName?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -593,7 +634,101 @@ const props = withDefaults(defineProps<Props>(), {
   theme: 'light',
   showRegulationPanel: true,
   reviewReportData: undefined,
-  currentFileId: undefined
+  currentFileId: undefined,
+  previewUrl: undefined, // 新增默认值
+  fileName: ''
+})
+
+// PDF分页控制
+const pdfPage = ref(1)
+const pdfPages = ref(0)
+// 文件类型判断
+const fileType = computed(() => {
+  if (!props.previewUrl && props.url) return 'cad'
+  if (!props.previewUrl) return null
+
+  const fileExt =
+    (props.fileName || props.previewUrl)
+      .toLowerCase()
+      .split('.')
+      .pop()
+      ?.split('?')[0] || ''
+
+  // PDF
+  if (fileExt === 'pdf') return 'pdf'
+
+  // Office文档
+  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(fileExt)) {
+    return 'office'
+  }
+
+  // 图片
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileExt)) {
+    return 'image'
+  }
+
+  // 其他
+  return 'unsupported'
+})
+
+// Office在线查看器URL（使用Microsoft Office Web Viewer）
+const officeViewerUrl = computed(() => {
+  if (fileType.value !== 'office') return ''
+
+  // 使用Microsoft Office在线查看器（支持跨域，无需额外配置）
+  const encodedUrl = encodeURIComponent(props.previewUrl ?? '')
+  console.log('officeViewerUrl:', encodedUrl)
+  // return `/proxy?url=${encodedUrl}`
+  return props.previewUrl
+})
+
+// PDF加载完成
+const onPdfLoaded = (pdf: any) => {
+  pdfPages.value = pdf.numPages
+  ElMessage.success('PDF加载成功')
+}
+
+// 下载不支持的文件
+const downloadFile = () => {
+  window.open(props.previewUrl, '_blank')
+}
+
+// 预览加载完成处理
+const handlePreviewLoad = () => {
+  console.log('预览文档加载完成:', props.previewUrl)
+}
+
+// 修改watch，监听previewUrl变化
+watch(
+  () => props.previewUrl,
+  newPreviewUrl => {
+    if (newPreviewUrl) {
+      // 预览模式，清空CAD相关设置
+      // cadUrl.value = ''
+      // 可以在这里添加清理CAD资源的逻辑
+      cleanupCadResources()
+    }
+  }
+)
+// 添加清理CAD资源的函数
+const cleanupCadResources = () => {
+  // 清理CAD查看器相关资源
+  if (editorRef.value) {
+    // 这里可以根据需要清理CAD资源
+    // 例如：清除选择集、停止渲染等
+  }
+}
+
+// 监听文件类型变化
+watch(fileType, (newType, oldType) => {
+  if (newType !== 'cad' && oldType === 'cad') {
+    cleanupCadResources()
+  }
+
+  // 重置PDF页码
+  if (newType === 'pdf') {
+    pdfPage.value = 1
+  }
 })
 
 const emit = defineEmits<{
@@ -2131,5 +2266,64 @@ const getArticleContent = (articleId: string) => {
 .suggestion-ol li {
   margin-bottom: 8px;
   line-height: 1.6;
+}
+
+/* 新增预览相关样式 */
+.preview-area {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f5f5f5;
+}
+
+.preview-toolbar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-info {
+  padding: 0 12px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.preview-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #909399;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.unsupported {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
