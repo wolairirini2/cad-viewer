@@ -135,7 +135,7 @@
           </div>
           <!-- Tabs切换 -->
           <div class="panel-tabs">
-            <el-tabs v-model="activeTab" stretch>
+            <el-tabs v-model="activeTab" stretch type="card">
               <el-tab-pane label="违规列表" name="violations">
                 <!-- 违规项表格 -->
                 <div class="violation-table">
@@ -145,6 +145,7 @@
                     style="width: 100%"
                     empty-text="未发现违规项"
                     @row-click="handleRowClick"
+                    border
                   >
                     <el-table-column
                       prop="risk_level"
@@ -176,7 +177,28 @@
                       label="建议"
                       min-width="150"
                       show-overflow-tooltip
-                    />
+                    >
+                      <template #default="{ row }">
+                        <div v-if="Array.isArray(row.suggestion)">
+                          <!-- ✅ 修改：判断是否为数组 -->
+                          <div v-if="row.suggestion.length === 1">
+                            {{ row.suggestion[0] }}
+                          </div>
+                          <div v-else>
+                            <div
+                              v-for="(item, index) in row.suggestion"
+                              :key="index"
+                              class="suggestion-item"
+                            >
+                              {{ Number(index) + 1 }}. {{ item }}
+                            </div>
+                          </div>
+                        </div>
+                        <div v-else>
+                          {{ row.suggestion }}
+                        </div>
+                      </template>
+                    </el-table-column>
                     <el-table-column label="操作" width="100" fixed="right">
                       <template #default="{ row }">
                         <el-button
@@ -185,6 +207,7 @@
                           size="small"
                           @click.stop="handleLocateClick(row.geometry_ref)"
                           :loading="locating[row.violation_id]"
+                          :disabled="!row.geometry_ref?.extents"
                         >
                           定位
                         </el-button>
@@ -221,7 +244,6 @@
                         </el-icon>
                       </div>
                     </div>
-
                     <!-- 规范内容（可折叠） -->
                     <div class="rule-content" v-if="rule.expanded">
                       <div
@@ -273,8 +295,27 @@
                               {{ violation.description }}
                             </div>
 
-                            <div class="violation-suggestion">
-                              <strong>建议：</strong>{{ violation.suggestion }}
+                            <div
+                              v-if="
+                                violation.suggestion &&
+                                violation.suggestion.length > 0
+                              "
+                              class="violation-suggestion"
+                            >
+                              <div class="suggestion-title">建议：</div>
+                              <ul
+                                v-if="Array.isArray(violation.suggestion)"
+                                class="suggestion-list"
+                              >
+                                <!-- ✅ 修改：数组显示为列表 -->
+                                <li
+                                  v-for="(item, idx) in violation.suggestion"
+                                  :key="idx"
+                                >
+                                  {{ item }}
+                                </li>
+                              </ul>
+                              <div v-else>{{ violation.suggestion }}</div>
                             </div>
 
                             <!-- 几何信息 -->
@@ -282,7 +323,11 @@
                               v-if="violation.geometry_ref"
                               class="violation-geometry"
                             >
-                              <div class="geometry-info">
+                              <div
+                                v-if="violation.geometry_ref.extents"
+                                class="geometry-info"
+                              >
+                                <!-- ✅ 新增：检查extents -->
                                 <span>坐标范围：</span>
                                 <span>
                                   ({{
@@ -306,10 +351,15 @@
                                   }})
                                 </span>
                               </div>
+                              <div v-else class="geometry-info">
+                                <span>坐标范围：</span>
+                                <span>未提供</span>
+                              </div>
                               <el-button
                                 type="primary"
                                 size="small"
                                 @click="locateInDrawing(violation.geometry_ref)"
+                                :disabled="!violation.geometry_ref.extents"
                               >
                                 定位到图纸
                               </el-button>
@@ -379,13 +429,34 @@
       <!-- 修改建议 -->
       <div class="detail-section">
         <h4>修改建议</h4>
-        <div class="detail-content suggestion">
+        <div
+          v-if="
+            Array.isArray(selectedViolation.suggestion) &&
+            selectedViolation.suggestion.length > 0
+          "
+          class="detail-content suggestion"
+        >
+          <ol class="suggestion-ol">
+            <li
+              v-for="(item, index) in selectedViolation.suggestion"
+              :key="index"
+            >
+              {{ item }}
+            </li>
+          </ol>
+        </div>
+        <div v-else class="detail-content suggestion">
           {{ selectedViolation.suggestion }}
         </div>
       </div>
-
       <!-- 几何信息 -->
-      <div v-if="selectedViolation.geometry_ref" class="detail-section">
+      <div
+        v-if="
+          selectedViolation.geometry_ref &&
+          selectedViolation.geometry_ref.extents
+        "
+        class="detail-section"
+      >
         <h4>图纸位置</h4>
         <div class="geometry-info">
           <div class="coordinate">
@@ -412,6 +483,11 @@
           </div>
         </div>
       </div>
+      <div v-else-if="selectedViolation.geometry_ref" class="detail-section">
+        <!-- ✅ 新增：有geometry_ref但无extents的情况 -->
+        <h4>图纸位置</h4>
+        <div class="detail-content">未提供坐标范围信息</div>
+      </div>
 
       <!-- 相关条目 -->
       <div class="detail-section">
@@ -434,7 +510,10 @@
       <div class="dialog-footer">
         <el-button @click="showViolationDetail = false">关闭</el-button>
         <el-button
-          v-if="selectedViolation?.geometry_ref?.file_id"
+          v-if="
+            selectedViolation?.geometry_ref?.file_id &&
+            selectedViolation?.geometry_ref?.extents
+          "
           type="primary"
           @click="handleLocateClick(selectedViolation.geometry_ref)"
           :loading="locating[selectedViolation.violation_id]"
@@ -529,6 +608,12 @@ const handleLocateClick = async (geometry: any) => {
     return
   }
 
+  if (!geometry?.extents) {
+    // ✅ 新增：检查extents是否为null
+    ElMessage.warning('无法获取几何信息')
+    return
+  }
+
   try {
     // 设置加载状态
     if (geometry.violation_id) {
@@ -588,130 +673,106 @@ const reportData = computed(() => {
   // 返回空数据
   return {
     rules: [
-      {
-        type: '国标',
-        category: '建筑防火',
-        name: '建筑设计防火规范',
-        code: 'GB 50016-2014(2022)',
-        expanded: true,
-        articles: [
-          {
-            id: '3.3.1',
-            title: '厂房的防火分区面积',
-            content: '一般防火分区面积不能超过2000m2',
-            expanded: true,
-            violations: [
-              {
-                title: '防火分区超限',
-                risk_level: 'high',
-                description:
-                  '该防火分区实际面积4500㎡，超出规范允许的4000㎡，超出12.5%。火灾蔓延风险增加，不符合甲类厂房防火要求',
-                suggestion: '调整防火分区边界，将面积控制在4000㎡以内',
-                geometry_ref: {
-                  handles: ['1A2B3C', '2D3E4F'],
-                  extents: {
-                    min_point: { x: 12450.5, y: 8765.2 },
-                    max_point: { x: 13789.3, y: 9876.7 }
-                  }
-                }
-              }
-            ]
-          },
-          {
-            id: '3.7.1',
-            title: '疏散距离要求',
-            content: '厂房内任一点至最近安全出口的直线距离不应大于60m',
-            expanded: true,
-            violations: [
-              {
-                title: '疏散距离超标',
-                risk_level: 'medium',
-                description:
-                  '发现2处疏散路径长度超过规范要求，最大疏散距离75m，超出规范限制25%',
-                suggestion:
-                  '增加安全出口或调整工作区域布局，确保疏散距离控制在60m以内',
-                geometry_ref: {
-                  handles: ['5G6H7I', '8J9K0L'],
-                  extents: {
-                    min_point: { x: 11200.0, y: 7500.0 },
-                    max_point: { x: 14500.0, y: 9200.0 }
-                  }
-                }
-              }
-            ]
-          },
-          {
-            id: '3.8.2',
-            title: '安全出口设置要求',
-            content:
-              '每个防火分区应至少设置2个安全出口，且安全出口间距不应小于5m',
-            expanded: true,
-            violations: [
-              {
-                title: '安全出口数量不足',
-                risk_level: 'high',
-                description:
-                  '防火分区A仅设置1个安全出口，不满足规范要求的至少2个安全出口。紧急情况下疏散风险极高',
-                suggestion:
-                  '在防火分区A增设至少1个安全出口，确保满足双向疏散要求',
-                geometry_ref: {
-                  handles: ['9M0N1O'],
-                  extents: {
-                    min_point: { x: 12800.0, y: 8100.0 },
-                    max_point: { x: 13200.0, y: 8500.0 }
-                  }
-                }
-              },
-              {
-                title: '安全出口间距不足',
-                risk_level: 'medium',
-                description:
-                  '防火分区B的两个安全出口间距仅3.2m，不满足规范要求的最小5m间距',
-                suggestion: '调整安全出口位置，确保两个安全出口间距不小于5m',
-                geometry_ref: {
-                  handles: ['2P3Q4R', '5S6T7U'],
-                  extents: {
-                    min_point: { x: 15000.0, y: 7800.0 },
-                    max_point: { x: 15800.0, y: 8600.0 }
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        type: '国标',
-        category: '消防设施',
-        name: '消防给水及消火栓系统技术规范',
-        code: 'GB 50974-2014',
-        expanded: false,
-        articles: [
-          {
-            id: '7.4.1',
-            title: '室内消火栓设置',
-            content:
-              '室内消火栓应保证同一防火分区内的任何部位都能有两支水枪的充实水柱同时到达',
-            expanded: false,
-            violations: [
-              {
-                title: '消火栓保护范围不足',
-                risk_level: 'medium',
-                description:
-                  '防火分区C东北角区域超出消火栓保护范围，无法保证两支水枪同时到达',
-                suggestion: '在该区域增设室内消火栓，确保全覆盖保护',
-                geometry_ref: {
-                  handles: ['8V9W0X'],
-                  extents: {
-                    min_point: { x: 13500.0, y: 9000.0 },
-                    max_point: { x: 14200.0, y: 9800.0 }
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
+      // {
+      //   code: 'DESIGN-SPEC-001',
+      //   name: '工程设计说明编制规范',
+      //   type: '行业标准',
+      //   articles: [
+      //     {
+      //       id: '1.3',
+      //       title: '核查设计分界点',
+      //       content: '设计分界点应定义明确，责任边界无模糊或遗漏',
+      //       violations: [
+      //         {
+      //           title: '设计分界点定义不完整',
+      //           risk_level: 'medium',
+      //           suggestion: [
+      //             '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
+      //             '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
+      //             '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
+      //             '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
+      //             '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
+      //           ],
+      //           description:
+      //             '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
+      //           geometry_ref: {
+      //             extents: null,
+      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+      //             handles: null
+      //           }
+      //         },
+      //         {
+      //           title: '责任边界表述模糊',
+      //           risk_level: 'medium',
+      //           suggestion: [
+      //             "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
+      //             "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
+      //             "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
+      //           ],
+      //           description:
+      //             "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
+      //           geometry_ref: {
+      //             extents: null,
+      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+      //             handles: null
+      //           }
+      //         },
+      //         {
+      //           title: '分界点物理位置描述不精确',
+      //           risk_level: 'medium',
+      //           suggestion: [
+      //             "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
+      //             "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
+      //             '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
+      //           ],
+      //           description:
+      //             "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
+      //           geometry_ref: {
+      //             extents: null,
+      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+      //             handles: null
+      //           }
+      //         },
+      //         {
+      //           title: '系统接口责任未明确',
+      //           risk_level: 'medium',
+      //           suggestion: [
+      //             '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
+      //             '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
+      //             '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
+      //             '补充与厂区其他系统的接口责任说明'
+      //           ],
+      //           description:
+      //             "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
+      //           geometry_ref: {
+      //             extents: null,
+      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+      //             handles: null
+      //           }
+      //         }
+      //       ]
+      //     },
+      //     {
+      //       id: '1.4',
+      //       title: '核查建所必要性及负荷审查',
+      //       content: '核查建所必要性及负荷审查',
+      //       violations: []
+      //     },
+      //     {
+      //       id: '2.1',
+      //       title: '核查配电装置选择的合理性',
+      //       content: '核查配电装置选择的合理性',
+      //       violations: []
+      //     },
+      //     {
+      //       id: '3.1',
+      //       title: '短路电流审查',
+      //       content: '短路电流审查',
+      //       violations: []
+      //     }
+      //   ],
+      //   category: '设计说明审查'
+      // }
     ]
   }
 })
@@ -1425,7 +1486,6 @@ const getArticleContent = (articleId: string) => {
   position: relative; /* 相对定位，作为canvas和UI层的容器 */
   min-width: 0; /* 防止flex项目溢出 */
   height: 100%;
-  background: #1e1e1e; /* CAD背景色 */
   overflow: hidden; /* 防止内容溢出 */
 }
 
@@ -1480,7 +1540,7 @@ const getArticleContent = (articleId: string) => {
 
 /* 审查报告侧边栏 */
 .regulation-panel {
-  width: 480px;
+  width: 33%;
   background: #ffffff;
   border-left: 1px solid #e8e8e8;
   display: flex;
@@ -1523,7 +1583,6 @@ const getArticleContent = (articleId: string) => {
 }
 /* 侧边栏内容 */
 .panel-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1590,6 +1649,8 @@ const getArticleContent = (articleId: string) => {
   flex: 1;
   overflow: hidden;
   padding: 0;
+  box-sizing: border-box;
+  padding-top: 10px;
 }
 
 :deep(.el-table) {
@@ -1841,6 +1902,9 @@ const getArticleContent = (articleId: string) => {
   display: flex;
   flex-direction: column;
 }
+:deep(.el-tabs__header) {
+  margin-bottom: 0;
+}
 
 :deep(.el-tabs__content) {
   flex: 1;
@@ -1859,7 +1923,6 @@ const getArticleContent = (articleId: string) => {
 .regulation-filters {
   padding: 12px 12px;
   background: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
   display: flex;
   gap: 8px;
   flex-shrink: 0;
@@ -2032,5 +2095,41 @@ const getArticleContent = (articleId: string) => {
 
 :deep(.el-table__body tr.current-row > td) {
   background-color: #e6f7ff;
+}
+
+/* 建议列表样式 */
+.suggestion-item {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* 规范详情中的建议列表 */
+.suggestion-list {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.suggestion-list li {
+  font-size: 13px;
+  color: #1890ff;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.suggestion-title {
+  font-weight: 500;
+  color: #1890ff;
+}
+
+/* 详情对话框中的有序列表 */
+.suggestion-ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.suggestion-ol li {
+  margin-bottom: 8px;
+  line-height: 1.6;
 }
 </style>
