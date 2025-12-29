@@ -129,7 +129,7 @@
         <div class="panel-content" v-if="!isPanelCollapsed">
           <!-- 标题 -->
           <div class="panel-header">
-            <h3>AI审查报告</h3>
+            <h3>{{ projectName }}审查报告</h3>
           </div>
           <!-- 筛选按钮 -->
           <div class="violation-filters">
@@ -177,7 +177,7 @@
           <!-- Tabs切换 -->
           <div class="panel-tabs">
             <el-tabs v-model="activeTab" stretch type="card">
-              <el-tab-pane label="违规列表" name="violations">
+              <el-tab-pane label="问题列表" name="violations">
                 <!-- 违规项表格 -->
                 <div class="violation-table">
                   <el-table
@@ -192,11 +192,13 @@
                       prop="risk_level"
                       label="风险等级"
                       width="100"
+                      align="center"
                     >
                       <template #default="{ row }">
                         <el-tag
                           :type="getRiskTagType(row.risk_level)"
                           size="small"
+                          effect="dark"
                         >
                           {{ getRiskText(row.risk_level) }}
                         </el-tag>
@@ -206,7 +208,11 @@
                       prop="title"
                       label="违规标题"
                       min-width="120"
-                    />
+                    >
+                      <template #default="{ row }">
+                        <span style="color: #409eff">{{ row.title }}</span>
+                      </template>
+                    </el-table-column>
                     <el-table-column
                       prop="description"
                       label="描述"
@@ -260,163 +266,6 @@
                   </el-table>
                 </div>
               </el-tab-pane>
-
-              <el-tab-pane label="规范详情" name="regulations">
-                <!-- 规范列表 -->
-                <div class="regulation-list">
-                  <div
-                    v-for="rule in filteredRules"
-                    :key="rule.code"
-                    class="rule-panel"
-                  >
-                    <!-- 规范标题 -->
-                    <div class="rule-header" @click="toggleRule(rule.code)">
-                      <div class="rule-info">
-                        <div class="rule-name">{{ rule.name }}</div>
-                        <div class="rule-code">{{ rule.code }}</div>
-                        <div class="rule-category">{{ rule.category }}</div>
-                      </div>
-                      <div class="rule-meta">
-                        <span class="violation-count">
-                          {{ getRuleViolationCount(rule) }} 项违规
-                        </span>
-                        <el-icon :class="rule.expanded ? 'expanded' : ''">
-                          <ArrowDown />
-                        </el-icon>
-                      </div>
-                    </div>
-                    <!-- 规范内容（可折叠） -->
-                    <div class="rule-content" v-if="rule.expanded">
-                      <div
-                        v-for="article in rule.articles"
-                        :key="article.id"
-                        class="article-panel"
-                      >
-                        <!-- 条目标题 -->
-                        <div
-                          class="article-header"
-                          @click="toggleArticle(article.id)"
-                        >
-                          <div class="article-info">
-                            <div class="article-title">{{ article.title }}</div>
-                            <div class="article-id">条目 {{ article.id }}</div>
-                          </div>
-                          <el-icon :class="article.expanded ? 'expanded' : ''">
-                            <ArrowDown />
-                          </el-icon>
-                        </div>
-
-                        <!-- 条目内容（可折叠） -->
-                        <div class="article-content" v-if="article.expanded">
-                          <div class="article-description">
-                            {{ article.content }}
-                          </div>
-
-                          <!-- 违规项列表 -->
-                          <div
-                            v-for="(violation, index) in getFilteredViolations(
-                              article
-                            )"
-                            :key="index"
-                            class="violation-item"
-                          >
-                            <div class="violation-header">
-                              <div class="violation-title">
-                                {{ violation.title }}
-                              </div>
-                              <el-tag
-                                :type="getRiskTagType(violation.risk_level)"
-                                size="small"
-                              >
-                                {{ getRiskText(violation.risk_level) }}
-                              </el-tag>
-                            </div>
-
-                            <div class="violation-description">
-                              {{ violation.description }}
-                            </div>
-
-                            <div
-                              v-if="
-                                violation.suggestion &&
-                                violation.suggestion.length > 0
-                              "
-                              class="violation-suggestion"
-                            >
-                              <div class="suggestion-title">建议：</div>
-                              <ul
-                                v-if="Array.isArray(violation.suggestion)"
-                                class="suggestion-list"
-                              >
-                                <!-- ✅ 修改：数组显示为列表 -->
-                                <li
-                                  v-for="(item, idx) in violation.suggestion"
-                                  :key="idx"
-                                >
-                                  {{ item }}
-                                </li>
-                              </ul>
-                              <div v-else>{{ violation.suggestion }}</div>
-                            </div>
-
-                            <!-- 几何信息 -->
-                            <div
-                              v-if="violation.geometry_ref"
-                              class="violation-geometry"
-                            >
-                              <div
-                                v-if="violation.geometry_ref.extents"
-                                class="geometry-info"
-                              >
-                                <!-- ✅ 新增：检查extents -->
-                                <span>坐标范围：</span>
-                                <span>
-                                  ({{
-                                    violation.geometry_ref.extents.min_point.x.toFixed(
-                                      2
-                                    )
-                                  }},
-                                  {{
-                                    violation.geometry_ref.extents.min_point.y.toFixed(
-                                      2
-                                    )
-                                  }}) - ({{
-                                    violation.geometry_ref.extents.max_point.x.toFixed(
-                                      2
-                                    )
-                                  }},
-                                  {{
-                                    violation.geometry_ref.extents.max_point.y.toFixed(
-                                      2
-                                    )
-                                  }})
-                                </span>
-                              </div>
-                              <div v-else class="geometry-info">
-                                <span>坐标范围：</span>
-                                <span>未提供</span>
-                              </div>
-                              <el-button
-                                type="primary"
-                                size="small"
-                                @click="locateInDrawing(violation.geometry_ref)"
-                                :disabled="!violation.geometry_ref.extents"
-                              >
-                                定位到图纸
-                              </el-button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 无结果提示 -->
-                  <div v-if="filteredRules.length === 0" class="no-results">
-                    <el-empty description="未找到匹配的规范" />
-                  </div>
-                </div>
-              </el-tab-pane>
             </el-tabs>
           </div>
         </div>
@@ -436,17 +285,12 @@
       <!-- 基本信息 -->
       <div class="detail-section">
         <div class="detail-row">
-          <span class="detail-label">风险等级:</span>
-          <el-tag
-            :type="getRiskTagType(selectedViolation.risk_level)"
-            size="small"
-          >
-            {{ getRiskText(selectedViolation.risk_level) }}
-          </el-tag>
+          <span class="detail-label">检查内容:</span>
+          <span>{{ selectedViolation.articleTitle }}</span>
         </div>
 
         <div class="detail-row">
-          <span class="detail-label">规范标准:</span>
+          <span class="detail-label">依据标准:</span>
           <span>{{ selectedViolation.ruleCode }}</span>
         </div>
 
@@ -454,10 +298,15 @@
           <span class="detail-label">条目编号:</span>
           <span>{{ selectedViolation.articleId }}</span>
         </div>
-
         <div class="detail-row">
-          <span class="detail-label">条目标题:</span>
-          <span>{{ selectedViolation.articleTitle }}</span>
+          <span class="detail-label">风险等级:</span>
+          <el-tag
+            :type="getRiskTagType(selectedViolation.risk_level)"
+            size="small"
+            effect="dark"
+          >
+            {{ getRiskText(selectedViolation.risk_level) }}
+          </el-tag>
         </div>
       </div>
 
@@ -491,30 +340,22 @@
         </div>
       </div>
       <!-- 几何信息 -->
-      <div
-        v-if="
-          selectedViolation.geometry_ref &&
-          selectedViolation.geometry_ref.extents
-        "
-        class="detail-section"
-      >
+      <div v-if="selectedViolation.geometry_ref" class="detail-section">
         <h4>图纸位置</h4>
-        <div class="geometry-info">
-          <div class="coordinate">
-            <span class="coordinate-label">最小坐标:</span>
-            <span class="coordinate-value">
+        <div class="violation-geometry">
+          <div
+            v-if="selectedViolation.geometry_ref.extents"
+            class="geometry-info"
+          >
+            <!-- ✅ 新增：检查extents -->
+            <span>坐标范围：</span>
+            <span>
               ({{
                 selectedViolation.geometry_ref.extents.min_point.x.toFixed(2)
               }},
               {{
                 selectedViolation.geometry_ref.extents.min_point.y.toFixed(2)
-              }})
-            </span>
-          </div>
-          <div class="coordinate">
-            <span class="coordinate-label">最大坐标:</span>
-            <span class="coordinate-value">
-              ({{
+              }}) - ({{
                 selectedViolation.geometry_ref.extents.max_point.x.toFixed(2)
               }},
               {{
@@ -522,6 +363,18 @@
               }})
             </span>
           </div>
+          <div v-else class="geometry-info">
+            <span>坐标范围：</span>
+            <span>未提供</span>
+          </div>
+          <el-button
+            type="primary"
+            size="small"
+            @click="locateInDrawing(selectedViolation.geometry_ref)"
+            :disabled="!selectedViolation.geometry_ref.extents"
+          >
+            定位
+          </el-button>
         </div>
       </div>
 
@@ -554,7 +407,7 @@
           @click="handleLocateClick(selectedViolation.geometry_ref)"
           :loading="locating[selectedViolation.violation_id]"
         >
-          定位到图纸
+          定位
         </el-button>
       </div>
     </template>
@@ -622,6 +475,7 @@ interface Props {
   previewUrl?: string
   /** 文件名，用于判断文件类型 */
   fileName?: string
+  projectName?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -636,7 +490,8 @@ const props = withDefaults(defineProps<Props>(), {
   reviewReportData: undefined,
   currentFileId: undefined,
   previewUrl: undefined, // 新增默认值
-  fileName: ''
+  fileName: '',
+  projectName: ''
 })
 
 // PDF分页控制
@@ -808,106 +663,106 @@ const reportData = computed(() => {
   // 返回空数据
   return {
     rules: [
-      // {
-      //   code: 'DESIGN-SPEC-001',
-      //   name: '工程设计说明编制规范',
-      //   type: '行业标准',
-      //   articles: [
-      //     {
-      //       id: '1.3',
-      //       title: '核查设计分界点',
-      //       content: '设计分界点应定义明确，责任边界无模糊或遗漏',
-      //       violations: [
-      //         {
-      //           title: '设计分界点定义不完整',
-      //           risk_level: 'medium',
-      //           suggestion: [
-      //             '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
-      //             '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
-      //             '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
-      //             '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
-      //             '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
-      //           ],
-      //           description:
-      //             '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
-      //           geometry_ref: {
-      //             extents: null,
-      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-      //             handles: null
-      //           }
-      //         },
-      //         {
-      //           title: '责任边界表述模糊',
-      //           risk_level: 'medium',
-      //           suggestion: [
-      //             "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
-      //             "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
-      //             "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
-      //           ],
-      //           description:
-      //             "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
-      //           geometry_ref: {
-      //             extents: null,
-      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-      //             handles: null
-      //           }
-      //         },
-      //         {
-      //           title: '分界点物理位置描述不精确',
-      //           risk_level: 'medium',
-      //           suggestion: [
-      //             "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
-      //             "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
-      //             '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
-      //           ],
-      //           description:
-      //             "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
-      //           geometry_ref: {
-      //             extents: null,
-      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-      //             handles: null
-      //           }
-      //         },
-      //         {
-      //           title: '系统接口责任未明确',
-      //           risk_level: 'medium',
-      //           suggestion: [
-      //             '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
-      //             '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
-      //             '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
-      //             '补充与厂区其他系统的接口责任说明'
-      //           ],
-      //           description:
-      //             "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
-      //           geometry_ref: {
-      //             extents: null,
-      //             file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-      //             handles: null
-      //           }
-      //         }
-      //       ]
-      //     },
-      //     {
-      //       id: '1.4',
-      //       title: '核查建所必要性及负荷审查',
-      //       content: '核查建所必要性及负荷审查',
-      //       violations: []
-      //     },
-      //     {
-      //       id: '2.1',
-      //       title: '核查配电装置选择的合理性',
-      //       content: '核查配电装置选择的合理性',
-      //       violations: []
-      //     },
-      //     {
-      //       id: '3.1',
-      //       title: '短路电流审查',
-      //       content: '短路电流审查',
-      //       violations: []
-      //     }
-      //   ],
-      //   category: '设计说明审查'
-      // }
+      {
+        code: 'DESIGN-SPEC-001',
+        name: '工程设计说明编制规范',
+        type: '行业标准',
+        articles: [
+          {
+            id: '1.3',
+            title: '核查设计分界点',
+            content: '设计分界点应定义明确，责任边界无模糊或遗漏',
+            violations: [
+              {
+                title: '设计分界点定义不完整',
+                risk_level: 'medium',
+                suggestion: [
+                  '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
+                  '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
+                  '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
+                  '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
+                  '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
+                ],
+                description:
+                  '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  handles: null
+                }
+              },
+              {
+                title: '责任边界表述模糊',
+                risk_level: 'medium',
+                suggestion: [
+                  "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
+                  "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
+                  "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
+                ],
+                description:
+                  "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  handles: null
+                }
+              },
+              {
+                title: '分界点物理位置描述不精确',
+                risk_level: 'medium',
+                suggestion: [
+                  "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
+                  "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
+                  '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
+                ],
+                description:
+                  "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  handles: null
+                }
+              },
+              {
+                title: '系统接口责任未明确',
+                risk_level: 'medium',
+                suggestion: [
+                  '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
+                  '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
+                  '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
+                  '补充与厂区其他系统的接口责任说明'
+                ],
+                description:
+                  "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  handles: null
+                }
+              }
+            ]
+          },
+          {
+            id: '1.4',
+            title: '核查建所必要性及负荷审查',
+            content: '核查建所必要性及负荷审查',
+            violations: []
+          },
+          {
+            id: '2.1',
+            title: '核查配电装置选择的合理性',
+            content: '核查配电装置选择的合理性',
+            violations: []
+          },
+          {
+            id: '3.1',
+            title: '短路电流审查',
+            content: '短路电流审查',
+            violations: []
+          }
+        ],
+        category: '设计说明审查'
+      }
     ]
   }
 })
@@ -2158,6 +2013,7 @@ const getArticleContent = (articleId: string) => {
   line-height: 1.6;
   color: #595959;
   text-align: justify;
+  text-indent: 2em;
 }
 
 .detail-content.suggestion {
