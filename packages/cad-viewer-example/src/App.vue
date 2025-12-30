@@ -4,6 +4,7 @@
       locale="zh"
       url="https://mlightcad.gitlab.io/cad-data/data/anteen.dwg"
       base-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/"
+      :project-name="projectName"
     />
   </div>
 </template>
@@ -11,6 +12,8 @@
 <script setup lang="ts">
 // import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
+
+const projectName = encodeURIComponent('测试项目/变电一次')
 // import { ref } from 'vue'
 
 // import FileUpload from './components/FileUpload.vue'
@@ -31,7 +34,10 @@ import { MlCadViewer } from '@mlightcad/cad-viewer'
 // }
 </script>
 
-<style scoped>
+<style>
+* {
+  font-family: var(--font-family);
+}
 #app-root {
   width: 100%;
   height: 100%;
