@@ -2307,7 +2307,6 @@ const formatDescription = (description: string): string => {
 
 .detail-content.suggestion {
   color: var(--color-primary);
-  background: var(--color-primary-light);
   padding: 12px;
   border-radius: 4px;
   border-left: 3px solid var(--color-primary);
