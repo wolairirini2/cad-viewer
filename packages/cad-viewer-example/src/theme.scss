@@ -219,14 +219,18 @@
     background: var(--color-primary);
     border: none;
     box-shadow: var(--shadow-sm);
-
-    &:hover,
-    &:focus {
+    &:hover {
       background: var(--color-primary-dark);
     }
 
     &:active {
       box-shadow: var(--shadow-xs);
+    }
+    &.is-disabled {
+      background: var(--color-primary);
+      &:hover {
+        background: var(--color-primary-dark);
+      }
     }
   }
 
@@ -328,24 +332,6 @@
   }
 }
 
-.el-select-dropdown {
-  border-radius: var(--border-radius-md);
-
-  .el-select-dropdown__item {
-    border-radius: var(--border-radius-sm);
-    margin: 2px 4px;
-
-    &.selected {
-      background: var(--color-primary-light);
-      color: var(--color-primary-dark);
-    }
-
-    &:hover {
-      background: var(--color-secondary-light);
-    }
-  }
-}
-
 /* 日期选择器 */
 .el-date-editor {
   .el-input__wrapper {
@@ -433,14 +419,15 @@
     .el-dialog__title {
       color: var(--color-primary);
       font-weight: 600;
-      line-height: 36px;
+      line-height: 24px;
     }
   }
 
   .el-dialog__footer {
+    padding-bottom: 10px;
     .el-button {
       font-size: 16px;
-      padding: 2px 20px 0;
+      padding: 0 20px 0;
     }
   }
 }
@@ -583,7 +570,7 @@
     .el-message-box__title {
       color: var(--color-primary);
       font-weight: 600;
-      line-height: 36px;
+      line-height: 24px;
     }
   }
 
@@ -599,9 +586,10 @@
   }
 
   .el-message-box__btns {
+    padding-bottom: 10px;
     .el-button {
       font-size: 16px;
-      padding: 2px 20px 0;
+      padding: 0 20px 0;
     }
   }
 }
@@ -731,13 +719,11 @@
    ================================= */
 
 /* 对话框关闭按钮 - 带圆圈样式 */
+/* 对话框关闭按钮 - 带圆圈样式 */
 .el-dialog__headerbtn,
 .el-message-box__headerbtn {
-  // 基础圆圈样式
-  width: 32px;
-  height: 32px;
-  background: var(--color-gray-100);
-  border: 1px solid var(--color-gray-300);
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -746,29 +732,29 @@
   margin-top: 0;
   top: 12px !important;
   right: 12px !important;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
 
-  // 关闭图标样式
   .el-dialog__close,
   .el-message-box__close {
-    color: var(--color-gray-500);
+    color: #fff;
+    // color: var(--color-primary);
     font-size: 16px;
-    font-weight: 500;
     position: static;
   }
 
-  // 悬停效果
   &:hover {
-    background: var(--color-primary-light);
-    border-color: var(--color-primary);
-
     .el-dialog__close,
     .el-message-box__close {
-      color: var(--color-primary);
+      color: #fff;
+      // color: var(--color-primary);
     }
   }
+}
+.el-select__popper {
+  overflow: hidden;
+}
 
-  // 点击效果
-  &:active {
-    transform: scale(0.95);
-  }
+.el-form-item__label {
+  font-weight: bold;
 }

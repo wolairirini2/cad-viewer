@@ -312,9 +312,10 @@
       <!-- 详细描述 -->
       <div class="detail-section">
         <h4>问题描述</h4>
-        <div class="detail-content" style="text-indent: 2em">
-          {{ selectedViolation.description }}
-        </div>
+        <div
+          class="detail-content description-content"
+          v-html="formatDescription(selectedViolation.description)"
+        ></div>
       </div>
 
       <!-- 修改建议 -->
@@ -398,18 +399,9 @@
 
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="showViolationDetail = false">关闭</el-button>
-        <el-button
-          v-if="
-            selectedViolation?.geometry_ref?.file_id &&
-            selectedViolation?.geometry_ref?.extents
-          "
-          type="primary"
-          @click="handleLocateClick(selectedViolation.geometry_ref)"
-          :loading="locating[selectedViolation.violation_id]"
+        <el-button type="primary" @click="showViolationDetail = false"
+          >关闭</el-button
         >
-          定位
-        </el-button>
       </div>
     </template>
   </el-dialog>
@@ -1711,6 +1703,40 @@ const pagedData = computed(() => {
 watch(filterRisk, () => {
   currentPage.value = 1
 })
+
+// 格式化描述文本，将数字条目转换为换行显示
+const formatDescription = (description: string): string => {
+  if (!description) return ''
+
+  // 识别格式：数字+点+空格+内容+分号（或句号）
+  // 例如：1. xxx；2. xxx；3. xxx。
+  // 也支持：1、xxx；2、xxx；3、xxx。
+  const regex = /(\d+)[.、]\s*([^；。]+?)(?:；|。|$)/g
+
+  let formatted = description
+  const matches = [...description.matchAll(regex)]
+
+  if (matches.length > 0) {
+    // 如果找到数字条目模式
+    formatted = description.replace(
+      regex,
+      '<div class="description-item">$1. $2</div>'
+    )
+
+    // 处理最后可能残留的非条目文本
+    const lastMatch = matches[matches.length - 1]
+    const lastIndex = lastMatch.index! + lastMatch[0].length
+
+    if (lastIndex < description.length) {
+      const remainingText = description.substring(lastIndex).trim()
+      if (remainingText) {
+        formatted += `<div class="description-text">${remainingText}</div>`
+      }
+    }
+  }
+
+  return formatted
+}
 </script>
 
 <style scoped lang="scss">
@@ -2187,6 +2213,7 @@ watch(filterRisk, () => {
   display: flex !important;
   flex-direction: column !important;
   margin-top: 5vh !important; /* 使弹窗垂直居中 */
+  padding-bottom: 10px;
 }
 
 /* 弹窗主体内容区域 - 关键：设置可滚动 */
@@ -2197,14 +2224,7 @@ watch(filterRisk, () => {
   padding: 20px;
   max-height: calc(85vh - 120px); /* 减去header和footer的高度 */
 }
-/* 确保footer固定在底部 */
-:global(.violation-detail-dialog-wrapper .el-dialog__footer) {
-  flex-shrink: 0;
-  border-top: 1px solid var(--el-border-color-light);
-  padding: 12px 20px;
-}
 .violation-detail-dialog {
-  padding-right: 8px;
   max-height: none; /* 移除之前的限制 */
   overflow: visible; /* 改为由dialog body控制滚动 */
 }
@@ -2318,12 +2338,6 @@ watch(filterRisk, () => {
   font-size: 14px;
   color: #595959;
   line-height: 1.5;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
 }
 
 /* 添加行悬停效果 */
@@ -2517,5 +2531,32 @@ watch(filterRisk, () => {
   padding: 2px 6px;
   min-width: 20px;
   text-align: center;
+}
+
+// 问题描述内容样式
+.description-content {
+  text-indent: 0; // 移除首行缩进，因为每一项都会缩进
+
+  // 数字条目样式
+  .description-item {
+    text-indent: 2em; // 每项缩进2字符
+    margin-bottom: 8px;
+    line-height: 1.6;
+
+    &:first-child {
+      margin-top: 8px;
+    }
+
+    &:last-child {
+      margin-bottom: 12px;
+    }
+  }
+
+  // 非条目文本样式（如开头的描述和结尾的总结）
+  .description-text {
+    text-indent: 2em;
+    margin-top: 12px;
+    line-height: 1.6;
+  }
 }
 </style>
