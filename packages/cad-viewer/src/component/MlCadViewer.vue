@@ -1704,38 +1704,59 @@ watch(filterRisk, () => {
   currentPage.value = 1
 })
 
-// 格式化描述文本，将数字条目转换为换行显示
+
+// 格式化描述文本 - 修复重复渲染问题
 const formatDescription = (description: string): string => {
-  if (!description) return ''
+  if (!description || typeof description !== 'string') return ''
 
-  // 识别格式：数字+点+空格+内容+分号（或句号）
-  // 例如：1. xxx；2. xxx；3. xxx。
-  // 也支持：1、xxx；2、xxx；3、xxx。
-  const regex = /(\d+)[.、]\s*([^；。]+?)(?:；|。|$)/g
+  try {
+    // 匹配数字条目：数字+点/顿号+内容+分号/句号
+    const regex = /(\d+)[.、]\s*([^；。]+?)(?:；|。|$)/g
+    const matches = [...description.matchAll(regex)]
+    
+    // 无匹配项时返回原文
+    if (matches.length === 0) {
+      return `<div class="description-text">${description}</div>`
+    }
 
-  let formatted = description
-  const matches = [...description.matchAll(regex)]
-
-  if (matches.length > 0) {
-    // 如果找到数字条目模式
-    formatted = description.replace(
-      regex,
-      '<div class="description-item">$1. $2</div>'
-    )
-
-    // 处理最后可能残留的非条目文本
-    const lastMatch = matches[matches.length - 1]
-    const lastIndex = lastMatch.index! + lastMatch[0].length
-
-    if (lastIndex < description.length) {
-      const remainingText = description.substring(lastIndex).trim()
-      if (remainingText) {
-        formatted += `<div class="description-text">${remainingText}</div>`
+    let formatted = ''
+    
+    // 1. 添加前缀文本（第一个匹配项之前的内容）
+    const firstMatchIndex = matches[0].index!
+    if (firstMatchIndex > 0) {
+      const prefixText = description.substring(0, firstMatchIndex).trim()
+      if (prefixText) {
+        formatted += `<div class="description-text prefix">${prefixText}</div>`
       }
     }
+    
+    // 2. 逐个处理匹配项，格式化为条目
+    matches.forEach(match => {
+      const num = match[1]
+      const content = match[2]
+      const separator = match[0].endsWith('；') ? '；' : '。'
+      
+      formatted += `<div class="description-item" style="text-indent: 2em;">` +
+                   `<span class="item-number">${num}.</span>` +
+                   `<span class="item-content">${content}${separator}</span>` +
+                   `</div>`
+    })
+    
+    // 3. 添加后缀文本（最后一个匹配项之后的内容）
+    const lastMatch = matches[matches.length - 1]
+    const lastIndex = lastMatch.index! + lastMatch[0].length
+    if (lastIndex < description.length) {
+      const suffixText = description.substring(lastIndex).trim()
+      if (suffixText) {
+        formatted += `<div class="description-text suffix">${suffixText}</div>`
+      }
+    }
+    
+    return formatted
+  } catch (error) {
+    console.error('格式化描述失败:', error)
+    return `<div class="description-text">${description}</div>`
   }
-
-  return formatted
 }
 </script>
 
@@ -1905,7 +1926,7 @@ const formatDescription = (description: string): string => {
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 .stat-value.risk-high {
@@ -2125,7 +2146,7 @@ const formatDescription = (description: string): string => {
 
 .violation-suggestion {
   font-size: 13px;
-  color: #1890ff;
+  color: var(--color-primary);
   line-height: 1.5;
   margin-bottom: 12px;
   padding: 8px;
@@ -2272,7 +2293,7 @@ const formatDescription = (description: string): string => {
 
 .detail-label {
   width: 80px;
-  font-weight: 500;
+  font-weight: bold;
   color: #595959;
   margin-right: 12px;
   flex-shrink: 0;
@@ -2285,11 +2306,11 @@ const formatDescription = (description: string): string => {
 }
 
 .detail-content.suggestion {
-  color: #1890ff;
-  background: #e6f7ff;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
   padding: 12px;
   border-radius: 4px;
-  border-left: 3px solid #1890ff;
+  border-left: 3px solid var(--color-primary);
 }
 
 .geometry-info {
@@ -2340,16 +2361,6 @@ const formatDescription = (description: string): string => {
   line-height: 1.5;
 }
 
-/* 添加行悬停效果 */
-:deep(.el-table__body tr:hover > td) {
-  background-color: #f5f7fa;
-  cursor: pointer;
-}
-
-:deep(.el-table__body tr.current-row > td) {
-  background-color: #e6f7ff;
-}
-
 /* 建议列表样式 */
 .suggestion-item {
   font-size: 12px;
@@ -2365,14 +2376,14 @@ const formatDescription = (description: string): string => {
 
 .suggestion-list li {
   font-size: 13px;
-  color: #1890ff;
+  color: var(--color-primary);
   line-height: 1.5;
   margin-bottom: 4px;
 }
 
 .suggestion-title {
   font-weight: 500;
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 /* 详情对话框中的有序列表 */
@@ -2533,15 +2544,29 @@ const formatDescription = (description: string): string => {
   text-align: center;
 }
 
-// 问题描述内容样式
+// 问题描述内容样式 - 修复版
 .description-content {
-  text-indent: 0; // 移除首行缩进，因为每一项都会缩进
-
-  // 数字条目样式
+  // 数字条目 - 使用flex布局确保对齐
   .description-item {
-    text-indent: 2em; // 每项缩进2字符
+    display: flex;
     margin-bottom: 8px;
     line-height: 1.6;
+
+    // 数字部分（固定宽度，右对齐）
+    .item-number {
+      flex-shrink: 0;
+      width: 28px; // 固定宽度，确保所有数字对齐
+      text-align: right;
+      padding-right: 8px;
+      font-weight: 500;
+      color: var(--el-text-color-primary);
+    }
+
+    // 内容部分（自动填充剩余空间）
+    .item-content {
+      flex: 1;
+      padding-left: 0; // 取消内容缩进
+    }
 
     &:first-child {
       margin-top: 8px;
@@ -2552,11 +2577,21 @@ const formatDescription = (description: string): string => {
     }
   }
 
-  // 非条目文本样式（如开头的描述和结尾的总结）
+  // 普通文本段落 - 使用padding-left模拟缩进
   .description-text {
-    text-indent: 2em;
-    margin-top: 12px;
+    padding-left: 36px; // 与条目内容左对齐（28px数字宽+8px间距）
+    margin: 8px 0;
     line-height: 1.6;
+
+    &.prefix {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    &.suffix {
+      margin-top: 12px;
+      margin-bottom: 0;
+    }
   }
 }
 </style>
