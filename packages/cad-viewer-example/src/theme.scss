@@ -8,7 +8,7 @@
   /* 主色调 - 鲜明蓝色 */
   --color-primary-light: #eaeeff;
   --color-primary: #7c98ff;
-  --color-primary-dark: #96a3fb;
+  --color-primary-dark: #5e79de;
 
   /* 辅助色调 - 鲜明紫色 */
   --color-secondary-light: #f3e8ff;
@@ -132,7 +132,7 @@
   .el-input__wrapper {
     border-radius: var(--border-radius-sm);
     background: var(--color-white);
-    border: 1px solid var(--color-primary);
+    border: 1px solid var(--color-primary-light);
     box-shadow: none !important;
     transition: var(--transition-fast);
 
@@ -149,12 +149,11 @@
 
 .el-textarea .el-textarea__inner {
   border-radius: var(--border-radius-sm);
-  border: 1px solid var(--color-primary);
+  border: 1px solid var(--color-primary-light);
   transition: var(--transition-fast);
-
+  box-shadow: none;
   &:focus {
     border-color: var(--color-primary-dark);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 }
 
@@ -162,7 +161,7 @@
 /* 选择器样式 */
 .el-select {
   .el-select__wrapper {
-    border: 1px solid var(--color-primary);
+    border: 1px solid var(--color-primary-light);
     box-shadow: none !important;
     transition: var(--transition-fast);
 
@@ -194,7 +193,6 @@
 
   &:hover {
     box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
   }
 
   .el-card__header {
@@ -423,6 +421,10 @@
       align-items: flex-start;
       .el-icon {
         margin-top: 5px;
+        transform: translateX(2.5em);
+      }
+      .el-message-box__message {
+        text-indent: 2em;
       }
     }
   }
@@ -449,29 +451,6 @@
 
   .el-step__description.is-finish {
     color: var(--color-primary);
-  }
-}
-
-/* 进度条 */
-.el-progress {
-  .el-progress-bar__outer {
-    background: var(--color-gray-200);
-    border-radius: var(--border-radius-sm);
-  }
-
-  .el-progress-bar__inner {
-    background: linear-gradient(
-      90deg,
-      var(--color-primary) 0%,
-      var(--color-primary-dark) 100%
-    );
-    border-radius: var(--border-radius-sm);
-  }
-
-  .el-progress__text {
-    color: var(--color-primary-dark);
-    font-weight: 500;
-    min-width: initial;
   }
 }
 
@@ -599,4 +578,10 @@
 
 .el-form-item__label {
   font-weight: bold;
+}
+
+.el-progress {
+  .el-progress-bar__outer {
+    background-color: var(--color-primary-light);
+  }
 }

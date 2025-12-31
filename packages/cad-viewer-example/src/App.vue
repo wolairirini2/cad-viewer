@@ -13,7 +13,7 @@
 // import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
 
-const projectName = encodeURIComponent('测试项目/变电一次')
+const projectName = encodeURIComponent('测试项目变电一次专业')
 // import { ref } from 'vue'
 
 // import FileUpload from './components/FileUpload.vue'

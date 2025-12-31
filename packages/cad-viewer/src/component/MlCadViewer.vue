@@ -197,12 +197,16 @@
                   align="center"
                 >
                   <template #default="{ row }">
-                    <el-tag
+                    <el-button
                       :type="getRiskTagType(row.risk_level)"
                       effect="plain"
+                      size="small"
+                      plain
+                      style="pointer-events: none"
+                      :icon="getRiskIcon(row.risk_level)"
                     >
                       {{ getRiskText(row.risk_level) }}
-                    </el-tag>
+                    </el-button>
                   </template>
                 </el-table-column>
                 <el-table-column
@@ -212,7 +216,13 @@
                   show-overflow-tooltip
                 >
                   <template #default="{ row }">
-                    <span style="color: #558ee2">{{ row.title }}</span>
+                    <span
+                      style="
+                        font-weight: bold;
+                        color: var(--color-primary-dark);
+                      "
+                      >{{ row.title }}</span
+                    >
                   </template>
                 </el-table-column>
                 <el-table-column
@@ -1763,6 +1773,20 @@ const formatDescription = (description: string): string => {
     return `<div class="description-text">${description}</div>`
   }
 }
+
+// 获取风险等级对应的图标组件
+const getRiskIcon = (level: string) => {
+  switch (level) {
+    case 'high':
+      return WarnTriangleFilled
+    case 'medium':
+      return WarningFilled
+    case 'low':
+      return InfoFilled
+    default:
+      return WarningFilled
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -1905,19 +1929,20 @@ const formatDescription = (description: string): string => {
 
 /* 标题区域 */
 .panel-header {
-  padding: 8px 10px;
+  margin-top: 8px;
+  padding: 12px 10px;
   background: #fafafa;
-  border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-radius: var(--border-radius-sm);
 }
 
 .panel-header h3 {
   margin: 0;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: bold;
   color: #262626;
 }
 
@@ -2315,10 +2340,10 @@ const formatDescription = (description: string): string => {
 }
 
 .detail-content.suggestion {
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   padding: 12px;
   border-radius: 4px;
-  border-left: 3px solid var(--color-primary);
+  border-left: 3px solid var(--color-primary-dark);
 }
 
 .geometry-info {
