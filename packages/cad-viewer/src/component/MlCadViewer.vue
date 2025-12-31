@@ -130,6 +130,11 @@
           <!-- 标题 -->
           <div class="panel-header">
             <h3>{{ projectName }}审查报告</h3>
+            <div class="panel-actions">
+              <el-button icon="Promotion" type="success">
+                导出审查报告
+              </el-button>
+            </div>
           </div>
           <div class="violation-filters">
             <div
@@ -147,7 +152,7 @@
               :class="{ active: filterRisk === 'high' }"
               @click="filterRisk = 'high'"
             >
-              <el-icon><CircleCloseFilled /></el-icon>
+              <el-icon><WarnTriangleFilled /></el-icon>
               <span>重大问题</span>
               <span class="filter-count">{{ riskCounts.high }}</span>
             </div>
@@ -194,7 +199,7 @@
                   <template #default="{ row }">
                     <el-tag
                       :type="getRiskTagType(row.risk_level)"
-                      effect="dark"
+                      effect="plain"
                     >
                       {{ getRiskText(row.risk_level) }}
                     </el-tag>
@@ -257,6 +262,8 @@
                       @click.stop="handleLocateClick(row.geometry_ref)"
                       :loading="locating[row.violation_id]"
                       :disabled="!row.geometry_ref?.extents"
+                      plain
+                      icon="location"
                     >
                       定位
                     </el-button>
@@ -271,7 +278,6 @@
                 v-model:page-size="pageSize"
                 :total="sortedViolations.length"
                 layout="total,sizes, prev, pager, next, "
-                small
                 style="padding: 8px; justify-content: center"
               />
             </div>
@@ -302,7 +308,6 @@
           <el-tag
             :type="getRiskTagType(selectedViolation.risk_level)"
             size="small"
-            effect="dark"
           >
             {{ getRiskText(selectedViolation.risk_level) }}
           </el-tag>
@@ -427,7 +432,7 @@ import {
   ArrowRight,
   ArrowLeft,
   List,
-  CircleCloseFilled,
+  WarnTriangleFilled,
   InfoFilled,
   WarningFilled
 } from '@element-plus/icons-vue'
@@ -1704,7 +1709,6 @@ watch(filterRisk, () => {
   currentPage.value = 1
 })
 
-
 // 格式化描述文本 - 修复重复渲染问题
 const formatDescription = (description: string): string => {
   if (!description || typeof description !== 'string') return ''
@@ -1713,14 +1717,14 @@ const formatDescription = (description: string): string => {
     // 匹配数字条目：数字+点/顿号+内容+分号/句号
     const regex = /(\d+)[.、]\s*([^；。]+?)(?:；|。|$)/g
     const matches = [...description.matchAll(regex)]
-    
+
     // 无匹配项时返回原文
     if (matches.length === 0) {
       return `<div class="description-text">${description}</div>`
     }
 
     let formatted = ''
-    
+
     // 1. 添加前缀文本（第一个匹配项之前的内容）
     const firstMatchIndex = matches[0].index!
     if (firstMatchIndex > 0) {
@@ -1729,19 +1733,20 @@ const formatDescription = (description: string): string => {
         formatted += `<div class="description-text prefix">${prefixText}</div>`
       }
     }
-    
+
     // 2. 逐个处理匹配项，格式化为条目
     matches.forEach(match => {
       const num = match[1]
       const content = match[2]
       const separator = match[0].endsWith('；') ? '；' : '。'
-      
-      formatted += `<div class="description-item" style="text-indent: 2em;">` +
-                   `<span class="item-number">${num}.</span>` +
-                   `<span class="item-content">${content}${separator}</span>` +
-                   `</div>`
+
+      formatted +=
+        `<div class="description-item" style="text-indent: 2em;">` +
+        `<span class="item-number">${num}.</span>` +
+        `<span class="item-content">${content}${separator}</span>` +
+        `</div>`
     })
-    
+
     // 3. 添加后缀文本（最后一个匹配项之后的内容）
     const lastMatch = matches[matches.length - 1]
     const lastIndex = lastMatch.index! + lastMatch[0].length
@@ -1751,7 +1756,7 @@ const formatDescription = (description: string): string => {
         formatted += `<div class="description-text suffix">${suffixText}</div>`
       }
     }
-    
+
     return formatted
   } catch (error) {
     console.error('格式化描述失败:', error)
@@ -1891,7 +1896,8 @@ const formatDescription = (description: string): string => {
     --el-table-header-bg-color: #eceef2;
     :deep(th.el-table__cell) {
       color: #100;
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 16px;
       border-bottom: 1px solid var(--color-gray-200);
     }
   }
@@ -1899,14 +1905,17 @@ const formatDescription = (description: string): string => {
 
 /* 标题区域 */
 .panel-header {
-  padding: 16px 0 0;
+  padding: 8px 10px;
   background: #fafafa;
   border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .panel-header h3 {
-  margin: 0 0 12px 0;
+  margin: 0;
   font-size: 18px;
   font-weight: 500;
   color: #262626;

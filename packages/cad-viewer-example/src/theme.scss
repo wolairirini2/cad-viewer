@@ -61,11 +61,8 @@
   --border-radius-lg: 14px;
   --border-radius-xl: 18px;
 
-  /* 字体 */
-  --font-family:  /* iOS/macOS 苹方字体 */ "PingFang SC",
-    /* Android 系统字体 */ "HarmonyOS Sans", "Noto Sans CJK SC",
-    "Source Han Sans SC", /* 通用系统字体 */ system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 
   /* 过渡动画 */
   --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,12 +83,12 @@
     &.el-button--primary {
       border: 1px solid var(--color-primary);
       color: var(--color-primary);
-
+      background-color: var(--color-white);
       &:hover,
       &:focus {
         background: var(--color-primary-dark);
         border-color: var(--color-primary-dark);
-        color: var(--color-primary-dark);
+        color: var(--color-white);
         transform: translateY(-1px);
         box-shadow: var(--shadow-sm);
       }
@@ -101,115 +98,6 @@
         box-shadow: none;
         background: var(--color-primary);
         color: var(--color-white);
-      }
-    }
-
-    // Success plain
-    &.el-button--success {
-      border: 1px solid var(--color-success);
-      color: var(--color-success);
-
-      &:hover,
-      &:focus {
-        background: var(--color-success-light);
-        border-color: var(--color-success-dark);
-        color: var(--color-success-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: none;
-        background: var(--color-success);
-        color: var(--color-white);
-      }
-    }
-
-    // Warning plain
-    &.el-button--warning {
-      border: 1px solid var(--color-warning);
-      color: var(--color-warning-dark);
-
-      &:hover,
-      &:focus {
-        background: var(--color-warning-light);
-        border-color: var(--color-warning-dark);
-        color: var(--color-gray-900);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: none;
-        background: var(--color-warning);
-        color: var(--color-white);
-      }
-    }
-
-    // Danger plain
-    &.el-button--danger {
-      border: 1px solid var(--color-danger);
-      color: var(--color-danger);
-
-      &:hover,
-      &:focus {
-        background: var(--color-danger-light);
-        border-color: var(--color-danger-dark);
-        color: var(--color-danger-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: none;
-        background: var(--color-danger);
-        color: var(--color-white);
-      }
-    }
-
-    // Info plain
-    &.el-button--info {
-      border: 1px solid var(--color-info);
-      color: var(--color-info);
-
-      &:hover,
-      &:focus {
-        background: var(--color-info-light);
-        border-color: var(--color-info-dark);
-        color: var(--color-info-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: none;
-        background: var(--color-info);
-        color: var(--color-white);
-      }
-    }
-
-    // Default plain (slightly lighter version)
-    &.el-button--default {
-      background: var(--color-gray-50);
-      border: 1px solid var(--color-gray-300);
-      color: var(--color-gray-700);
-
-      &:hover,
-      &:focus {
-        background: var(--color-gray-100);
-        border-color: var(--color-gray-400);
-        color: var(--color-gray-800);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-xs);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: none;
       }
     }
   }
@@ -233,71 +121,20 @@
       }
     }
   }
-
-  &--success {
-    background: var(--color-success-dark);
-    border: none;
-
-    &:hover {
-      background: var(--color-success) 100%;
-    }
-  }
-
-  &--warning {
-    background: var(--color-warning);
-    border: none;
-    color: var(--color-gray-800);
-    &:hover {
-      background: var(--color-warning);
-    }
-  }
-
-  &--danger {
-    background: var(--color-danger);
-    border: none;
-
-    &:hover {
-      background: var(--color-danger);
-    }
-  }
-
-  &--info {
-    background: var(--color-info);
-    border: none;
-
-    &:hover {
-      background: var(--color-info);
-    }
-  }
-
-  &--default {
-    background: var(--color-white);
-    border: 1px solid var(--color-gray-300);
-    color: var(--color-gray-700);
-
-    &:hover {
-      border-color: var(--color-primary);
-      color: var(--color-primary-dark);
-      background: var(--color-primary-light);
-    }
-  }
 }
 /* =================================
    Element Plus 主题覆盖
    ================================= */
 
 /* 输入框样式 */
+
 .el-input {
   .el-input__wrapper {
     border-radius: var(--border-radius-sm);
     background: var(--color-white);
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--color-primary);
     box-shadow: none !important;
     transition: var(--transition-fast);
-
-    &:hover {
-      border-color: var(--color-primary);
-    }
 
     &.is-focus {
       border-color: var(--color-primary-dark);
@@ -312,12 +149,8 @@
 
 .el-textarea .el-textarea__inner {
   border-radius: var(--border-radius-sm);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-primary);
   transition: var(--transition-fast);
-
-  &:hover {
-    border-color: var(--color-primary);
-  }
 
   &:focus {
     border-color: var(--color-primary-dark);
@@ -326,12 +159,21 @@
 }
 
 /* 选择器样式 */
+/* 选择器样式 */
 .el-select {
-  .el-input__wrapper {
-    border-radius: var(--border-radius-sm);
+  .el-select__wrapper {
+    border: 1px solid var(--color-primary);
+    box-shadow: none !important;
+    transition: var(--transition-fast);
+
+    &.is-focused {
+      border-color: var(--color-primary-dark);
+    }
+  }
+
+  &.is-disabled .el-select__wrapper {
   }
 }
-
 /* 日期选择器 */
 .el-date-editor {
   .el-input__wrapper {
@@ -372,7 +214,7 @@
   overflow: hidden;
 
   th.el-table__cell {
-    color: #fff;
+    color: var(--color-white);
     font-weight: 600;
     border-bottom: 1px solid var(--color-gray-200);
   }
@@ -710,7 +552,7 @@
 .el-tag {
   &--primary {
     background: var(--color-primary);
-    color: #fff;
+    color: var(--color-white);
   }
 }
 
@@ -737,7 +579,7 @@
 
   .el-dialog__close,
   .el-message-box__close {
-    color: #fff;
+    color: var(--color-white);
     // color: var(--color-primary);
     font-size: 16px;
     position: static;
@@ -746,7 +588,7 @@
   &:hover {
     .el-dialog__close,
     .el-message-box__close {
-      color: #fff;
+      color: var(--color-white);
       // color: var(--color-primary);
     }
   }
