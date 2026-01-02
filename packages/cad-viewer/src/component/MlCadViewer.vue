@@ -131,22 +131,17 @@
           <div class="panel-header">
             <h3>{{ projectName }}审查报告</h3>
             <div class="panel-actions">
-              <el-button icon="Promotion" type="success">
-                导出审查报告
+              <el-button
+                icon="Promotion"
+                type="success"
+                size="small"
+                style="padding: 14px 8px; font-weight: 700; font-size: 13px"
+              >
+                导出报告
               </el-button>
             </div>
           </div>
           <div class="violation-filters">
-            <div
-              class="filter-item"
-              :class="{ active: filterRisk === null }"
-              @click="filterRisk = null"
-            >
-              <el-icon><List /></el-icon>
-              <span>全部问题</span>
-              <span class="filter-count">{{ totalViolations }}</span>
-            </div>
-
             <div
               class="filter-item"
               :class="{ active: filterRisk === 'high' }"
@@ -191,6 +186,13 @@
                 stripe
               >
                 <el-table-column
+                  type="index"
+                  label="序号"
+                  width="55"
+                  align="center"
+                  :index="index => (currentPage - 1) * pageSize + index + 1"
+                />
+                <el-table-column
                   prop="risk_level"
                   label="风险等级"
                   width="90"
@@ -199,11 +201,14 @@
                   <template #default="{ row }">
                     <el-button
                       :type="getRiskTagType(row.risk_level)"
-                      effect="plain"
                       size="small"
-                      plain
-                      style="pointer-events: none"
-                      :icon="getRiskIcon(row.risk_level)"
+                      style="
+                        pointer-events: none;
+                        padding: 2px 8px 0;
+                        font-size: 10px;
+                        height: 20px;
+                        font-weight: bold;
+                      "
                     >
                       {{ getRiskText(row.risk_level) }}
                     </el-button>
@@ -218,8 +223,9 @@
                   <template #default="{ row }">
                     <span
                       style="
-                        font-weight: bold;
                         color: var(--color-primary-dark);
+                        font-weight: 700;
+                        font-size: 12px;
                       "
                       >{{ row.title }}</span
                     >
@@ -230,56 +236,46 @@
                   label="问题描述"
                   min-width="150"
                   show-overflow-tooltip
+                  align="center"
                 />
                 <el-table-column
                   prop="suggestion"
                   label="处理建议"
                   min-width="150"
                   show-overflow-tooltip
+                  align="center"
                 >
-                  <template #default="{ row }">
-                    <div v-if="Array.isArray(row.suggestion)">
-                      <!-- ✅ 修改：判断是否为数组 -->
-                      <div v-if="row.suggestion.length === 1">
-                        {{ row.suggestion[0] }}
-                      </div>
-                      <div v-else>
-                        <div
-                          v-for="(item, index) in row.suggestion"
-                          :key="index"
-                          class="suggestion-item"
-                        >
-                          {{ Number(index) + 1 }}. {{ item }}
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else>
-                      {{ row.suggestion }}
-                    </div>
-                  </template>
                 </el-table-column>
                 <el-table-column
                   label="操作"
-                  width="100"
+                  width="120"
                   fixed="right"
                   align="center"
                 >
                   <template #default="{ row }">
                     <el-button
                       v-if="row.geometry_ref?.file_id"
-                      type="primary"
+                      type="info"
                       size="small"
                       @click.stop="handleLocateClick(row.geometry_ref)"
                       :loading="locating[row.violation_id]"
                       :disabled="!row.geometry_ref?.extents"
                       plain
-                      icon="location"
                     >
                       定位
                     </el-button>
                     <el-tooltip v-else content="无几何信息" placement="top">
-                      <el-button size="small" disabled>定位</el-button>
+                      <el-button size="small" disabled type="primary"
+                        >定位</el-button
+                      >
                     </el-tooltip>
+                    <el-button
+                      size="small"
+                      style="margin-left: 4px"
+                      type="info"
+                      plain
+                      >发送</el-button
+                    >
                   </template>
                 </el-table-column>
               </el-table>
@@ -441,7 +437,6 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowRight,
   ArrowLeft,
-  List,
   WarnTriangleFilled,
   InfoFilled,
   WarningFilled
@@ -667,7 +662,7 @@ const showNotificationCenter = ref(false)
 
 // 审查报告相关状态
 const isPanelCollapsed = ref(false)
-const filterRisk = ref<null | 'high' | 'medium' | 'low'>(null)
+const filterRisk = ref<null | 'high' | 'medium' | 'low'>('high')
 
 // 修改reportData，优先使用props传入的数据
 const reportData = computed(() => {
@@ -1198,17 +1193,6 @@ const openLocalFile = async (file: File) => {
   }
 }
 
-// 计算总违规项数
-const totalViolations = computed(() => {
-  let count = 0
-  reportData.value.rules.forEach((rule: any) => {
-    rule.articles.forEach((article: any) => {
-      count += article.violations.length
-    })
-  })
-  return count
-})
-
 // 计算各风险等级的违规项数
 const riskCounts = computed(() => {
   const counts = { high: 0, medium: 0, low: 0 }
@@ -1551,11 +1535,11 @@ const getRiskTagType = (level: string) => {
 const getRiskText = (level: string) => {
   switch (level) {
     case 'high':
-      return '重大'
+      return '重大问题'
     case 'medium':
-      return '一般'
+      return '一般问题'
     case 'low':
-      return '轻微'
+      return '轻微问题'
     default:
       return level
   }
@@ -1706,7 +1690,7 @@ const getArticleContent = (articleId: string) => {
 
 // 分页相关状态
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(20)
 // 分页数据
 const pagedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
@@ -1775,18 +1759,18 @@ const formatDescription = (description: string): string => {
 }
 
 // 获取风险等级对应的图标组件
-const getRiskIcon = (level: string) => {
-  switch (level) {
-    case 'high':
-      return WarnTriangleFilled
-    case 'medium':
-      return WarningFilled
-    case 'low':
-      return InfoFilled
-    default:
-      return WarningFilled
-  }
-}
+// const getRiskIcon = (level: string) => {
+//   switch (level) {
+//     case 'high':
+//       return WarnTriangleFilled
+//     case 'medium':
+//       return WarningFilled
+//     case 'low':
+//       return InfoFilled
+//     default:
+//       return WarningFilled
+//   }
+// }
 </script>
 
 <style scoped lang="scss">
@@ -1917,13 +1901,43 @@ const getRiskIcon = (level: string) => {
   width: 100%;
 
   .el-table {
-    --el-table-header-bg-color: #eceef2;
-    :deep(th.el-table__cell) {
-      color: #100;
-      font-weight: 500;
-      font-size: 16px;
-      border-bottom: 1px solid var(--color-gray-200);
+    --el-table-header-bg-color: rgb(242, 242, 242);
+    :deep(.el-table__cell) {
+      padding: 6px 0;
     }
+    :deep(th.el-table__cell) {
+      color: rgb(52, 73, 94);
+      font-weight: 700;
+      font-size: 13px;
+      border-bottom: 1px solid var(--color-gray-200);
+      // font-family: Arial, 'Microsoft YaHei', sans-serif;
+    }
+    /* 缩小操作栏内边距，保持按钮在一行 */
+    :deep(td:last-child .cell) {
+      padding: 0 4px !important; /* 减小单元格内边距 */
+      display: flex;
+      justify-content: center;
+      gap: 0px; /* 按钮间距 */
+    }
+  }
+  /* ---------- 表格内边框 ---------- */
+  :deep(.el-table) {
+    border-right: 1px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
+    font-size: 12px;
+  }
+
+  /* 表头、表体、表尾统一加右边框与下边框 */
+  :deep(.el-table th.el-table__cell),
+  :deep(.el-table td.el-table__cell) {
+    border-right: 1px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  /* 去掉最右侧一列的右边框，防止重复 */
+  :deep(.el-table th:last-child),
+  :deep(.el-table td:last-child) {
+    border-right: none;
   }
 }
 
@@ -1936,12 +1950,11 @@ const getRiskIcon = (level: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: var(--border-radius-sm);
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color: #262626;
 }
@@ -2396,7 +2409,7 @@ const getRiskIcon = (level: string) => {
 
 /* 建议列表样式 */
 .suggestion-item {
-  font-size: 12px;
+  // font-size: 12px;
   line-height: 1.4;
   margin-top: 2px;
 }
@@ -2501,7 +2514,7 @@ const getRiskIcon = (level: string) => {
 
   // 筛选标签项 - 基础样式
   .filter-item {
-    height: 32px;
+    height: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -2509,13 +2522,14 @@ const getRiskIcon = (level: string) => {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: var(--transition-normal);
-    font-size: 14px;
+    font-size: 13px;
     color: var(--color-gray-700);
-    gap: 6px;
+    gap: 5px;
     white-space: nowrap;
     border: 1px solid transparent;
-    padding: 0 12px;
+    padding: 0 5px;
     user-select: none;
+    font-weight: bold;
 
     // 悬停效果
     &:hover {
@@ -2529,7 +2543,6 @@ const getRiskIcon = (level: string) => {
     // 激活状态 - 通用样式
     &.active {
       color: var(--color-white) !important;
-      font-weight: 500;
       transform: translateY(-1px);
       box-shadow: var(--shadow-sm);
 
@@ -2539,24 +2552,32 @@ const getRiskIcon = (level: string) => {
     }
 
     // 按位置设置不同激活颜色
-    &:nth-child(1).active {
-      background: var(--color-primary);
-      border-color: var(--color-primary-dark);
-    }
 
-    &:nth-child(2).active {
+    &:nth-child(1) {
+      // color: var(--color-danger);
+      // border-color: var(--color-danger-dark);
+      // &.active {
       background: var(--color-danger);
       border-color: var(--color-danger-dark);
+      // }
     }
 
-    &:nth-child(3).active {
-      background: var(--color-warning);
+    &:nth-child(2) {
+      // color: var(--color-warning);
+      // border-color: var(--color-warning-dark);
+      // &.active {
+      background: var(--color-warning-dark);
       border-color: var(--color-warning-dark);
+      // }
     }
 
-    &:nth-child(4).active {
+    &:nth-child(3) {
+      // color: var(--color-success);
+      // border-color: var(--color-success-dark);
+      // &.active {
       background: var(--color-success);
       border-color: var(--color-success-dark);
+      // }
     }
 
     // 图标样式
