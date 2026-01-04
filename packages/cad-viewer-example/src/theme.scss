@@ -18,7 +18,7 @@
   /* 功能色 - 鲜明色彩 */
   --color-success-light: #d1fae5;
   --color-success: #10b981;
-  --color-success-dark: #4caf50;
+  --color-success-dark: #6caf50;
 
   --color-warning-light: #fef3c7;
   --color-warning: #f59e0b;
@@ -61,7 +61,7 @@
   --border-radius-lg: 14px;
   --border-radius-xl: 18px;
 
-  --font-family: Arial, 'Microsoft YaHei', sans-serif;
+  --font-family: Arial, "Microsoft YaHei", sans-serif;
 
   /* 过渡动画 */
   --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -99,12 +99,15 @@
         color: var(--color-white);
       }
     }
-    &.el-button--info{
+    &.el-button--info {
       &:hover,
       &:focus {
         border-color: var(--color-primary-dark);
         color: var(--color-primary-dark);
         background-color: var(--color-primary-light);
+      }
+      &.is-disabled{
+        pointer-events: none;
       }
     }
   }
@@ -219,7 +222,8 @@
 
   th.el-table__cell {
     color: var(--color-white);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 13px;
     border-bottom: 1px solid var(--color-gray-200);
   }
 }
@@ -248,7 +252,7 @@
       border-color: var(--color-primary-dark);
       color: var(--color-white);
     }
-    &.is-active{
+    &.is-active {
       color: var(--color-primary-dark);
     }
   }
@@ -297,29 +301,6 @@
       var(--color-gray-200) 37%,
       var(--color-gray-100) 63%
     );
-  }
-}
-
-/* 复选框 */
-.el-checkbox {
-  .el-checkbox__inner {
-    border-radius: var(--border-radius-sm);
-    border-color: var(--color-gray-400);
-    transition: var(--transition-fast);
-
-    &::after {
-      border-color: var(--color-white);
-    }
-  }
-
-  .el-checkbox__input.is-checked .el-checkbox__inner {
-    background: var(--color-primary);
-    border-color: var(--color-primary-dark);
-  }
-
-  .el-checkbox__label {
-    color: var(--color-gray-700);
-    font-weight: 500;
   }
 }
 
@@ -536,11 +517,35 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* 标签样式 - 浅色背景 */
 .el-tag {
-  &--primary {
-    background: var(--color-primary);
-    color: var(--color-white);
+  border: none;
+  &.el-tag--primary {
+    background: linear-gradient(
+      to right,
+      var(--color-primary),
+      var(--color-primary-dark)
+    );
+  }
+  &.el-tag--warning {
+    background: linear-gradient(
+      to right,
+      var(--color-warning),
+      var(--color-warning-dark)
+    );
+  }
+  &.el-tag--success {
+    background: linear-gradient(
+      to right,
+      var(--color-success),
+      var(--color-success-dark)
+    );
+  }
+  &.el-tag--danger {
+    background: linear-gradient(
+      to right,
+      var(--color-danger),
+      var(--color-danger-dark)
+    );
   }
 }
 

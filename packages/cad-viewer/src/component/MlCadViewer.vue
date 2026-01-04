@@ -130,51 +130,44 @@
           <!-- 标题 -->
           <div class="panel-header">
             <h3>{{ projectName }}审查报告</h3>
-            <div class="panel-actions">
-              <el-button
-                icon="Promotion"
-                type="success"
-                size="small"
-                style="padding: 14px 8px; font-weight: 700; font-size: 13px"
-              >
-                导出报告
-              </el-button>
-            </div>
           </div>
-          <div class="violation-filters">
-            <div
-              class="filter-item"
-              :class="{ active: filterRisk === 'high' }"
-              @click="filterRisk = 'high'"
-            >
-              <el-icon><WarnTriangleFilled /></el-icon>
-              <span>重大问题</span>
+          <!-- 风险等级筛选 - 改为 el-radio-group -->
+          <el-radio-group v-model="filterRisk" class="violation-filters">
+            <el-radio-button :label="null">
+              <el-icon><Document /></el-icon>
+              <span>全部</span>
               <span class="filter-count">{{ riskCounts.high }}</span>
-            </div>
-
-            <div
-              class="filter-item"
-              :class="{ active: filterRisk === 'medium' }"
-              @click="filterRisk = 'medium'"
-            >
+            </el-radio-button>
+            <el-radio-button label="high">
+              <el-icon><WarnTriangleFilled /></el-icon>
+              <span>重大</span>
+              <span class="filter-count">{{ riskCounts.high }}</span>
+            </el-radio-button>
+            <el-radio-button label="medium">
               <el-icon><WarningFilled /></el-icon>
-              <span>一般问题</span>
+              <span>一般</span>
               <span class="filter-count">{{ riskCounts.medium }}</span>
-            </div>
-
-            <div
-              class="filter-item"
-              :class="{ active: filterRisk === 'low' }"
-              @click="filterRisk = 'low'"
-            >
+            </el-radio-button>
+            <el-radio-button label="low">
               <el-icon><InfoFilled /></el-icon>
-              <span>轻微问题</span>
+              <span>轻微</span>
               <span class="filter-count">{{ riskCounts.low }}</span>
-            </div>
+            </el-radio-button>
+          </el-radio-group>
+          <div class="panel-actions">
+            <el-button
+              icon="Promotion"
+              type="success"
+              size="small"
+              style="padding: 14px 8px; font-weight: 700; font-size: 13px"
+              @click="handleExport"
+              :disabled="selection.length === 0"
+            >
+              导出报告
+            </el-button>
           </div>
-          <!-- Tabs切换 -->
+          <!-- 违规项表格 -->
           <div class="panel-tabs">
-            <!-- 违规项表格 -->
             <div class="violation-table">
               <el-table
                 :data="pagedData"
@@ -182,16 +175,11 @@
                 style="width: 100%"
                 empty-text="未发现违规项"
                 @row-click="handleRowClick"
+                @selection-change="handleSelectionChange"
                 border
                 stripe
               >
-                <el-table-column
-                  type="index"
-                  label="序号"
-                  width="55"
-                  align="center"
-                  :index="index => (currentPage - 1) * pageSize + index + 1"
-                />
+                <el-table-column type="selection" width="55" align="center" />
                 <el-table-column
                   prop="risk_level"
                   label="风险等级"
@@ -309,8 +297,8 @@
   <!-- 添加违规详情对话框 -->
   <el-dialog
     v-model="showViolationDetail"
-    :title="selectedViolation?.title || '违规详情'"
-    width="600px"
+    :title="'违规详情'"
+    width="800px"
     class="violation-detail-dialog-wrapper"
     :style="{ maxHeight: '85vh' }"
   >
@@ -452,7 +440,8 @@ import {
   ArrowLeft,
   WarnTriangleFilled,
   InfoFilled,
-  WarningFilled
+  WarningFilled,
+  Document
 } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
@@ -465,6 +454,8 @@ import { MlPaletteManager } from './palette'
 import { MlStatusBar } from './statusBar'
 import { AcGeBox2d } from '@mlightcad/data-model'
 import VuePdfEmbed from 'vue-pdf-embed'
+import { ElMessageBox } from 'element-plus'
+import * as XLSX from 'xlsx'
 
 // Define component props with their purposes
 interface Props {
@@ -697,7 +688,7 @@ const reportData = computed(() => {
             violations: [
               {
                 title: '设计分界点定义不完整',
-                risk_level: 'medium',
+                risk_level: 'high',
                 suggestion: [
                   '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
                   '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
@@ -715,7 +706,7 @@ const reportData = computed(() => {
               },
               {
                 title: '责任边界表述模糊',
-                risk_level: 'medium',
+                risk_level: 'low',
                 suggestion: [
                   "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
                   "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
@@ -1798,6 +1789,122 @@ const getRiskColor = (level: string) => {
       return 'var(--color-gray-500)'
   }
 }
+
+// 表格选择状态
+const selection = ref<any[]>([])
+
+// 处理表格选择变化
+const handleSelectionChange = (val: any[]) => {
+  selection.value = val
+}
+
+// 导出报告
+const exportReport = async () => {
+  const dataToExport =
+    selection.value.length > 0 ? selection.value : sortedViolations.value
+
+  if (dataToExport.length === 0) {
+    ElMessage.warning('暂无数据可导出')
+    return
+  }
+
+  try {
+    // 显示加载状态
+    const loading = ElMessage({
+      message: '正在生成报告...',
+      type: 'info',
+      duration: 0
+    })
+
+    // 准备导出数据
+    const exportData = dataToExport.map((item, index) => ({
+      序号: index + 1,
+      风险等级: getRiskText(item.risk_level),
+      违规问题: item.title,
+      问题描述: item.description,
+      处理建议: Array.isArray(item.suggestion)
+        ? item.suggestion.join('；')
+        : item.suggestion,
+      相关规范: item.articleTitle || '',
+      条文编号: item.articleId || '',
+      定位状态: item.geometry_ref?.extents ? '可定位' : '无几何信息'
+    }))
+
+    // 创建工作簿
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    // 设置列宽
+    const colWidths = [
+      { wch: 8 }, // 序号
+      { wch: 12 }, // 风险等级
+      { wch: 40 }, // 违规问题
+      { wch: 50 }, // 问题描述
+      { wch: 60 }, // 处理建议
+      { wch: 30 }, // 相关规范
+      { wch: 15 }, // 条文编号
+      { wch: 12 } // 定位状态
+    ]
+    ws['!cols'] = colWidths
+
+    // 添加样式（可选）
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '审查报告')
+
+    // 生成文件名
+    const timestamp = new Date()
+      .toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      .replace(/[/:]/g, '-')
+
+    const fileName = `${projectName.value || '项目'}_审查报告_${timestamp}.xlsx`
+
+    // 下载文件
+    XLSX.writeFile(wb, fileName)
+
+    // 关闭加载提示
+    loading.close()
+
+    ElMessage.success({
+      message: `报告已导出：${fileName}`,
+      duration: 3000
+    })
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
+  }
+}
+
+// 导出前确认
+const handleExport = () => {
+  if (selection.value.length > 0) {
+    ElMessageBox.confirm(
+      `当前已选中 ${selection.value.length} 条记录，是否只导出选中的记录？`,
+      '导出确认',
+      {
+        confirmButtonText: '导出选中项',
+        cancelButtonText: '导出全部',
+        type: 'info',
+        distinguishCancelAndClose: true
+      }
+    )
+      .then(() => {
+        exportReport()
+      })
+      .catch(action => {
+        if (action === 'cancel') {
+          selection.value = [] // 清空选择
+          exportReport()
+        }
+      })
+  } else {
+    exportReport()
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -1928,7 +2035,7 @@ const getRiskColor = (level: string) => {
   width: 100%;
 
   .el-table {
-    --el-table-header-bg-color: rgb(242, 242, 242);
+    --el-table-header-bg-color: #eceef2;
     :deep(.el-table__cell) {
       padding: 6px 0;
     }
@@ -1986,43 +2093,9 @@ const getRiskColor = (level: string) => {
   color: #262626;
 }
 
-.report-stats {
+// 操作按钮
+.panel-actions {
   display: flex;
-  gap: 24px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.stat-value.risk-high {
-  color: #ff4d4f;
-}
-
-.stat-value.risk-medium {
-  color: #faad14;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #8c8c8c;
-  margin-top: 4px;
-}
-
-/* 筛选区域 */
-.panel-filters {
-  padding: 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
-  flex-shrink: 0;
 }
 
 /* 违规项表格 */
@@ -2350,7 +2423,7 @@ const getRiskColor = (level: string) => {
 .detail-section h4 {
   margin: 0 0 12px 0;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: bold;
   color: #262626;
 }
 
@@ -2419,7 +2492,6 @@ const getRiskColor = (level: string) => {
   padding: 12px;
   background: #fafafa;
   border-radius: 4px;
-  border-left: 3px solid #52c41a;
 }
 
 .article-title {
@@ -2531,92 +2603,107 @@ const getRiskColor = (level: string) => {
   justify-content: center;
 }
 
-// 筛选标签容器
+/* ✅ 修改2：风险等级筛选样式 - 使用 el-radio-group */
 .violation-filters {
   padding: 12px 0;
   background: var(--color-white);
   display: flex;
-  gap: 8px;
   flex-shrink: 0;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--color-gray-200);
 
-  // 筛选标签项 - 基础样式
-  .filter-item {
-    height: 28px;
+  /* 覆盖 el-radio-group 默认样式 */
+  :deep(.el-radio-group) {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--color-gray-100);
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    transition: var(--transition-normal);
-    font-size: 12px;
-    color: var(--color-gray-700);
-    gap: 5px;
-    white-space: nowrap;
-    border: 1px solid transparent;
-    padding: 0 5px;
-    user-select: none;
-    font-weight: bold;
+  }
 
-    // 悬停效果
-    &:hover {
-      background: var(--color-gray-200);
-      color: var(--color-gray-900);
-      border-color: var(--color-primary-light);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-xs);
-    }
-
-    // 激活状态 - 通用样式
-    &.active {
-      color: var(--color-white) !important;
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-sm);
-
-      .filter-count {
-        background: rgba(255, 255, 255, 0.2);
+  /* 覆盖 el-radio-button 样式 */
+  :deep(.el-radio-button) {
+    &.is-active {
+      .el-radio-button__inner {
+        color: var(--color-white) !important;
+        box-shadow: var(--shadow-sm);
       }
     }
 
-    // 按位置设置不同激活颜色
-
-    &:nth-child(1) {
-      // color: var(--color-danger);
-      // border-color: var(--color-danger-dark);
-      // &.active {
-      background: var(--color-danger);
-      border-color: var(--color-danger-dark);
+    /* 全部 */
+    &:first-child {
+      // .el-radio-button__inner {
+      //   color: var(--color-primary);
+      //   border-color: var(--color-primary-dark);
+      //   background-color: var(--color-primary-light);
       // }
+      &.is-active .el-radio-button__inner {
+        background: var(--color-primary);
+        border-color: var(--color-primary-dark);
+      }
     }
 
+    /* 重大问题 */
     &:nth-child(2) {
-      // color: var(--color-warning);
-      // border-color: var(--color-warning-dark);
-      // &.active {
-      background: var(--color-warning-dark);
-      border-color: var(--color-warning-dark);
+      // .el-radio-button__inner {
+      //   color: var(--color-danger);
+      //   border-color: var(--color-danger-dark);
+      //   background-color: var(--color-danger-light);
       // }
+      &.is-active .el-radio-button__inner {
+        background: var(--color-danger);
+        border-color: var(--color-danger-dark);
+      }
     }
 
+    /* 一般问题 */
     &:nth-child(3) {
-      // color: var(--color-success);
-      // border-color: var(--color-success-dark);
-      // &.active {
-      background: var(--color-success);
-      border-color: var(--color-success-dark);
+      // .el-radio-button__inner {
+      //   color: var(--color-warning);
+      //   border-color: var(--color-warning-dark);
+      //   background-color: var(--color-warning-light);
       // }
+      &.is-active .el-radio-button__inner {
+        background: var(--color-warning-dark);
+        border-color: var(--color-warning-dark);
+      }
     }
 
-    // 图标样式
-    .el-icon {
-      font-size: 16px;
+    /* 轻微问题 */
+    &:nth-child(4) {
+      // .el-radio-button__inner {
+      //   color: var(--color-success);
+      //   border-color: var(--color-success-dark);
+      //   background-color: var(--color-success-light);
+      // }
+      &.is-active .el-radio-button__inner {
+        background: var(--color-success);
+        border-color: var(--color-success-dark);
+      }
     }
+
+    /* 按钮内层样式 */
+    .el-radio-button__inner {
+      height: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: var(--transition-normal);
+      font-size: 12px;
+      gap: 5px;
+      white-space: nowrap;
+      padding: 0 12px;
+      font-weight: bold;
+      box-shadow: none !important;
+      &:hover {
+        box-shadow: var(--shadow-xs);
+      }
+    }
+  }
+
+  /* 图标样式 */
+  :deep(.el-icon) {
+    font-size: 16px;
   }
 }
 
-// 数量徽章样式
+/* 数量徽章样式 */
 .filter-count {
   background: rgba(0, 0, 0, 0.08);
   border-radius: 10px;
@@ -2625,6 +2712,7 @@ const getRiskColor = (level: string) => {
   padding: 1px 4px;
   min-width: 18px;
   text-align: center;
+  margin-left: 4px;
 }
 
 // 问题描述内容样式 - 修复版
