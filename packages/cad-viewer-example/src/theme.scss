@@ -18,11 +18,11 @@
   /* 功能色 - 鲜明色彩 */
   --color-success-light: #d1fae5;
   --color-success: #10b981;
-  --color-success-dark: #6caf50;
+  --color-success-dark: #09c05c;
 
   --color-warning-light: #fef3c7;
   --color-warning: #f59e0b;
-  --color-warning-dark: #d97706;
+  --color-warning-dark: #d17706;
 
   --color-danger-light: #fee2e2;
   --color-danger: #ef4444;
@@ -537,7 +537,7 @@
   }
   &.el-tag--dark {
     border: none;
-
+    font-weight: bold;
     &.el-tag--primary {
       background: linear-gradient(
         to right,
@@ -546,18 +546,10 @@
       );
     }
     &.el-tag--warning {
-      background: linear-gradient(
-        to right,
-        var(--color-warning),
-        var(--color-warning-dark)
-      );
+      background: var(--color-warning-dark);
     }
     &.el-tag--success {
-      background: linear-gradient(
-        to right,
-        var(--color-success),
-        var(--color-success-dark)
-      );
+      background: var(--color-success-dark);
     }
     &.el-tag--danger {
       background: linear-gradient(

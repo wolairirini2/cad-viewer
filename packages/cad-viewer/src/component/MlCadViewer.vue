@@ -322,7 +322,7 @@
   <!-- 添加违规详情对话框 -->
   <el-dialog
     v-model="showViolationDetail"
-    :title="'违规详情'"
+    :title="'违规问题详情'"
     width="800px"
     class="violation-detail-dialog-wrapper"
     :style="{ maxHeight: '85vh' }"
@@ -339,8 +339,8 @@
           <span class="detail-label">风险等级:</span>
           <el-tag
             :type="getRiskTagType(selectedViolation.risk_level)"
-            size="small"
             effect="dark"
+            style="font-weight: bold"
           >
             {{ getRiskText(selectedViolation.risk_level) }}
           </el-tag>
@@ -1819,7 +1819,7 @@ const getRiskColor = (level: string) => {
     case 'high':
       return 'var(--color-danger)'
     case 'medium':
-      return 'var(--color-warning-dark)'
+      return 'var(--color-warning)'
     case 'low':
       return 'var(--color-success)'
     default:
@@ -2124,7 +2124,7 @@ const handleExport = () => {
 
 .panel-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   color: #262626;
 }
@@ -2134,6 +2134,7 @@ const handleExport = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-right: 10px;
 }
 
 /* 违规项表格 */
@@ -2470,6 +2471,9 @@ const handleExport = () => {
   align-items: center;
   margin-bottom: 8px;
   line-height: 1.5;
+  .el-tag--warning.el-tag--dark {
+    background-color: var(--color-warning);
+  }
 }
 
 .detail-row:last-child {
@@ -2488,6 +2492,7 @@ const handleExport = () => {
   line-height: 1.6;
   color: #595959;
   text-align: justify;
+  font-size: 14px;
 }
 
 .detail-content.suggestion {
@@ -2530,6 +2535,7 @@ const handleExport = () => {
   padding: 12px;
   background: #fafafa;
   border-radius: 4px;
+  border-left: 2px solid var(--color-success-dark);
 }
 
 .article-title {
@@ -2578,7 +2584,7 @@ const handleExport = () => {
 .suggestion-ol li {
   margin-bottom: 8px;
   line-height: 1.6;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
 }
 
@@ -2691,29 +2697,62 @@ const handleExport = () => {
     }
 
     // 按位置设置不同激活颜色
-    &:nth-child(1).active {
-      background: var(--color-gray-400);
-      border-color: var(--color-gray-400);
+    &:nth-child(1) {
+      .el-icon {
+        color: var(--color-gray-400);
+      }
+      &.active {
+        background: var(--color-gray-400);
+        border-color: var(--color-gray-400);
+        .el-icon {
+          color: var(--color-white);
+        }
+      }
     }
 
-    &:nth-child(2).active {
-      background: var(--color-danger);
-      border-color: var(--color-danger-dark);
+    &:nth-child(2) {
+      .el-icon {
+        color: var(--color-danger);
+      }
+      &.active {
+        background: var(--color-danger);
+        border-color: var(--color-danger-dark);
+        .el-icon {
+          color: var(--color-white);
+        }
+      }
     }
 
-    &:nth-child(3).active {
-      background: var(--color-warning);
-      border-color: var(--color-warning-dark);
+    &:nth-child(3) {
+      .el-icon {
+        color: var(--color-warning);
+      }
+      &.active {
+        background: var(--color-warning);
+        border-color: var(--color-warning-dark);
+        .el-icon {
+          color: var(--color-white);
+        }
+      }
     }
 
-    &:nth-child(4).active {
-      background: var(--color-success);
-      border-color: var(--color-success-dark);
+    &:nth-child(4) {
+      .el-icon {
+        color: var(--color-success);
+      }
+      &.active {
+        background: var(--color-success);
+        border-color: var(--color-success-dark);
+        .el-icon {
+          color: var(--color-white);
+        }
+      }
     }
 
     // 图标样式
     .el-icon {
       font-size: 16px;
+      padding-top: 2px;
     }
   }
 }
