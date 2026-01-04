@@ -131,30 +131,49 @@
           <div class="panel-header">
             <h3>{{ projectName }}审查报告</h3>
           </div>
-          <!-- 风险等级筛选 - 改为 el-radio-group -->
-          <el-radio-group v-model="filterRisk" class="violation-filters">
-            <el-radio-button :label="null">
-              <el-icon><Document /></el-icon>
-              <span>全部</span>
-              <span class="filter-count">{{ riskCounts.high }}</span>
-            </el-radio-button>
-            <el-radio-button label="high">
-              <el-icon><WarnTriangleFilled /></el-icon>
-              <span>重大</span>
-              <span class="filter-count">{{ riskCounts.high }}</span>
-            </el-radio-button>
-            <el-radio-button label="medium">
-              <el-icon><WarningFilled /></el-icon>
-              <span>一般</span>
-              <span class="filter-count">{{ riskCounts.medium }}</span>
-            </el-radio-button>
-            <el-radio-button label="low">
-              <el-icon><InfoFilled /></el-icon>
-              <span>轻微</span>
-              <span class="filter-count">{{ riskCounts.low }}</span>
-            </el-radio-button>
-          </el-radio-group>
           <div class="panel-actions">
+            <!-- 风险等级筛选 - 改为 el-radio-group -->
+            <div class="violation-filters">
+              <div
+                class="filter-item"
+                :class="{ active: filterRisk === null }"
+                @click="filterRisk = null"
+              >
+                <el-icon><List /></el-icon>
+                <span>全部问题</span>
+                <span class="filter-count">{{ totalViolations }}</span>
+              </div>
+
+              <div
+                class="filter-item"
+                :class="{ active: filterRisk === 'high' }"
+                @click="filterRisk = 'high'"
+              >
+                <el-icon><WarnTriangleFilled /></el-icon>
+                <span>重大问题</span>
+                <span class="filter-count">{{ riskCounts.high }}</span>
+              </div>
+
+              <div
+                class="filter-item"
+                :class="{ active: filterRisk === 'medium' }"
+                @click="filterRisk = 'medium'"
+              >
+                <el-icon><WarningFilled /></el-icon>
+                <span>一般问题</span>
+                <span class="filter-count">{{ riskCounts.medium }}</span>
+              </div>
+
+              <div
+                class="filter-item"
+                :class="{ active: filterRisk === 'low' }"
+                @click="filterRisk = 'low'"
+              >
+                <el-icon><InfoFilled /></el-icon>
+                <span>轻微问题</span>
+                <span class="filter-count">{{ riskCounts.low }}</span>
+              </div>
+            </div>
             <el-button
               icon="Promotion"
               type="success"
@@ -223,11 +242,7 @@
                 >
                   <template #default="{ row }">
                     <span
-                      style="
-                        color: var(--color-primary-dark);
-                        font-weight: 700;
-                        font-size: 12px;
-                      "
+                      style="color: var(--color-primary-dark); font-weight: 700"
                       >{{ row.title }}</span
                     >
                   </template>
@@ -666,7 +681,7 @@ const showNotificationCenter = ref(false)
 
 // 审查报告相关状态
 const isPanelCollapsed = ref(false)
-const filterRisk = ref<null | 'high' | 'medium' | 'low'>('high')
+const filterRisk = ref<null | 'high' | 'medium' | 'low'>(null)
 
 // 修改reportData，优先使用props传入的数据
 const reportData = computed(() => {
@@ -1210,6 +1225,17 @@ const riskCounts = computed(() => {
     })
   })
   return counts
+})
+
+// 计算总违规项数
+const totalViolations = computed(() => {
+  let count = 0
+  reportData.value.rules.forEach((rule: any) => {
+    rule.articles.forEach((article: any) => {
+      count += article.violations.length
+    })
+  })
+  return count
 })
 
 // 扁平化的违规项列表（用于表格展示）
@@ -2058,7 +2084,7 @@ const handleExport = () => {
   :deep(.el-table) {
     border-right: 1px solid #e8e8e8;
     border-bottom: 1px solid #e8e8e8;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   /* 表头、表体、表尾统一加右边框与下边框 */
@@ -2096,6 +2122,8 @@ const handleExport = () => {
 // 操作按钮
 .panel-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* 违规项表格 */
@@ -2603,106 +2631,82 @@ const handleExport = () => {
   justify-content: center;
 }
 
-/* ✅ 修改2：风险等级筛选样式 - 使用 el-radio-group */
+// 筛选标签容器
 .violation-filters {
   padding: 12px 0;
   background: var(--color-white);
   display: flex;
+  gap: 8px;
   flex-shrink: 0;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-gray-200);
 
-  /* 覆盖 el-radio-group 默认样式 */
-  :deep(.el-radio-group) {
+  // 筛选标签项 - 基础样式
+  .filter-item {
+    height: 32px;
     display: flex;
-  }
+    justify-content: center;
+    align-items: center;
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    font-size: 14px;
+    color: var(--color-gray-700);
+    gap: 6px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    padding: 0 12px;
+    user-select: none;
 
-  /* 覆盖 el-radio-button 样式 */
-  :deep(.el-radio-button) {
-    &.is-active {
-      .el-radio-button__inner {
-        color: var(--color-white) !important;
-        box-shadow: var(--shadow-sm);
+    // 悬停效果
+    &:hover {
+      background: var(--color-gray-200);
+      color: var(--color-gray-900);
+      border-color: var(--color-primary-light);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-xs);
+    }
+
+    // 激活状态 - 通用样式
+    &.active {
+      color: var(--color-white) !important;
+      font-weight: 500;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+
+      .filter-count {
+        background: rgba(255, 255, 255, 0.2);
       }
     }
 
-    /* 全部 */
-    &:first-child {
-      // .el-radio-button__inner {
-      //   color: var(--color-primary);
-      //   border-color: var(--color-primary-dark);
-      //   background-color: var(--color-primary-light);
-      // }
-      &.is-active .el-radio-button__inner {
-        background: var(--color-primary);
-        border-color: var(--color-primary-dark);
-      }
+    // 按位置设置不同激活颜色
+    &:nth-child(1).active {
+      background: var(--color-primary);
+      border-color: var(--color-primary-dark);
     }
 
-    /* 重大问题 */
-    &:nth-child(2) {
-      // .el-radio-button__inner {
-      //   color: var(--color-danger);
-      //   border-color: var(--color-danger-dark);
-      //   background-color: var(--color-danger-light);
-      // }
-      &.is-active .el-radio-button__inner {
-        background: var(--color-danger);
-        border-color: var(--color-danger-dark);
-      }
+    &:nth-child(2).active {
+      background: var(--color-danger);
+      border-color: var(--color-danger-dark);
     }
 
-    /* 一般问题 */
-    &:nth-child(3) {
-      // .el-radio-button__inner {
-      //   color: var(--color-warning);
-      //   border-color: var(--color-warning-dark);
-      //   background-color: var(--color-warning-light);
-      // }
-      &.is-active .el-radio-button__inner {
-        background: var(--color-warning-dark);
-        border-color: var(--color-warning-dark);
-      }
+    &:nth-child(3).active {
+      background: var(--color-warning);
+      border-color: var(--color-warning-dark);
     }
 
-    /* 轻微问题 */
-    &:nth-child(4) {
-      // .el-radio-button__inner {
-      //   color: var(--color-success);
-      //   border-color: var(--color-success-dark);
-      //   background-color: var(--color-success-light);
-      // }
-      &.is-active .el-radio-button__inner {
-        background: var(--color-success);
-        border-color: var(--color-success-dark);
-      }
+    &:nth-child(4).active {
+      background: var(--color-success);
+      border-color: var(--color-success-dark);
     }
 
-    /* 按钮内层样式 */
-    .el-radio-button__inner {
-      height: 28px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: var(--transition-normal);
-      font-size: 12px;
-      gap: 5px;
-      white-space: nowrap;
-      padding: 0 12px;
-      font-weight: bold;
-      box-shadow: none !important;
-      &:hover {
-        box-shadow: var(--shadow-xs);
-      }
+    // 图标样式
+    .el-icon {
+      font-size: 16px;
     }
-  }
-
-  /* 图标样式 */
-  :deep(.el-icon) {
-    font-size: 16px;
   }
 }
-
 /* 数量徽章样式 */
 .filter-count {
   background: rgba(0, 0, 0, 0.08);

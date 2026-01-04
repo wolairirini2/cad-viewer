@@ -61,7 +61,7 @@
   --border-radius-lg: 14px;
   --border-radius-xl: 18px;
 
-  --font-family: Arial, "Microsoft YaHei", sans-serif;
+  --font-family: Arial, 'Microsoft YaHei', sans-serif;
 
   /* 过渡动画 */
   --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -70,7 +70,7 @@
 }
 
 /* 按钮样式 - 鲜明渐变 */
-[class*="el-button"].el-button {
+[class*='el-button'].el-button {
   font-weight: 500;
   transition: var(--transition-normal);
 
@@ -106,7 +106,7 @@
         color: var(--color-primary-dark);
         background-color: var(--color-primary-light);
       }
-      &.is-disabled{
+      &.is-disabled {
         pointer-events: none;
       }
     }
@@ -303,7 +303,15 @@
     );
   }
 }
-
+.el-checkbox {
+  .el-checkbox__input.is-checked,
+  .el-checkbox__input.is-indeterminate {
+    .el-checkbox__inner {
+      border-color: var(--color-primary-dark);
+      background: var(--color-primary-dark);
+    }
+  }
+}
 /* 单选框 */
 .el-radio {
   .el-radio__inner {
