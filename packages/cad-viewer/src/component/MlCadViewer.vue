@@ -326,6 +326,7 @@
     width="800px"
     class="violation-detail-dialog-wrapper"
     :style="{ maxHeight: '85vh' }"
+    draggable
   >
     <div v-if="selectedViolation" class="violation-detail-dialog">
       <!-- 基本信息 -->
@@ -2770,6 +2771,7 @@ const handleExport = () => {
 
 // 问题描述内容样式 - 修复版
 .description-content {
+  text-indent: 2em;
   // 数字条目 - 使用flex布局确保对齐
   .description-item {
     display: flex;
