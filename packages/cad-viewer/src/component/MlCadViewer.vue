@@ -195,23 +195,36 @@
                 <el-table-column
                   prop="risk_level"
                   label="风险等级"
-                  width="90"
+                  width="80"
                   align="center"
                 >
                   <template #default="{ row }">
-                    <el-button
+                    <!-- <el-button
                       :type="getRiskTagType(row.risk_level)"
                       size="small"
                       style="
                         pointer-events: none;
-                        padding: 2px 8px 0;
-                        font-size: 10px;
-                        height: 20px;
+                        font-size: 12px;
+                        padding: 0 4px;
                         font-weight: bold;
+                        border-radius: 50%;
                       "
                     >
                       {{ getRiskText(row.risk_level) }}
-                    </el-button>
+                    </el-button> -->
+                    <el-tooltip>
+                      <el-icon
+                        style="font-size: 20px; margin-top: 8px"
+                        :style="{
+                          color: getRiskColor(row.risk_level)
+                        }"
+                      >
+                        <component :is="getRiskIcon(row.risk_level)" />
+                      </el-icon>
+                      <template #content>
+                        {{ getRiskText(row.risk_level) }}
+                      </template>
+                    </el-tooltip>
                   </template>
                 </el-table-column>
                 <el-table-column
@@ -1759,18 +1772,32 @@ const formatDescription = (description: string): string => {
 }
 
 // 获取风险等级对应的图标组件
-// const getRiskIcon = (level: string) => {
-//   switch (level) {
-//     case 'high':
-//       return WarnTriangleFilled
-//     case 'medium':
-//       return WarningFilled
-//     case 'low':
-//       return InfoFilled
-//     default:
-//       return WarningFilled
-//   }
-// }
+const getRiskIcon = (level: string) => {
+  switch (level) {
+    case 'high':
+      return WarnTriangleFilled
+    case 'medium':
+      return WarningFilled
+    case 'low':
+      return InfoFilled
+    default:
+      return WarningFilled
+  }
+}
+
+// 获取风险等级对应的颜色
+const getRiskColor = (level: string) => {
+  switch (level) {
+    case 'high':
+      return 'var(--color-danger)'
+    case 'medium':
+      return 'var(--color-warning-dark)'
+    case 'low':
+      return 'var(--color-success)'
+    default:
+      return 'var(--color-gray-500)'
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -2441,6 +2468,8 @@ const formatDescription = (description: string): string => {
 .suggestion-ol li {
   margin-bottom: 8px;
   line-height: 1.6;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 /* 新增预览相关样式 */
@@ -2522,7 +2551,7 @@ const formatDescription = (description: string): string => {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: var(--transition-normal);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--color-gray-700);
     gap: 5px;
     white-space: nowrap;
@@ -2593,8 +2622,8 @@ const formatDescription = (description: string): string => {
   border-radius: 10px;
   font-size: 12px;
   font-weight: 500;
-  padding: 2px 6px;
-  min-width: 20px;
+  padding: 1px 4px;
+  min-width: 18px;
   text-align: center;
 }
 
