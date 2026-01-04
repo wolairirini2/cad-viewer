@@ -174,16 +174,26 @@
                 <span class="filter-count">{{ riskCounts.low }}</span>
               </div>
             </div>
-            <el-button
-              icon="Promotion"
-              type="success"
-              size="small"
-              style="padding: 14px 8px; font-weight: 700; font-size: 13px"
-              @click="handleExport"
-              :disabled="selection.length === 0"
-            >
-              导出报告
-            </el-button>
+            <div>
+              <el-button
+                icon="Stamp"
+                type="primary"
+                @click="handleExport"
+                :disabled="selection.length === 0"
+                style="padding-top: 10px"
+              >
+                批量发送
+              </el-button>
+              <el-button
+                icon="Promotion"
+                type="success"
+                @click="handleExport"
+                :disabled="selection.length === 0"
+                style="padding-top: 10px"
+              >
+                导出报告
+              </el-button>
+            </div>
           </div>
           <!-- 违规项表格 -->
           <div class="panel-tabs">
@@ -330,6 +340,7 @@
           <el-tag
             :type="getRiskTagType(selectedViolation.risk_level)"
             size="small"
+            effect="dark"
           >
             {{ getRiskText(selectedViolation.risk_level) }}
           </el-tag>
@@ -456,7 +467,7 @@ import {
   WarnTriangleFilled,
   InfoFilled,
   WarningFilled,
-  Document
+  List
 } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
@@ -2103,7 +2114,6 @@ const handleExport = () => {
 
 /* 标题区域 */
 .panel-header {
-  margin-top: 8px;
   padding: 12px 10px;
   background: #fafafa;
   flex-shrink: 0;
@@ -2682,8 +2692,8 @@ const handleExport = () => {
 
     // 按位置设置不同激活颜色
     &:nth-child(1).active {
-      background: var(--color-primary);
-      border-color: var(--color-primary-dark);
+      background: var(--color-gray-400);
+      border-color: var(--color-gray-400);
     }
 
     &:nth-child(2).active {
