@@ -1836,10 +1836,10 @@ const handleSelectionChange = (val: any[]) => {
   selection.value = val
 }
 
-
 // 完整的 exportReport 函数
 const exportReport = async () => {
-  const dataToExport = selection.value.length > 0 ? selection.value : sortedViolations.value
+  const dataToExport =
+    selection.value.length > 0 ? selection.value : sortedViolations.value
 
   if (dataToExport.length === 0) {
     ElMessage.warning('暂无数据可导出')
@@ -1856,7 +1856,7 @@ const exportReport = async () => {
 
     // 创建工作簿
     const workbook = new ExcelJS.Workbook()
-    
+
     // 设置文档属性
     workbook.creator = 'AI审图系统'
     workbook.lastModifiedBy = 'AI审图系统'
@@ -1899,11 +1899,15 @@ const exportReport = async () => {
     // 表头样式
     const headerStyle = {
       font: { bold: true, size: 11, color: { argb: 'FFFFFFFF' } },
-      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } },
-      alignment: { 
-        horizontal: 'center', 
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2C3E50' }
+      },
+      alignment: {
+        horizontal: 'center',
         vertical: 'middle',
-        wrapText: true 
+        wrapText: true
       },
       border: createExcelBorders(true) // 直接调用，不用 this
     }
@@ -1911,9 +1915,9 @@ const exportReport = async () => {
     // 普通单元格样式
     const cellStyle = {
       font: { size: 10 },
-      alignment: { 
+      alignment: {
         vertical: 'middle',
-        wrapText: true 
+        wrapText: true
       },
       border: createExcelBorders(false) // 直接调用，不用 this
     }
@@ -1921,9 +1925,9 @@ const exportReport = async () => {
     // 居中列样式
     const centerCellStyle = {
       ...cellStyle,
-      alignment: { 
+      alignment: {
         ...cellStyle.alignment,
-        horizontal: 'center' 
+        horizontal: 'center'
       }
     }
 
@@ -1940,7 +1944,7 @@ const exportReport = async () => {
     }
 
     // 应用表头样式
-    worksheet.getRow(1).eachCell((cell) => {
+    worksheet.getRow(1).eachCell((cell: any) => {
       cell.style = headerStyle
     })
 
@@ -1962,17 +1966,21 @@ const exportReport = async () => {
       const row = worksheet.addRow(rowData)
 
       // 根据行号应用样式
-      const isEvenRow = (worksheet.rowCount) % 2 === 1 // 因为表头占一行，所以奇数行为数据偶数行
+      const isEvenRow = worksheet.rowCount % 2 === 1 // 因为表头占一行，所以奇数行为数据偶数行
       const needCenterCols = [1, 2, 7, 8] // 序号, 风险等级, 条文编号, 定位状态
 
       // 设置每列的样式
-      row.eachCell((cell, colNumber) => {
+      row.eachCell((cell: any, colNumber) => {
         if (isEvenRow) {
           // 偶数行（条纹背景）
-          cell.style = needCenterCols.includes(colNumber) ? stripeCenterRowStyle : stripeRowStyle
+          cell.style = needCenterCols.includes(colNumber)
+            ? stripeCenterRowStyle
+            : stripeRowStyle
         } else {
           // 奇数行（正常背景）
-          cell.style = needCenterCols.includes(colNumber) ? centerCellStyle : cellStyle
+          cell.style = needCenterCols.includes(colNumber)
+            ? centerCellStyle
+            : cellStyle
         }
       })
 
@@ -1980,7 +1988,7 @@ const exportReport = async () => {
       const descriptionLength = rowData.description?.length || 0
       const suggestionLength = rowData.suggestion?.length || 0
       const maxLength = Math.max(descriptionLength, suggestionLength)
-      
+
       let rowHeight = 18 // 基础高度
       if (maxLength > 200) {
         rowHeight = 60
@@ -1989,7 +1997,7 @@ const exportReport = async () => {
       } else if (maxLength > 50) {
         rowHeight = 24
       }
-      
+
       row.height = rowHeight
     })
 
@@ -2011,17 +2019,17 @@ const exportReport = async () => {
 
     // 导出文件
     const buffer = await workbook.xlsx.writeBuffer()
-    
+
     // 创建Blob并下载
-    const blob = new Blob([buffer], { 
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     })
-    
+
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
     link.download = fileName
     link.click()
-    
+
     // 清理
     URL.revokeObjectURL(link.href)
 
@@ -2032,7 +2040,6 @@ const exportReport = async () => {
       message: `报告已导出：${fileName}`,
       duration: 3000
     })
-    
   } catch (error) {
     console.error('导出失败:', error)
     ElMessage.error('导出失败，请稍后重试')
@@ -2874,7 +2881,6 @@ const handleExport = () => {
     // 图标样式
     .el-icon {
       font-size: 18px;
-      padding-top: 2px;
     }
   }
 }
