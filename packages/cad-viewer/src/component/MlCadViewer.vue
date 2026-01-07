@@ -1837,6 +1837,46 @@ const handleSelectionChange = (val: any[]) => {
 }
 
 // 完整的 exportReport 函数
+// 添加格式化函数
+const formatTextForExcel = (text: string | string[]): string => {
+  if (!text) return ''
+
+  // 如果是数组（处理建议）
+  if (Array.isArray(text)) {
+    return text.map((item, index) => `${index + 1}. ${item}`).join('\n')
+  }
+
+  // 如果是字符串（问题描述）
+  if (typeof text === 'string') {
+    // 匹配数字条目：数字+点/顿号+内容+分号/句号
+    const regex = /(\d+)[.、]\s*([^；。]+?)(?:；|。|$)/g
+    const matches = [...text.matchAll(regex)]
+
+    if (matches.length > 0) {
+      let formatted = ''
+
+      // 添加前缀文本
+      const firstMatchIndex = matches[0].index!
+      if (firstMatchIndex > 0) {
+        const prefixText = text.substring(0, firstMatchIndex).trim()
+        if (prefixText) formatted += `${prefixText}\n\n`
+      }
+
+      // 格式化数字条目
+      matches.forEach(match => {
+        const num = match[1]
+        const content = match[2]
+        const separator = match[0].endsWith('；') ? '；' : '。'
+        formatted += `${num}. ${content}${separator}\n`
+      })
+
+      return formatted.trim()
+    }
+  }
+
+  return String(text)
+}
+
 const exportReport = async () => {
   const dataToExport =
     selection.value.length > 0 ? selection.value : sortedViolations.value
@@ -1863,28 +1903,7 @@ const exportReport = async () => {
     workbook.created = new Date()
     workbook.modified = new Date()
 
-    // 添加工作表
-    const worksheet = workbook.addWorksheet('审查报告', {
-      views: [{ showGridLines: true }]
-    })
-
-    // 定义表头
-    const headers = [
-      { header: '序号', key: 'index', width: 8 },
-      { header: '风险等级', key: 'riskLevel', width: 12 },
-      { header: '违规问题', key: 'title', width: 40 },
-      { header: '问题描述', key: 'description', width: 50 },
-      { header: '处理建议', key: 'suggestion', width: 60 },
-      { header: '相关规范', key: 'articleTitle', width: 30 },
-      { header: '条文编号', key: 'articleId', width: 15 },
-      { header: '定位状态', key: 'locationStatus', width: 12 }
-    ]
-
-    // 设置工作表列
-    worksheet.columns = headers
-
-    // ===== 创建边框辅助函数 =====
-    // 注意：必须在样式定义之前定义
+    // ===== 定义通用样式函数 =====
     const createExcelBorders = (isHeader = true) => {
       const color = isHeader ? 'FF000000' : 'FFD9D9D9'
       return {
@@ -1895,31 +1914,16 @@ const exportReport = async () => {
       }
     }
 
-    // ===== 定义样式 =====
-    // 表头样式
-    const headerStyle = {
-      font: { bold: true, size: 11, color: { argb: 'FFFFFFFF' } },
-      fill: {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF2C3E50' }
-      },
-      alignment: {
-        horizontal: 'center',
-        vertical: 'middle',
-        wrapText: true
-      },
-      border: createExcelBorders(true) // 直接调用，不用 this
-    }
-
-    // 普通单元格样式
+    // 更新后的单元格样式（支持换行）
     const cellStyle = {
       font: { size: 10 },
       alignment: {
         vertical: 'middle',
-        wrapText: true
+        wrapText: true, // 关键：允许换行
+        horizontal: 'left', // 左对齐
+        shrinkToFit: false
       },
-      border: createExcelBorders(false) // 直接调用，不用 this
+      border: createExcelBorders(false)
     }
 
     // 居中列样式
@@ -1943,68 +1947,196 @@ const exportReport = async () => {
       fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8F9FA' } }
     }
 
-    // 应用表头样式
-    worksheet.getRow(1).eachCell((cell: any) => {
-      cell.style = headerStyle
-    })
+    // 表头样式
+    const headerStyle = {
+      font: { bold: true, size: 11, color: { argb: 'FFFFFFFF' } },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2C3E50' }
+      },
+      alignment: {
+        horizontal: 'center',
+        vertical: 'middle',
+        wrapText: true
+      },
+      border: createExcelBorders(true)
+    }
 
-    // ===== 添加数据行 =====
+    // 定义表头
+    const headers = [
+      { header: '序号', key: 'index', width: 8 },
+      { header: '风险等级', key: 'riskLevel', width: 12 },
+      { header: '违规问题', key: 'title', width: 40 },
+      { header: '问题描述', key: 'description', width: 50 },
+      { header: '处理建议', key: 'suggestion', width: 60 },
+      { header: '相关规范', key: 'articleTitle', width: 30 },
+      { header: '条文编号', key: 'articleId', width: 15 },
+      { header: '定位状态', key: 'locationStatus', width: 12 }
+    ]
+
+    // ===== 创建主工作表（包含所有数据）=====
+    const mainWorksheet = workbook.addWorksheet(
+      `${projectName.value || '项目'}_全部问题`,
+      {
+        views: [{ showGridLines: true }]
+      }
+    )
+
+    mainWorksheet.columns = headers
+
+    // 添加主表数据（使用新的格式化函数）
     dataToExport.forEach((item, index) => {
       const rowData = {
         index: index + 1,
         riskLevel: getRiskText(item.risk_level),
         title: item.title,
-        description: item.description,
-        suggestion: Array.isArray(item.suggestion)
-          ? item.suggestion.join('；')
-          : item.suggestion,
+        description: formatTextForExcel(item.description), // 格式化描述
+        suggestion: formatTextForExcel(item.suggestion), // 格式化建议
         articleTitle: item.articleTitle || '',
         articleId: item.articleId || '',
         locationStatus: item.geometry_ref?.extents ? '可定位' : '无几何信息'
       }
 
-      const row = worksheet.addRow(rowData)
+      const row = mainWorksheet.addRow(rowData)
 
-      // 根据行号应用样式
-      const isEvenRow = worksheet.rowCount % 2 === 1 // 因为表头占一行，所以奇数行为数据偶数行
-      const needCenterCols = [1, 2, 7, 8] // 序号, 风险等级, 条文编号, 定位状态
+      // 应用样式
+      const isEvenRow = mainWorksheet.rowCount % 2 === 0
+      const needCenterCols = [1, 2, 7, 8]
 
-      // 设置每列的样式
       row.eachCell((cell: any, colNumber) => {
         if (isEvenRow) {
-          // 偶数行（条纹背景）
           cell.style = needCenterCols.includes(colNumber)
             ? stripeCenterRowStyle
             : stripeRowStyle
         } else {
-          // 奇数行（正常背景）
           cell.style = needCenterCols.includes(colNumber)
             ? centerCellStyle
             : cellStyle
         }
       })
 
-      // 根据内容长度动态设置行高
-      const descriptionLength = rowData.description?.length || 0
-      const suggestionLength = rowData.suggestion?.length || 0
-      const maxLength = Math.max(descriptionLength, suggestionLength)
+      // 动态设置行高（考虑换行）
+      const descriptionLines =
+        (rowData.description?.match(/\n/g) || []).length + 1
+      const suggestionLines =
+        (rowData.suggestion?.match(/\n/g) || []).length + 1
+      const contentLength = Math.max(
+        rowData.description?.length || 0,
+        rowData.suggestion?.length || 0
+      )
 
-      let rowHeight = 18 // 基础高度
-      if (maxLength > 200) {
-        rowHeight = 60
-      } else if (maxLength > 100) {
-        rowHeight = Math.min(50, 22 + Math.floor(maxLength / 50) * 8)
-      } else if (maxLength > 50) {
-        rowHeight = 24
+      let rowHeight = Math.max(18, descriptionLines * 14, suggestionLines * 14)
+      if (contentLength > 200) {
+        rowHeight = Math.max(rowHeight, 60)
+      } else if (contentLength > 100) {
+        rowHeight = Math.max(rowHeight, 22 + Math.floor(contentLength / 50) * 8)
       }
 
       row.height = rowHeight
     })
 
-    // 设置表头行高
-    worksheet.getRow(1).height = 25
+    // 应用表头样式
+    mainWorksheet.getRow(1).eachCell((cell: any) => {
+      cell.style = headerStyle
+    })
+    mainWorksheet.getRow(1).height = 25
 
-    // 生成文件名
+    // ===== 按风险等级创建额外的工作表 =====
+    const riskLevels = [
+      { level: 'high', name: '重大问题', color: 'FFDC3545' },
+      { level: 'medium', name: '一般问题', color: 'FFFFB84D' },
+      { level: 'low', name: '轻微问题', color: 'FF28A745' }
+    ]
+
+    for (const { level, name, color } of riskLevels) {
+      const levelData = dataToExport.filter(
+        (item: any) => item.risk_level === level
+      )
+
+      if (levelData.length > 0) {
+        const levelWorksheet = workbook.addWorksheet(
+          `${projectName.value || '项目'}_${name}`,
+          { views: [{ showGridLines: true }] }
+        )
+
+        levelWorksheet.columns = headers
+
+        // 添加该等级的数据（同样使用格式化函数）
+        levelData.forEach((item: any, index: number) => {
+          const rowData = {
+            index: index + 1,
+            riskLevel: getRiskText(item.risk_level),
+            title: item.title,
+            description: formatTextForExcel(item.description),
+            suggestion: formatTextForExcel(item.suggestion),
+            articleTitle: item.articleTitle || '',
+            articleId: item.articleId || '',
+            locationStatus: item.geometry_ref?.extents ? '可定位' : '无几何信息'
+          }
+
+          const row = levelWorksheet.addRow(rowData)
+
+          // 应用样式
+          const isEvenRow = levelWorksheet.rowCount % 2 === 0
+          const needCenterCols = [1, 2, 7, 8]
+
+          row.eachCell((cell: any, colNumber) => {
+            if (isEvenRow) {
+              cell.style = needCenterCols.includes(colNumber)
+                ? stripeCenterRowStyle
+                : stripeRowStyle
+            } else {
+              cell.style = needCenterCols.includes(colNumber)
+                ? centerCellStyle
+                : cellStyle
+            }
+          })
+
+          // 动态设置行高
+          const descriptionLines =
+            (rowData.description?.match(/\n/g) || []).length + 1
+          const suggestionLines =
+            (rowData.suggestion?.match(/\n/g) || []).length + 1
+          const contentLength = Math.max(
+            rowData.description?.length || 0,
+            rowData.suggestion?.length || 0
+          )
+
+          let rowHeight = Math.max(
+            18,
+            descriptionLines * 14,
+            suggestionLines * 14
+          )
+          if (contentLength > 200) {
+            rowHeight = Math.max(rowHeight, 60)
+          } else if (contentLength > 100) {
+            rowHeight = Math.max(
+              rowHeight,
+              22 + Math.floor(contentLength / 50) * 8
+            )
+          }
+
+          row.height = rowHeight
+        })
+
+        // 应用带颜色的表头样式
+        levelWorksheet.getRow(1).eachCell((cell: any) => {
+          const levelHeaderStyle = {
+            ...headerStyle,
+            fill: {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: color }
+            }
+          }
+          cell.style = levelHeaderStyle
+        })
+        levelWorksheet.getRow(1).height = 25
+      }
+    }
+
+    // ===== 导出文件 =====
     const timestamp = new Date()
       .toLocaleString('zh-CN', {
         year: 'numeric',
@@ -2017,10 +2149,8 @@ const exportReport = async () => {
 
     const fileName = `${projectName.value || '项目'}_审查报告_${timestamp}.xlsx`
 
-    // 导出文件
     const buffer = await workbook.xlsx.writeBuffer()
 
-    // 创建Blob并下载
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     })
@@ -2030,10 +2160,8 @@ const exportReport = async () => {
     link.download = fileName
     link.click()
 
-    // 清理
     URL.revokeObjectURL(link.href)
 
-    // 关闭加载提示
     loading.close()
 
     ElMessage.success({
