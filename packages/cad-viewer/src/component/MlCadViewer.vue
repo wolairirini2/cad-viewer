@@ -208,7 +208,7 @@
                 border
                 stripe
               >
-                <el-table-column type="selection" width="55" align="center" />
+                <el-table-column type="selection" width="45" align="center" />
                 <el-table-column
                   prop="risk_level"
                   label="风险等级"
@@ -216,19 +216,6 @@
                   align="center"
                 >
                   <template #default="{ row }">
-                    <!-- <el-button
-                      :type="getRiskTagType(row.risk_level)"
-                      size="small"
-                      style="
-                        pointer-events: none;
-                        font-size: 12px;
-                        padding: 0 4px;
-                        font-weight: bold;
-                        border-radius: 50%;
-                      "
-                    >
-                      {{ getRiskText(row.risk_level) }}
-                    </el-button> -->
                     <el-tooltip>
                       <el-icon
                         style="font-size: 20px; margin-top: 8px"
@@ -242,6 +229,22 @@
                         {{ getRiskText(row.risk_level) }}
                       </template>
                     </el-tooltip>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="category"
+                  label="问题来源"
+                  width="110"
+                  align="center"
+                >
+                  <template #default="{ row }">
+                    <el-tag
+                      :type="getFileCategoryTagType(row.category)"
+                      size="small"
+                      style="width: 70px; padding: 12px 6px; font-size: 12px"
+                    >
+                      {{ row.category }}
+                    </el-tag>
                   </template>
                 </el-table-column>
                 <el-table-column
@@ -274,7 +277,7 @@
                 </el-table-column>
                 <el-table-column
                   label="操作"
-                  width="120"
+                  width="100"
                   fixed="right"
                   align="center"
                 >
@@ -709,396 +712,320 @@ const reportData = computed(() => {
         type: '行业标准',
         articles: [
           {
-            id: '1.3',
-            title: '核查设计分界点',
-            content: '设计分界点应定义明确，责任边界无模糊或遗漏',
+            id: '1.4',
+            title: '核查建所必要性及负荷审查',
+            content: '核查建所必要性及负荷审查',
             violations: [
               {
-                title: '设计分界点定义不完整',
-                risk_level: 'high',
-                suggestion: [
-                  '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
-                  '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
-                  '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
-                  '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
-                  '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
-                ],
-                description:
-                  '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-                  handles: null
-                }
-              },
-              {
-                title: '责任边界表述模糊',
-                risk_level: 'low',
-                suggestion: [
-                  "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
-                  "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
-                  "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
-                ],
-                description:
-                  "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-                  handles: null
-                }
-              },
-              {
-                title: '分界点物理位置描述不精确',
+                title: '核查建所必要性及负荷审查',
                 risk_level: 'medium',
                 suggestion: [
-                  "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
-                  "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
-                  '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
+                  '补充详细的建所必要性论证报告，包括负荷预测、增长率分析、供电可靠性分析等。',
+                  '提供负荷计算书，包括本期和远景负荷的计算过程和结果。'
                 ],
                 description:
-                  "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
+                  '设计说明中仅提及“核查建所必要性及负荷审查”，但未提供任何核查结果或依据。这违反了规范条目1.4的要求，需要提供详细的必要性论证和负荷计算结果。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '系统接口责任未明确',
+                title: '110kV进线方式',
                 risk_level: 'medium',
                 suggestion: [
-                  '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
-                  '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
-                  '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
-                  '补充与厂区其他系统的接口责任说明'
+                  '提供延太730线的详细信息，包括其设计规范、运行经验、安全可靠性等。',
+                  '提供电缆进线的详细设计，包括电缆的型号、规格、敷设方式、保护措施等。',
+                  '提供与相关部门的协调和审批文件。'
                 ],
                 description:
-                  "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
+                  '110kV进线采用电缆进线，T接110kV延太733线，未明确该延太733线是否符合规范要求，以及是否经过了必要的协调和审批。电缆进线需要考虑电缆的敷设条件、安全距离、防火保护等。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '110kV侧中性点接地方式',
+                risk_level: 'medium',
+                suggestion: [
+                  '提供110kV侧中性点保护间隙的阻抗值计算结果，并进行验证。',
+                  '提供110kV侧中性点接地保护系统的设计说明，包括保护继电器的整定值、动作特性等。',
+                  '提供相关试验报告，验证保护系统的协调性和可靠性。'
+                ],
+                description:
+                  '110kV侧中性点采用保护间隙方式，这在某些情况下是允许的，但需要满足特定的条件，例如保护间隙的阻抗值、保护系统的协调性等。设计说明中未提及这些条件是否满足。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '10kV系统接地方式',
+                risk_level: 'medium',
+                suggestion: [
+                  '提供10kV系统不接地方式的可行性研究报告，包括对电网稳定性和可靠性的影响分析。',
+                  '提供电网公司的审核意见，确认不接地方式的可行性。'
+                ],
+                description:
+                  '10kV系统采用不接地方式，这在某些情况下是允许的，但需要满足特定的条件，例如电网的稳定性和可靠性。设计说明中未提及这些条件是否满足，以及是否经过了电网公司的审核。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '消谐滤波补偿装置容量',
+                risk_level: 'medium',
+                suggestion: [
+                  '提供消谐滤波补偿装置容量的计算书，包括谐波分析、补偿效果评估等。',
+                  '提供谐波分析报告，确定谐波的含量和频率。'
+                ],
+                description:
+                  '10kV消谐滤波补偿装置容量为1×12000kvar，相对于10kV母线容量，该补偿容量是否合理？是否考虑了谐波的实际情况？设计说明中未提供相关计算依据。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '户内变电站布局',
+                risk_level: 'medium',
+                suggestion: [
+                  '提供详细的户内变电站布局图，标明各设备之间的安全距离。',
+                  '提供通风和消防系统的设计说明，确保各设备的安全。',
+                  '进行人流疏散模拟，确保人员的安全。'
+                ],
+                description:
+                  '户内变电站配电装置楼长29米，宽21米，110kV配置装置室位于东北侧，变压器室位于北侧，10kV配电装置室位于南侧，10kV消谐补偿成套装置室位于西侧，10kV电容器室位于东北侧。需要考虑各设备之间的安全距离、通风、消防等因素。东北侧同时布置10kV电容器室和消谐补偿装置室，是否会影响通风和消防？',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               }
             ]
           },
           {
-            id: '1.4',
-            title: '核查建所必要性及负荷审查',
-            content: '核查建所必要性及负荷审查',
-            violations: []
-          },
-          {
             id: '2.1',
             title: '核查配电装置选择的合理性',
             content: '核查配电装置选择的合理性',
-            violations: []
-          },
-          {
-            id: '3.1',
-            title: '短路电流审查',
-            content: '短路电流审查',
-            violations: []
-          }
-        ],
-        category: '设计说明审查'
-      },
-      {
-        code: 'DESIGN-SPEC-001',
-        name: '工程设计说明编制规范',
-        type: '行业标准',
-        articles: [
-          {
-            id: '1.3',
-            title: '核查设计分界点',
-            content: '设计分界点应定义明确，责任边界无模糊或遗漏',
             violations: [
               {
-                title: '设计分界点定义不完整',
+                title: '2.1 核查配电装置选择的合理性',
                 risk_level: 'medium',
                 suggestion: [
-                  '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
-                  '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
-                  '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
-                  '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
-                  '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
+                  '在设计说明中增加配电装置选择的合理性核查章节，详细描述核查过程、依据和结论，包括负荷计算、电压降分析、短路计算、保护协调等。',
+                  '提供配电装置选型的技术计算书和论证报告，作为附件。'
                 ],
                 description:
-                  '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
+                  '设计说明中未体现配电装置选择的合理性核查过程和结果，仅列出了设备选型清单，缺乏必要的论证和依据。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '责任边界表述模糊',
+                title: '四、主要设备选型 - 主变压器',
                 risk_level: 'medium',
                 suggestion: [
-                  "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
-                  "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
-                  "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
+                  '在主变压器选型说明中，增加能效等级选择的依据和计算过程，例如，说明为什么选择二级能效，并提供相关的能效计算结果。'
                 ],
                 description:
-                  "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
+                  '虽然主变压器满足《GB20052-2020》二级能效要求，但设计说明中未体现能效等级选择的依据和计算过程。仅仅提及满足即可。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '分界点物理位置描述不精确',
+                title: '五、过电压保护与接地 - 接地电阻',
                 risk_level: 'medium',
                 suggestion: [
-                  "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
-                  "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
-                  '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
+                  '在设计说明中明确施工完成后实测接地电阻值的记录和处理措施，包括实测值的记录方式、处理流程、以及采取的纠正措施。'
                 ],
                 description:
-                  "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
+                  '虽然设计说明中提到接地电阻不应大于0.378Ω，但未提及施工完成后实测接地电阻值的记录和处理措施。如果实测值不满足要求，需要采取措施，但未在设计说明中体现。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '系统接口责任未明确',
+                title: '七、电缆设施及防火 - 防火封堵材料',
                 risk_level: 'medium',
                 suggestion: [
-                  '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
-                  '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
-                  '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
-                  '补充与厂区其他系统的接口责任说明'
+                  '在设计说明中明确防火涂料的类型、性能指标（如耐火极限、热释放率等）和施工要求，并提供相关的技术规范和标准。'
                 ],
                 description:
-                  "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
+                  '设计说明中提到“为防止火灾扩大，在阻火墙两侧1.5m及户外电缆隧道进入户内1m范围内的电缆涂防火涂料”，但未明确防火涂料的类型、性能指标和施工要求。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '三、电气主接线和平面布置 - 母线接线',
+                risk_level: 'medium',
+                suggestion: [
+                  '在设计说明中详细说明选择不接地方式的理由，包括对系统运行的安全性、可靠性和电能质量的影响，并提供相关的分析和论证。'
+                ],
+                description:
+                  '设计说明中提到“10kV系统采用不接地方式”，但未说明选择不接地方式的理由和对系统运行的影响。需要进行详细的分析和论证。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '六、照明与动力 - 事故照明',
+                risk_level: 'medium',
+                suggestion: [
+                  '在设计说明中明确检修人员判断是否需要合上事故照明开关的标准，并考虑增加事故照明系统的自动切换机制，以提高安全性。'
+                ],
+                description:
+                  '设计说明中提到“当一般照明箱失电时，检修人员根据需要合上相应的事故照明开关”，但未明确检修人员如何判断是否需要合上事故照明开关，以及事故照明系统的自动切换机制。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               }
             ]
           },
           {
-            id: '1.4',
-            title: '核查建所必要性及负荷审查',
-            content: '核查建所必要性及负荷审查',
-            violations: []
-          },
-          {
-            id: '2.1',
-            title: '核查配电装置选择的合理性',
-            content: '核查配电装置选择的合理性',
-            violations: []
-          },
-          {
             id: '3.1',
             title: '短路电流审查',
             content: '短路电流审查',
-            violations: []
-          }
-        ],
-        category: '设计说明审查'
-      },
-      {
-        code: 'DESIGN-SPEC-001',
-        name: '工程设计说明编制规范',
-        type: '行业标准',
-        articles: [
-          {
-            id: '1.3',
-            title: '核查设计分界点',
-            content: '设计分界点应定义明确，责任边界无模糊或遗漏',
             violations: [
               {
-                title: '设计分界点定义不完整',
+                title: '编号: 3.1 短路电流审查',
                 risk_level: 'medium',
                 suggestion: [
-                  '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
-                  '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
-                  '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
-                  '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
-                  '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
+                  '在设计说明中增加短路电流审查的具体内容，包括计算方法、计算结果、设备选型依据等。',
+                  '确保短路电流计算符合相关规范要求，并对设备选型进行验证。'
                 ],
                 description:
-                  '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
+                  '设计说明中缺少短路电流审查的具体内容和结果。规范要求进行短路电流审查，但设计说明仅提及了审查本身，没有提供任何审查结果或分析。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '责任边界表述模糊',
+                title: '全局项目参数',
                 risk_level: 'medium',
                 suggestion: [
-                  "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
-                  "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
-                  "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
+                  '在设计说明中明确列出所有全局项目参数，例如电压等级、频率、阻抗等。',
+                  '确保所有设计文件和计算都基于相同的全局参数。'
                 ],
                 description:
-                  "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
+                  '设计说明中没有提供全局项目参数信息。全局参数对于设计的一致性和可追溯性至关重要。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '分界点物理位置描述不精确',
+                title: '设计内容及范围 - 设计内容',
                 risk_level: 'medium',
                 suggestion: [
-                  "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
-                  "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
-                  '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
+                  '在设计内容中详细说明电容器组的控制方式（例如：自动控制、手动控制），以及相关的保护措施（例如：过电压保护、过电流保护）。'
                 ],
                 description:
-                  "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
+                  '设计内容中提到“无功补偿并联电容器装置安装”，但没有明确说明电容器组的控制方式和保护措施。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               },
               {
-                title: '系统接口责任未明确',
+                title: '电气主接线和平面布置 - 电气主接线 - 110kV进线',
                 risk_level: 'medium',
                 suggestion: [
-                  '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
-                  '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
-                  '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
-                  '补充与厂区其他系统的接口责任说明'
+                  '避免使用过于具体的项目信息，例如线路名称。使用更通用的描述，例如“采用电缆进线”。',
+                  '补充说明进线电缆的规格（例如：截面积、绝缘等级）和敷设方式（例如：电缆沟、隧道）。'
                 ],
                 description:
-                  "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
+                  '描述中提到“T接110kV延太733线”，这部分信息过于具体，可能与特定项目相关，缺乏通用性。此外，需要说明进线电缆的规格和敷设方式。',
                 geometry_ref: {
                   extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '电气主接线和平面布置 - 电气主接线 - 10kV母线',
+                risk_level: 'medium',
+                suggestion: [
+                  '说明是否考虑了10kV母线的冗余性或备用电源。如果采用单母线接线，需要明确说明其适用条件和风险。',
+                  '如果需要提高可靠性，可以考虑采用双母线接线或备用电源。'
+                ],
+                description:
+                  '描述中提到“采用单母线接线”，但没有说明是否考虑了冗余性或备用电源。在重要变电站，单母线接线通常需要考虑备用电源或冗余母线。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '电气主接线和平面布置 - 电气平面布置',
+                risk_level: 'medium',
+                suggestion: [
+                  '在平面布置图中明确标示设备之间的最小安全距离，以及检修通道的宽度。',
+                  '确保平面布置符合安全规范和维护要求。'
+                ],
+                description:
+                  '平面布置中没有提及设备之间的距离要求，以及安全通道的设置。这可能影响设备的维护和检修。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '过电压保护与接地 - 接地',
+                risk_level: 'medium',
+                suggestion: [
+                  '补充说明接地电阻的测量方法和频率，例如采用膜片法或三极法测量，频率为10kHz。'
+                ],
+                description:
+                  '虽然提到接地电阻不应大于0.378Ω，但没有说明接地电阻的测量方法和频率。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  handles: null
+                }
+              },
+              {
+                title: '电缆设施及防火',
+                risk_level: 'medium',
+                suggestion: [
+                  '明确防火涂料的类型（例如：有机防火涂料、无机防火涂料）和性能指标（例如：耐火极限、热释放率）。'
+                ],
+                description:
+                  '虽然提到阻火墙和防火封堵，但没有说明防火涂料的类型和性能指标。',
+                geometry_ref: {
+                  extents: null,
+                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
                   handles: null
                 }
               }
             ]
-          },
-          {
-            id: '1.4',
-            title: '核查建所必要性及负荷审查',
-            content: '核查建所必要性及负荷审查',
-            violations: []
-          },
-          {
-            id: '2.1',
-            title: '核查配电装置选择的合理性',
-            content: '核查配电装置选择的合理性',
-            violations: []
-          },
-          {
-            id: '3.1',
-            title: '短路电流审查',
-            content: '短路电流审查',
-            violations: []
-          }
-        ],
-        category: '设计说明审查'
-      },
-      {
-        code: 'DESIGN-SPEC-001',
-        name: '工程设计说明编制规范',
-        type: '行业标准',
-        articles: [
-          {
-            id: '1.3',
-            title: '核查设计分界点',
-            content: '设计分界点应定义明确，责任边界无模糊或遗漏',
-            violations: [
-              {
-                title: '设计分界点定义不完整',
-                risk_level: 'medium',
-                suggestion: [
-                  '补充通信系统分界：明确变电所至110kV斜桥变的光缆建设责任，以及110kV斜桥变光路分支板安装责任',
-                  '明确远动系统分界：变电所综合自动化系统与张家港市调调度端接口的责任划分',
-                  '补充站用电系统分界：明确站用电与厂区电源的接入点及责任',
-                  '补充消防系统分界：明确消防给水系统与厂区消防管网的连接点',
-                  '补充给排水系统分界：明确上下水系统与厂区管网的连接点及责任'
-                ],
-                description:
-                  '设计说明中仅定义了110kV进线和10kV出线的分界点，但未明确其他重要界面的分界，如：1. 通信系统（光纤通道）的分界点；2. 远动系统与调度端的分界；3. 站用电系统与厂区电源的分界；4. 消防系统与厂区消防管网的分界；5. 给排水系统与厂区管网的分界。这些界面的责任边界存在模糊和遗漏。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-                  handles: null
-                }
-              },
-              {
-                title: '责任边界表述模糊',
-                risk_level: 'medium',
-                suggestion: [
-                  "明确'线路专业'的具体责任单位，如是设计院内部专业分工应注明，如是外部单位应明确单位名称",
-                  "明确'用户'的具体定义，建议改为'由建设单位负责'或'由厂区管理单位负责'",
-                  "补充说明'接口补贴费'包含的具体工作内容、设备范围和责任分界点"
-                ],
-                description:
-                  "1. '110kV线路以进线终端电缆头(不含,列入线路专业)为界'表述中'线路专业'未明确是设计院内部专业分工还是外部单位责任；2. '10kV电缆敷设、进所道路均以变电所外墙为界，所外部分由用户自理'中'用户'定义不明确，未说明是建设单位还是厂区管理单位；3. '本工程列入市调通信系统接口补贴费'和'本工程列入市调调度、远动系统接口补贴费'未明确费用包含的具体工作范围和责任界面。",
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-                  handles: null
-                }
-              },
-              {
-                title: '分界点物理位置描述不精确',
-                risk_level: 'medium',
-                suggestion: [
-                  "补充110kV进线终端电缆头的具体安装位置描述，如'安装在110kV GIS柜电缆终端套管处'",
-                  "明确10kV开关柜内终端电缆头的具体位置，如'安装在10kV开关柜电缆室电缆终端处'",
-                  '建议在设计图纸中增加分界点位置示意图，或在说明书中用文字详细描述各分界点的物理位置'
-                ],
-                description:
-                  "1. 110kV进线分界点仅描述为'进线终端电缆头'，未说明具体安装位置（如GIS柜内、电缆竖井等）；2. 10kV出线分界点描述为'开关柜内终端电缆头'，未明确是开关柜的哪个具体位置（如电缆室、出线套管等）；3. 未提供分界点的示意图或详细位置描述。",
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-                  handles: null
-                }
-              },
-              {
-                title: '系统接口责任未明确',
-                risk_level: 'medium',
-                suggestion: [
-                  '明确变电所至110kV斜桥变光缆的建设责任单位（设计、施工、采购）',
-                  '明确110kV斜桥变光路分支板的安装责任单位及费用承担方',
-                  '明确调度端接口的具体分界点，如通信规约转换器、通信服务器等设备的分界',
-                  '补充与厂区其他系统的接口责任说明'
-                ],
-                description:
-                  "1. 系统通信部分提到'本期建设变电所至110kV斜桥变普通光纤（8芯）约3.5km，110kV斜桥变增加光路分支板一块'，但未明确这段光缆的建设责任和光路分支板的安装责任；2. 系统远动部分提到'局端由张家港市调提供调度端的接口要求'，但未明确接口设备的具体分界；3. 未说明与厂区其他系统（如厂区监控系统、生产管理系统）的接口责任。",
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'a5243ea6-c846-4dda-85e8-122c9cb0b3bf',
-                  handles: null
-                }
-              }
-            ]
-          },
-          {
-            id: '1.4',
-            title: '核查建所必要性及负荷审查',
-            content: '核查建所必要性及负荷审查',
-            violations: []
-          },
-          {
-            id: '2.1',
-            title: '核查配电装置选择的合理性',
-            content: '核查配电装置选择的合理性',
-            violations: []
-          },
-          {
-            id: '3.1',
-            title: '短路电流审查',
-            content: '短路电流审查',
-            violations: []
           }
         ],
         category: '设计说明审查'
@@ -1261,7 +1188,8 @@ const flattenedViolations = computed(() => {
           ruleName: rule.name,
           ruleCode: rule.code,
           articleId: article.id,
-          articleTitle: article.title
+          articleTitle: article.title,
+          category: rule.category?.slice(0, 4) // 添加问题来源
         })
       })
     })
@@ -1967,6 +1895,7 @@ const exportReport = async () => {
     const headers = [
       { header: '序号', key: 'index', width: 8 },
       { header: '风险等级', key: 'riskLevel', width: 12 },
+      { header: '问题来源', key: 'category', width: 12 },
       { header: '违规问题', key: 'title', width: 40 },
       { header: '问题描述', key: 'description', width: 50 },
       { header: '处理建议', key: 'suggestion', width: 60 },
@@ -1990,6 +1919,7 @@ const exportReport = async () => {
       const rowData = {
         index: index + 1,
         riskLevel: getRiskText(item.risk_level),
+        category: item.category,
         title: item.title,
         description: formatTextForExcel(item.description), // 格式化描述
         suggestion: formatTextForExcel(item.suggestion), // 格式化建议
@@ -2002,7 +1932,7 @@ const exportReport = async () => {
 
       // 应用样式
       const isEvenRow = mainWorksheet.rowCount % 2 === 0
-      const needCenterCols = [1, 2, 7, 8]
+      const needCenterCols = [1, 2, 3, 7, 8, 9]
 
       row.eachCell((cell: any, colNumber) => {
         if (isEvenRow) {
@@ -2067,6 +1997,7 @@ const exportReport = async () => {
           const rowData = {
             index: index + 1,
             riskLevel: getRiskText(item.risk_level),
+            category: item.category,
             title: item.title,
             description: formatTextForExcel(item.description),
             suggestion: formatTextForExcel(item.suggestion),
@@ -2079,7 +2010,7 @@ const exportReport = async () => {
 
           // 应用样式
           const isEvenRow = levelWorksheet.rowCount % 2 === 0
-          const needCenterCols = [1, 2, 7, 8]
+          const needCenterCols = [1, 2, 3, 7, 8, 9]
 
           row.eachCell((cell: any, colNumber) => {
             if (isEvenRow) {
@@ -2198,6 +2129,15 @@ const handleExport = () => {
   } else {
     exportReport()
   }
+}
+type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
+
+const getFileCategoryTagType = (category: string): TagType => {
+  const map: Record<string, TagType> = {
+    设计说明: 'success',
+    设计图纸: 'danger'
+  }
+  return map[category] || 'info'
 }
 </script>
 
