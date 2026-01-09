@@ -131,9 +131,15 @@
           <div class="panel-header">
             <h3>{{ projectName }}审查报告</h3>
             <div class="panel-actions">
-              <el-button type="primary" @click="goBack" icon="Back">
-                返回
-              </el-button>
+              <el-icon
+                @click="goBack"
+                style="
+                  font-size: 20px;
+                  color: var(--color-gray-500);
+                  cursor: pointer;
+                "
+                ><Back
+              /></el-icon>
             </div>
           </div>
           <div class="panel-actions">
@@ -239,7 +245,7 @@
                 <el-table-column
                   prop="category"
                   label="问题来源"
-                  width="100"
+                  width="90"
                   align="center"
                 >
                   <template #default="{ row }">
@@ -483,7 +489,8 @@ import {
   WarnTriangleFilled,
   InfoFilled,
   WarningFilled,
-  List
+  List,
+  Back
 } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
