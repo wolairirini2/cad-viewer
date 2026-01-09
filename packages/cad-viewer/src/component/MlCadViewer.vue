@@ -130,6 +130,11 @@
           <!-- 标题 -->
           <div class="panel-header">
             <h3>{{ projectName }}审查报告</h3>
+            <div class="panel-actions">
+              <el-button type="primary" @click="goBack" icon="Back">
+                返回
+              </el-button>
+            </div>
           </div>
           <div class="panel-actions">
             <!-- 风险等级筛选 - 改为 el-radio-group -->
@@ -234,14 +239,13 @@
                 <el-table-column
                   prop="category"
                   label="问题来源"
-                  width="110"
+                  width="100"
                   align="center"
                 >
                   <template #default="{ row }">
                     <el-tag
                       :type="getFileCategoryTagType(row.category)"
                       size="small"
-                      style="width: 70px; padding: 12px 6px; font-size: 12px"
                     >
                       {{ row.category }}
                     </el-tag>
@@ -343,10 +347,18 @@
           <span class="detail-label">风险等级:</span>
           <el-tag
             :type="getRiskTagType(selectedViolation.risk_level)"
-            effect="dark"
             style="font-weight: bold"
           >
             {{ getRiskText(selectedViolation.risk_level) }}
+          </el-tag>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">问题来源:</span>
+          <el-tag
+            :type="getFileCategoryTagType(selectedViolation.category)"
+            style="font-weight: bold"
+          >
+            {{ selectedViolation.category }}
           </el-tag>
         </div>
       </div>
@@ -2134,10 +2146,13 @@ type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
 
 const getFileCategoryTagType = (category: string): TagType => {
   const map: Record<string, TagType> = {
-    设计说明: 'success',
+    设计说明: 'primary',
     设计图纸: 'danger'
   }
   return map[category] || 'info'
+}
+const goBack = () => {
+  window.history.back()
 }
 </script>
 
@@ -2546,7 +2561,7 @@ const getFileCategoryTagType = (category: string): TagType => {
 }
 
 .geometry-info {
-  font-size: 12px;
+  font-size: 14px;
   color: #8c8c8c;
   flex: 1;
   margin-right: 12px;
@@ -2678,7 +2693,6 @@ const getFileCategoryTagType = (category: string): TagType => {
 }
 
 .detail-label {
-  width: 80px;
   font-weight: bold;
   color: #595959;
   margin-right: 12px;
@@ -3013,6 +3027,27 @@ const getFileCategoryTagType = (category: string): TagType => {
     &.suffix {
       margin-top: 12px;
       margin-bottom: 0;
+    }
+  }
+}
+
+.el-tag {
+  width: 60px;
+  padding: 10px 0px;
+  font-size: 11px;
+  font-weight: 600;
+  &.el-tag--light {
+    &.el-tag--danger {
+      color: var(--color-danger-dark);
+      border-color: var(--color-danger-dark);
+    }
+    &.el-tag--primary {
+      border-color: var(--color-primary-dark);
+      color: var(--color-primary-dark);
+    }
+    &.el-tag--warning {
+      border-color: var(--color-warning);
+      color: var(--color-warning);
     }
   }
 }
