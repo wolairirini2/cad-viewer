@@ -467,6 +467,96 @@
       </div>
     </template>
   </el-dialog>
+  <!-- 新增：审查规范详情弹窗（仅用于 risk_level 为 0 的条目） -->
+  <el-dialog
+    v-model="showPassedDetail"
+    title="审查规范详情"
+    width="800px"
+    class="violation-detail-dialog-wrapper"
+    :style="{ maxHeight: '85vh' }"
+    draggable
+  >
+    <div v-if="selectedViolation" class="violation-detail-dialog">
+      <!-- 基本信息 -->
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="detail-label">检查内容:</span>
+          <span>{{ selectedViolation.articleTitle }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">问题来源:</span>
+          <el-tag
+            :type="getFileCategoryTagType(selectedViolation.category)"
+            style="font-weight: bold"
+          >
+            {{ selectedViolation.category }}
+          </el-tag>
+        </div>
+      </div>
+
+      <!-- 几何信息 -->
+      <div v-if="selectedViolation.geometry_ref" class="detail-section">
+        <h4>图纸位置</h4>
+        <div class="violation-geometry">
+          <div
+            v-if="selectedViolation.geometry_ref.extents"
+            class="geometry-info"
+          >
+            <span>坐标范围：</span>
+            <span>
+              ({{
+                selectedViolation.geometry_ref.extents.min_point.x.toFixed(2)
+              }},
+              {{
+                selectedViolation.geometry_ref.extents.min_point.y.toFixed(2)
+              }}) - ({{
+                selectedViolation.geometry_ref.extents.max_point.x.toFixed(2)
+              }},
+              {{
+                selectedViolation.geometry_ref.extents.max_point.y.toFixed(2)
+              }})
+            </span>
+          </div>
+          <div v-else class="geometry-info">
+            <span>坐标范围：</span>
+            <span>未提供</span>
+          </div>
+          <el-button
+            type="primary"
+            size="small"
+            @click="locateInDrawing(selectedViolation.geometry_ref)"
+            :disabled="!selectedViolation.geometry_ref.extents"
+          >
+            定位
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 相关条目 -->
+      <div class="detail-section">
+        <h4>相关规范条文</h4>
+        <div class="related-article">
+          <div class="article-title">
+            {{
+              getArticleContent(selectedViolation.articleId)?.title ||
+              '未找到条文信息'
+            }}
+          </div>
+          <div class="article-content">
+            {{ getArticleContent(selectedViolation.articleId)?.content || '' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="showPassedDetail = false"
+          >关闭</el-button
+        >
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -1585,13 +1675,17 @@ watch(
 // 在响应式变量部分添加
 const showViolationDetail = ref(false)
 const selectedViolation = ref<any>(null)
+const showPassedDetail = ref(false)
 
-// 添加行点击处理函数
+// 修改行点击处理函数（替换原有的 handleRowClick）
 const handleRowClick = (row: any) => {
   selectedViolation.value = row
-  showViolationDetail.value = true
+  if (row.risk_level === 0) {
+    showPassedDetail.value = true
+  } else {
+    showViolationDetail.value = true
+  }
 }
-
 // 根据articleId获取条文内容
 const getArticleContent = (articleId: string) => {
   for (const rule of reportData.value.rules) {
