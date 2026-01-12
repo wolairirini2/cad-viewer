@@ -266,7 +266,7 @@
                   <template #default="{ row }">
                     <span
                       style="color: var(--color-primary-dark); font-weight: 700"
-                      >{{ row.title }}</span
+                      >{{ row.title || row.articleTitle }}</span
                     >
                   </template>
                 </el-table-column>
@@ -276,7 +276,11 @@
                   min-width="150"
                   show-overflow-tooltip
                   align="center"
-                />
+                >
+                  <template #default="{ row }">
+                    {{ row.description || '审查已通过' }}
+                  </template>
+                </el-table-column>
                 <el-table-column
                   prop="suggestion"
                   label="处理建议"
@@ -284,6 +288,9 @@
                   show-overflow-tooltip
                   align="center"
                 >
+                  <template #default="{ row }">
+                    {{ row.suggestion || '无' }}
+                  </template>
                 </el-table-column>
                 <el-table-column
                   label="操作"
@@ -293,7 +300,6 @@
                 >
                   <template #default="{ row }">
                     <el-button
-                      v-if="row.geometry_ref?.file_id"
                       type="info"
                       size="small"
                       @click.stop="handleLocateClick(row.geometry_ref)"
@@ -303,16 +309,12 @@
                     >
                       定位
                     </el-button>
-                    <el-tooltip v-else content="无几何信息" placement="top">
-                      <el-button size="small" disabled type="primary"
-                        >定位</el-button
-                      >
-                    </el-tooltip>
                     <el-button
                       size="small"
                       style="margin-left: 4px"
                       type="info"
                       plain
+                      :disabled="row.risk_level === 0"
                       >发送</el-button
                     >
                   </template>
@@ -834,93 +836,7 @@ const reportData = computed(() => {
             id: '2.1',
             title: '核查配电装置选择的合理性',
             content: '核查配电装置选择的合理性',
-            violations: [
-              {
-                title: '2.1 核查配电装置选择的合理性',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中增加配电装置选择的合理性核查章节，详细描述核查过程、依据和结论，包括负荷计算、电压降分析、短路计算、保护协调等。',
-                  '提供配电装置选型的技术计算书和论证报告，作为附件。'
-                ],
-                description:
-                  '设计说明中未体现配电装置选择的合理性核查过程和结果，仅列出了设备选型清单，缺乏必要的论证和依据。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '四、主要设备选型 - 主变压器',
-                risk_level: 'medium',
-                suggestion: [
-                  '在主变压器选型说明中，增加能效等级选择的依据和计算过程，例如，说明为什么选择二级能效，并提供相关的能效计算结果。'
-                ],
-                description:
-                  '虽然主变压器满足《GB20052-2020》二级能效要求，但设计说明中未体现能效等级选择的依据和计算过程。仅仅提及满足即可。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '五、过电压保护与接地 - 接地电阻',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中明确施工完成后实测接地电阻值的记录和处理措施，包括实测值的记录方式、处理流程、以及采取的纠正措施。'
-                ],
-                description:
-                  '虽然设计说明中提到接地电阻不应大于0.378Ω，但未提及施工完成后实测接地电阻值的记录和处理措施。如果实测值不满足要求，需要采取措施，但未在设计说明中体现。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '七、电缆设施及防火 - 防火封堵材料',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中明确防火涂料的类型、性能指标（如耐火极限、热释放率等）和施工要求，并提供相关的技术规范和标准。'
-                ],
-                description:
-                  '设计说明中提到“为防止火灾扩大，在阻火墙两侧1.5m及户外电缆隧道进入户内1m范围内的电缆涂防火涂料”，但未明确防火涂料的类型、性能指标和施工要求。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '三、电气主接线和平面布置 - 母线接线',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中详细说明选择不接地方式的理由，包括对系统运行的安全性、可靠性和电能质量的影响，并提供相关的分析和论证。'
-                ],
-                description:
-                  '设计说明中提到“10kV系统采用不接地方式”，但未说明选择不接地方式的理由和对系统运行的影响。需要进行详细的分析和论证。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '六、照明与动力 - 事故照明',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中明确检修人员判断是否需要合上事故照明开关的标准，并考虑增加事故照明系统的自动切换机制，以提高安全性。'
-                ],
-                description:
-                  '设计说明中提到“当一般照明箱失电时，检修人员根据需要合上相应的事故照明开关”，但未明确检修人员如何判断是否需要合上事故照明开关，以及事故照明系统的自动切换机制。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              }
-            ]
+            violations: []
           },
           {
             id: '3.1',
@@ -1211,6 +1127,17 @@ const flattenedViolations = computed(() => {
           category: rule.category?.slice(0, 4) // 添加问题来源
         })
       })
+
+      if (!article.violations.length) {
+        violations.push({
+          ruleName: rule.name,
+          ruleCode: rule.code,
+          articleId: article.id,
+          articleTitle: article.title,
+          category: rule.category?.slice(0, 4), // 添加问题来源
+          risk_level: 0
+        })
+      }
     })
   })
   return violations
@@ -1218,7 +1145,7 @@ const flattenedViolations = computed(() => {
 
 // 排序后的违规项列表（重大 > 一般 > 轻微）
 const sortedViolations = computed(() => {
-  const riskOrder = { high: 3, medium: 2, low: 1 }
+  const riskOrder = { high: 3, medium: 2, low: 1, 0: 0 }
   return flattenedViolations.value
     .filter(violation => {
       if (filterRisk.value === null) return true
@@ -1896,7 +1823,12 @@ const exportReport = async () => {
 
     // 表头样式
     const headerStyle = {
-      font: { bold: true, size: 11, color: { argb: 'FFFFFFFF' } },
+      font: {
+        bold: true,
+        size: 11,
+        color: { argb: 'FFFFFFFF' },
+        name: 'Microsoft YaHei' // 添加：微软雅黑字体
+      },
       fill: {
         type: 'pattern',
         pattern: 'solid',
@@ -1913,14 +1845,12 @@ const exportReport = async () => {
     // 定义表头
     const headers = [
       { header: '序号', key: 'index', width: 8 },
-      { header: '风险等级', key: 'riskLevel', width: 12 },
-      { header: '问题来源', key: 'category', width: 12 },
+      { header: '风险等级', key: 'riskLevel', width: 18 },
+      { header: '问题来源', key: 'category', width: 18 },
       { header: '违规问题', key: 'title', width: 40 },
       { header: '问题描述', key: 'description', width: 50 },
       { header: '处理建议', key: 'suggestion', width: 60 },
-      { header: '相关规范', key: 'articleTitle', width: 30 },
-      { header: '条文编号', key: 'articleId', width: 15 },
-      { header: '定位状态', key: 'locationStatus', width: 12 }
+      { header: '相关规范', key: 'articleTitle', width: 30 }
     ]
 
     // ===== 创建主工作表（包含所有数据）=====
@@ -1994,7 +1924,7 @@ const exportReport = async () => {
     // ===== 按风险等级创建额外的工作表 =====
     const riskLevels = [
       { level: 'high', name: '重大问题', color: 'FFDC3545' },
-      { level: 'medium', name: '一般问题', color: 'FFFFB84D' },
+      { level: 'medium', name: '一般问题', color: 'FFD17706' },
       { level: 'low', name: '轻微问题', color: 'FF28A745' }
     ]
 
