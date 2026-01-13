@@ -40,6 +40,25 @@
             />
           </div>
 
+          <!-- Word文档（使用docx-preview渲染） -->
+          <div v-else-if="fileType === 'docx'" class="preview-area">
+            <MlWordViewer
+              :src="
+                wordPreviewUrl
+                  ? wordPreviewUrl.replace(
+                      'http://192.168.3.184:9000',
+                      '/storage'
+                    )
+                  : previewUrl
+                    ? previewUrl.replace(
+                        'http://192.168.3.184:9000',
+                        '/storage'
+                      )
+                    : ''
+              "
+              :highlight-text="highlightText"
+            />
+          </div>
           <!-- Office文档 -->
           <div v-else-if="fileType === 'office'" class="preview-area">
             <iframe
@@ -289,7 +308,7 @@
                   align="center"
                 >
                   <template #default="{ row }">
-                    {{ row.suggestion || '无' }}
+                    {{ row.suggestion ? row.suggestion.join() : '无' }}
                   </template>
                 </el-table-column>
                 <el-table-column
@@ -302,9 +321,11 @@
                     <el-button
                       type="info"
                       size="small"
-                      @click.stop="handleLocateClick(row.geometry_ref)"
+                      @click.stop="handleLocateClick(row.geometry_ref, row)"
                       :loading="locating[row.violation_id]"
-                      :disabled="!row.geometry_ref?.extents"
+                      :disabled="
+                        !row.geometry_ref?.extents && row.risk_level === 0
+                      "
                       plain
                     >
                       定位
@@ -597,6 +618,7 @@ import { AcGeBox2d } from '@mlightcad/data-model'
 import VuePdfEmbed from 'vue-pdf-embed'
 import { ElMessageBox } from 'element-plus'
 import ExcelJS from 'exceljs'
+import MlWordViewer from './MlWordViewer.vue'
 
 // Define component props with their purposes
 interface Props {
@@ -647,12 +669,16 @@ const props = withDefaults(defineProps<Props>(), {
   projectName: ''
 })
 
+// Word文档查看相关
+const wordPreviewUrl = ref<string>('')
+const highlightText = ref<string>('')
+
 const projectName = computed(() => decodeURIComponent(props.projectName))
 
 // PDF分页控制
 const pdfPage = ref(1)
 const pdfPages = ref(0)
-// 文件类型判断
+// 替换原有的 fileType 计算属性
 const fileType = computed(() => {
   if (!props.previewUrl && props.url) return 'cad'
   if (!props.previewUrl) return null
@@ -667,8 +693,11 @@ const fileType = computed(() => {
   // PDF
   if (fileExt === 'pdf') return 'pdf'
 
-  // Office文档
-  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(fileExt)) {
+  // Word文档 - 使用docx-preview渲染
+  if (fileExt === 'docx') return 'docx'
+
+  // 其他Office文档
+  if (['doc', 'xls', 'xlsx', 'ppt', 'pptx'].includes(fileExt)) {
     return 'office'
   }
 
@@ -677,10 +706,8 @@ const fileType = computed(() => {
     return 'image'
   }
 
-  // 其他
   return 'unsupported'
 })
-
 // Office在线查看器URL（使用Microsoft Office Web Viewer）
 const officeViewerUrl = computed(() => {
   if (fileType.value !== 'office') return ''
@@ -747,34 +774,49 @@ const emit = defineEmits<{
 const locating = ref<Record<string, boolean>>({}) // 定位加载状态
 
 // 修改定位函数，添加file_id校验
-const handleLocateClick = async (geometry: any) => {
+const handleLocateClick = async (geometry: any, row: any) => {
+  // 设计说明类型：切换到Word预览并高亮
+  if (row.category === '设计说明') {
+    const keyword = extractKeyword(row.description || '')
+
+    if (!props.previewUrl) {
+      ElMessage.warning('未找到关联的设计说明文档')
+      return
+    }
+
+    // 清理之前的CAD资源
+    cleanupCadResources()
+
+    // 设置Word预览参数
+    wordPreviewUrl.value = props.previewUrl
+    highlightText.value = keyword
+
+    ElMessage.success(`正在定位问题位置...`)
+    return
+  }
+
+  // 原有CAD定位逻辑保持不变
   if (!geometry?.file_id) {
     ElMessage.warning('无法获取图纸信息')
     return
   }
 
   if (!geometry?.extents) {
-    // ✅ 新增：检查extents是否为null
     ElMessage.warning('无法获取几何信息')
     return
   }
 
   try {
-    // 设置加载状态
     if (geometry.violation_id) {
       locating.value[geometry.violation_id] = true
     }
 
-    // 检查是否需要切换图纸
     if (props.currentFileId !== geometry.file_id) {
       ElMessage.info('正在切换图纸...')
       await emit('switchDrawing', geometry.file_id)
-
-      // 等待图纸加载完成（简单延迟，实际可用事件监听）
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
 
-    // 执行定位
     await locateInDrawing(geometry)
   } catch (error) {
     console.error('定位失败:', error)
@@ -785,7 +827,6 @@ const handleLocateClick = async (geometry: any) => {
     }
   }
 }
-
 const { t } = useI18n()
 const { elementPlusLocale } = useLocale(props.locale)
 const { info, warning, error, success } = useNotificationCenter()
@@ -1435,6 +1476,10 @@ onUnmounted(() => {
     resizeObserver.disconnect()
     resizeObserver = null
   }
+
+  // 清理Word预览状态
+  wordPreviewUrl.value = ''
+  highlightText.value = ''
 })
 // Set up global event listeners for various CAD operations and notifications
 // These events are emitted by the underlying CAD engine and other components
@@ -1518,8 +1563,10 @@ const closeNotificationCenter = () => {
 
 // 切换侧边栏展开/收起
 const togglePanel = () => {
-  const view = AcApDocManager.instance.curView as any
-  view.updateSize()
+  if (fileType.value == 'cad') {
+    const view = AcApDocManager.instance.curView as any
+    view.updateSize()
+  }
   isPanelCollapsed.value = !isPanelCollapsed.value
 }
 
@@ -2184,6 +2231,30 @@ const getFileCategoryTagType = (category: string): TagType => {
 }
 const goBack = () => {
   window.history.back()
+}
+
+const extractKeyword = (text: string): string => {
+  return '主变高压侧装设过负荷保护。保护以第一时限发信号,第二时限闭锁有载调压并发信号。'
+  if (!text) return ''
+
+  try {
+    // 清理HTML标签和空格
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = text
+    let plainText = tempDiv.textContent || tempDiv.innerText || ''
+    plainText = plainText.replace(/\s+/g, ' ').trim()
+
+    // 提取策略：优先取第一句话或前50字符
+    const firstPeriod = plainText.indexOf('。')
+    if (firstPeriod > 10 && firstPeriod <= 50) {
+      return plainText.substring(0, firstPeriod)
+    }
+
+    return plainText.substring(0, 50)
+  } catch (error) {
+    console.warn('提取关键词失败:', error)
+    return text.substring(0, 50)
+  }
 }
 </script>
 

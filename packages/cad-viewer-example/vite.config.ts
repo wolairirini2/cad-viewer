@@ -74,6 +74,18 @@ export default defineConfig(({ command, mode }) => {
     plugins: plugins,
     server: {
       host: true
+    },
+
+    proxy: {
+      '/api': {
+        target: 'http://192.168.3.184:8000/',
+        changeOrigin: true
+      },
+      '/storage': {
+        target: 'http://192.168.3.184:9000/',
+        changeOrigin: true,
+        rewrite: (path: any) => path.replace(/^\/storage/, '')
+      }
     }
   }
 })

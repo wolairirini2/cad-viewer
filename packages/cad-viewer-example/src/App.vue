@@ -2,9 +2,10 @@
   <div id="app-root">
     <MlCadViewer
       locale="zh"
-      url="https://mlightcad.gitlab.io/cad-data/data/anteen.dwg"
       base-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/"
       :project-name="projectName"
+      preview-url="http://192.168.3.184:8012/onlinePreview?url=aHR0cDovL21pbmlvOjkwMDAvZGVzaWduLXNwZWNzLzIwMjUvMTIvMzAvODY3MjhjMjUtY2MwOS00NThjLThiYjgtYTg2NzZiZTI4NmMzLmRvY3g/WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1taW5pb2FkbWluJTJGMjAyNjAxMTMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYwMTEzVDA3MTkyNlomWC1BbXotRXhwaXJlcz0zNjAwJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZYLUFtei1TaWduYXR1cmU9YTA3ZDgwMzM5MWM2Y2M5ZTljMTQ1ZTU5ZDFkZDY3ZmIzOWYwMWVhYzA2MDc1ZDdjYmMwZGI0MDZmNDEyOTAyNg=="
+      fileName="YB11844S-D101-01-设计说明书.docx"
     />
   </div>
 </template>
