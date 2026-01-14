@@ -754,6 +754,8 @@ const cleanupCadResources = () => {
     // 这里可以根据需要清理CAD资源
     // 例如：清除选择集、停止渲染等
   }
+  // 清理定位信息
+  currentLocateInfo.value = {}
 }
 
 // 监听文件类型变化
@@ -773,14 +775,56 @@ const emit = defineEmits<{
 }>()
 const locating = ref<Record<string, boolean>>({}) // 定位加载状态
 
-// 修改定位函数，添加file_id校验
+// 在响应式变量部分添加一个跟踪当前定位状态的变量
+const currentLocateInfo = ref<{
+  fileId?: string
+  geometryRef?: any
+  highlightText?: string
+  rowId?: string
+}>({})
+
+// 修改定位函数，添加重复定位检测
 const handleLocateClick = async (geometry: any, row: any) => {
   // 设计说明类型：切换到Word预览并高亮
   if (row.category === '设计说明') {
-    const keyword = extractKeyword(row.description || '')
+    if (!geometry.chapter) {
+      ElMessage.warning('无法获取关键词')
+      return
+    }
+    const keyword = geometry.chapter
 
     if (!props.previewUrl) {
       ElMessage.warning('未找到关联的设计说明文档')
+      return
+    }
+
+    // 检查是否是重复点击同一个定位
+    const isSameLocation =
+      currentLocateInfo.value.rowId === row.violation_id &&
+      currentLocateInfo.value.highlightText === keyword &&
+      currentLocateInfo.value.fileId === geometry.file_id
+
+    if (isSameLocation) {
+      // 如果已经是当前定位，显示不同的提示
+      ElMessage.info('已在当前问题位置，如需重新定位请稍后重试')
+
+      // 添加闪烁效果提醒用户
+      const wordViewerElement = document.querySelector(
+        '.preview-area .docx-highlight'
+      )
+      if (wordViewerElement) {
+        wordViewerElement.animate(
+          [
+            { backgroundColor: 'var(--color-warning)' },
+            { backgroundColor: 'var(--color-primary)' },
+            { backgroundColor: 'var(--color-warning)' }
+          ],
+          {
+            duration: 500,
+            iterations: 2
+          }
+        )
+      }
       return
     }
 
@@ -789,6 +833,18 @@ const handleLocateClick = async (geometry: any, row: any) => {
 
     // 设置Word预览参数
     wordPreviewUrl.value = props.previewUrl
+
+    // 更新当前定位信息
+    currentLocateInfo.value = {
+      fileId: geometry.file_id,
+      geometryRef: geometry,
+      highlightText: keyword,
+      rowId: row.violation_id
+    }
+
+    // 先清空，再设置，确保触发重新高亮
+    highlightText.value = ''
+    await nextTick()
     highlightText.value = keyword
 
     ElMessage.success(`正在定位问题位置...`)
@@ -811,10 +867,37 @@ const handleLocateClick = async (geometry: any, row: any) => {
       locating.value[geometry.violation_id] = true
     }
 
+    // 检查是否是重复定位同一个图纸位置
+    const isSameLocation =
+      currentLocateInfo.value.rowId === row.violation_id &&
+      currentLocateInfo.value.fileId === geometry.file_id &&
+      JSON.stringify(currentLocateInfo.value.geometryRef?.extents) ===
+        JSON.stringify(geometry.extents)
+
+    if (isSameLocation) {
+      ElMessage.info('已在当前问题位置，如需重新定位请稍后重试')
+
+      // 添加闪烁效果提醒用户
+      const view = AcApDocManager.instance.curView
+      if (view) {
+        // 可以在这里添加CAD视图的闪烁效果
+      }
+
+      return
+    }
+
     if (props.currentFileId !== geometry.file_id) {
       ElMessage.info('正在切换图纸...')
       await emit('switchDrawing', geometry.file_id)
       await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    // 更新当前定位信息
+    currentLocateInfo.value = {
+      fileId: geometry.file_id,
+      geometryRef: geometry,
+      highlightText: row.title,
+      rowId: row.violation_id
     }
 
     await locateInDrawing(geometry)
@@ -827,6 +910,7 @@ const handleLocateClick = async (geometry: any, row: any) => {
     }
   }
 }
+
 const { t } = useI18n()
 const { elementPlusLocale } = useLocale(props.locale)
 const { info, warning, error, success } = useNotificationCenter()
@@ -1480,6 +1564,7 @@ onUnmounted(() => {
   // 清理Word预览状态
   wordPreviewUrl.value = ''
   highlightText.value = ''
+  currentLocateInfo.value = {}
 })
 // Set up global event listeners for various CAD operations and notifications
 // These events are emitted by the underlying CAD engine and other components
@@ -1727,6 +1812,12 @@ const showPassedDetail = ref(false)
 // 修改行点击处理函数（替换原有的 handleRowClick）
 const handleRowClick = (row: any) => {
   selectedViolation.value = row
+
+  // 更新定位信息，但不清除，因为用户可能只是查看详情
+  if (row.violation_id !== currentLocateInfo.value.rowId) {
+    currentLocateInfo.value = {}
+  }
+
   if (row.risk_level === 0) {
     showPassedDetail.value = true
   } else {
@@ -2231,30 +2322,6 @@ const getFileCategoryTagType = (category: string): TagType => {
 }
 const goBack = () => {
   window.history.back()
-}
-
-const extractKeyword = (text: string): string => {
-  return '主变高压侧装设过负荷保护。保护以第一时限发信号,第二时限闭锁有载调压并发信号。'
-  if (!text) return ''
-
-  try {
-    // 清理HTML标签和空格
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = text
-    let plainText = tempDiv.textContent || tempDiv.innerText || ''
-    plainText = plainText.replace(/\s+/g, ' ').trim()
-
-    // 提取策略：优先取第一句话或前50字符
-    const firstPeriod = plainText.indexOf('。')
-    if (firstPeriod > 10 && firstPeriod <= 50) {
-      return plainText.substring(0, firstPeriod)
-    }
-
-    return plainText.substring(0, 50)
-  } catch (error) {
-    console.warn('提取关键词失败:', error)
-    return text.substring(0, 50)
-  }
 }
 </script>
 
