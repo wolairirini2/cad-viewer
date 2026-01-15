@@ -5,96 +5,69 @@
       <!-- 左侧，包含canvas和UI层 -->
       <div class="cad-container">
         <!-- 根据文件类型自动选择查看器 -->
-        <template v-if="fileType">
-          <!-- CAD文件 -->
-          <div v-if="fileType === 'cad'" class="cad-area">
-            <canvas
-              v-if="currentFileId"
-              ref="canvasRef"
-              class="ml-cad-canvas"
-            ></canvas>
-            <el-empty v-else style="height: 100%; width: 100%" />
-          </div>
+        <!-- CAD文件 -->
+        <div v-show="fileType === 'cad'" class="cad-area">
+          <canvas
+            v-show="currentFileId"
+            ref="canvasRef"
+            class="ml-cad-canvas"
+          ></canvas>
+        </div>
 
-          <!-- PDF文件 -->
-          <div v-else-if="fileType === 'pdf'" class="preview-area">
-            <div class="preview-toolbar">
-              <el-button-group>
-                <el-button size="small" @click="pdfPage > 1 && pdfPage--">
-                  <el-icon><ArrowLeft /></el-icon>上一页
-                </el-button>
-                <span class="page-info">{{ pdfPage }} / {{ pdfPages }}</span>
-                <el-button
-                  size="small"
-                  @click="pdfPage < pdfPages && pdfPage++"
-                >
-                  下一页<el-icon><ArrowRight /></el-icon>
-                </el-button>
-              </el-button-group>
-            </div>
-            <VuePdfEmbed
-              :source="previewUrl"
-              :page="pdfPage"
-              @loaded="onPdfLoaded"
-              class="preview-iframe"
-            />
+        <!-- PDF文件 -->
+        <div v-if="fileType === 'pdf'" class="preview-area">
+          <div class="preview-toolbar">
+            <el-button-group>
+              <el-button size="small" @click="pdfPage > 1 && pdfPage--">
+                <el-icon><ArrowLeft /></el-icon>上一页
+              </el-button>
+              <span class="page-info">{{ pdfPage }} / {{ pdfPages }}</span>
+              <el-button size="small" @click="pdfPage < pdfPages && pdfPage++">
+                下一页<el-icon><ArrowRight /></el-icon>
+              </el-button>
+            </el-button-group>
           </div>
+          <VuePdfEmbed
+            :source="previewUrl"
+            :page="pdfPage"
+            @loaded="onPdfLoaded"
+            class="preview-iframe"
+          />
+        </div>
 
-          <!-- Word文档（使用docx-preview渲染） -->
-          <div v-else-if="fileType === 'docx'" class="preview-area">
-            <MlWordViewer
-              :src="
-                wordPreviewUrl
-                  ? wordPreviewUrl.replace(
-                      'http://192.168.3.184:9000',
-                      '/storage'
-                    )
-                  : previewUrl
-                    ? previewUrl.replace(
-                        'http://192.168.3.184:9000',
-                        '/storage'
-                      )
-                    : ''
-              "
-              :highlight-text="highlightText"
-            />
+        <!-- Word文档（使用docx-preview渲染） -->
+        <div v-else-if="fileType === 'docx'" class="preview-area">
+          <MlWordViewer
+            :src="
+              wordPreviewUrl
+                ? wordPreviewUrl.replace(
+                    'http://192.168.3.184:9000',
+                    '/storage'
+                  )
+                : previewUrl
+                  ? previewUrl.replace('http://192.168.3.184:9000', '/storage')
+                  : ''
+            "
+            :highlight-text="highlightText"
+          />
+        </div>
+        <!-- Office文档 -->
+        <div v-else-if="fileType === 'office'" class="preview-area">
+          <iframe
+            :src="officeViewerUrl"
+            frameborder="0"
+            class="preview-iframe"
+            @load="handlePreviewLoad"
+          ></iframe>
+          <div class="preview-hint">
+            文档预览由 Microsoft Office Online 提供
           </div>
-          <!-- Office文档 -->
-          <div v-else-if="fileType === 'office'" class="preview-area">
-            <iframe
-              :src="officeViewerUrl"
-              frameborder="0"
-              class="preview-iframe"
-              @load="handlePreviewLoad"
-            ></iframe>
-            <div class="preview-hint">
-              文档预览由 Microsoft Office Online 提供
-            </div>
-          </div>
+        </div>
 
-          <!-- 图片文件 -->
-          <div v-else-if="fileType === 'image'" class="preview-area">
-            <img :src="previewUrl" class="preview-image" alt="预览图片" />
-          </div>
-
-          <!-- 不支持的格式 -->
-          <div v-else class="preview-area unsupported">
-            <el-empty description="不支持的文件格式">
-              <template #default>
-                <el-button type="primary" @click="downloadFile">
-                  下载文件
-                </el-button>
-              </template>
-            </el-empty>
-          </div>
-        </template>
-
-        <!-- 无文件 -->
-        <el-empty
-          v-else
-          style="height: 100%; width: 100%"
-          description="暂无文件"
-        />
+        <!-- 图片文件 -->
+        <div v-else-if="fileType === 'image'" class="preview-area">
+          <img :src="previewUrl" class="preview-image" alt="预览图片" />
+        </div>
 
         <!-- CAD UI层（仅在CAD模式下显示） -->
         <div v-if="fileType === 'cad' && editorRef" class="ui-overlay">
@@ -589,7 +562,6 @@ import {
   ElButton,
   ElTag,
   ElIcon,
-  ElEmpty,
   ElTable,
   ElTableColumn,
   ElTooltip
@@ -680,7 +652,7 @@ const pdfPage = ref(1)
 const pdfPages = ref(0)
 // 替换原有的 fileType 计算属性
 const fileType = computed(() => {
-  if (!props.previewUrl && props.url) return 'cad'
+  if (props.url || props.localFile) return 'cad'
   if (!props.previewUrl) return null
 
   const fileExt =
@@ -723,11 +695,6 @@ const officeViewerUrl = computed(() => {
 const onPdfLoaded = (pdf: any) => {
   pdfPages.value = pdf.numPages
   ElMessage.success('PDF加载成功')
-}
-
-// 下载不支持的文件
-const downloadFile = () => {
-  window.open(props.previewUrl, '_blank')
 }
 
 // 预览加载完成处理
@@ -792,23 +759,22 @@ const handleLocateClick = async (geometry: any, row: any) => {
       return
     }
     const keyword = geometry.chapter
+    const targetFileId = geometry.file_id
 
-    if (!props.previewUrl) {
-      ElMessage.warning('未找到关联的设计说明文档')
+    if (!targetFileId) {
+      ElMessage.warning('无法获取文件信息')
       return
     }
 
-    // 检查是否是重复点击同一个定位
+    // 检查是否是重复定位
     const isSameLocation =
       currentLocateInfo.value.rowId === row.violation_id &&
       currentLocateInfo.value.highlightText === keyword &&
-      currentLocateInfo.value.fileId === geometry.file_id
+      currentLocateInfo.value.fileId === targetFileId
 
     if (isSameLocation) {
-      // 如果已经是当前定位，显示不同的提示
-      ElMessage.info('已在当前问题位置，如需重新定位请稍后重试')
-
-      // 添加闪烁效果提醒用户
+      ElMessage.info('已在当前问题位置')
+      // 添加闪烁效果
       const wordViewerElement = document.querySelector(
         '.preview-area .docx-highlight'
       )
@@ -819,30 +785,31 @@ const handleLocateClick = async (geometry: any, row: any) => {
             { backgroundColor: 'var(--color-primary)' },
             { backgroundColor: 'var(--color-warning)' }
           ],
-          {
-            duration: 500,
-            iterations: 2
-          }
+          { duration: 500, iterations: 2 }
         )
       }
       return
     }
 
-    // 清理之前的CAD资源
+    // 清理CAD资源
     cleanupCadResources()
 
-    // 设置Word预览参数
-    wordPreviewUrl.value = props.previewUrl
+    // 关键修复：如果文件不同，通知父组件切换文件
+    if (props.currentFileId !== targetFileId) {
+      await emit('switchDrawing', targetFileId)
+      // 等待文件加载完成
+      await new Promise(resolve => setTimeout(resolve, 800))
+    }
 
     // 更新当前定位信息
     currentLocateInfo.value = {
-      fileId: geometry.file_id,
+      fileId: targetFileId,
       geometryRef: geometry,
       highlightText: keyword,
       rowId: row.violation_id
     }
 
-    // 先清空，再设置，确保触发重新高亮
+    // 触发高亮
     highlightText.value = ''
     await nextTick()
     highlightText.value = keyword
@@ -851,7 +818,7 @@ const handleLocateClick = async (geometry: any, row: any) => {
     return
   }
 
-  // 原有CAD定位逻辑保持不变
+  // CAD图纸定位逻辑（保持不变）
   if (!geometry?.file_id) {
     ElMessage.warning('无法获取图纸信息')
     return
@@ -867,7 +834,6 @@ const handleLocateClick = async (geometry: any, row: any) => {
       locating.value[geometry.violation_id] = true
     }
 
-    // 检查是否是重复定位同一个图纸位置
     const isSameLocation =
       currentLocateInfo.value.rowId === row.violation_id &&
       currentLocateInfo.value.fileId === geometry.file_id &&
@@ -875,24 +841,15 @@ const handleLocateClick = async (geometry: any, row: any) => {
         JSON.stringify(geometry.extents)
 
     if (isSameLocation) {
-      ElMessage.info('已在当前问题位置，如需重新定位请稍后重试')
-
-      // 添加闪烁效果提醒用户
-      const view = AcApDocManager.instance.curView
-      if (view) {
-        // 可以在这里添加CAD视图的闪烁效果
-      }
-
+      ElMessage.info('已在当前问题位置')
       return
     }
 
     if (props.currentFileId !== geometry.file_id) {
-      ElMessage.info('正在切换图纸...')
       await emit('switchDrawing', geometry.file_id)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 3000))
     }
 
-    // 更新当前定位信息
     currentLocateInfo.value = {
       fileId: geometry.file_id,
       geometryRef: geometry,
@@ -1248,8 +1205,10 @@ const handleFileRead = async (fileName: string, fileContent: ArrayBuffer) => {
  */
 const openFileFromUrl = async (url: string) => {
   try {
-    const options: AcDbOpenDatabaseOptions = { minimumChunkSize: 1000 }
+    const options: AcDbOpenDatabaseOptions = {}
+
     await AcApDocManager.instance.openUrl(url, options)
+
     store.fileName = AcApDocManager.instance.curDocument.docTitle
   } catch (error) {
     console.error('Failed to open file from URL:', error)
@@ -1420,6 +1379,7 @@ onMounted(async () => {
   // Initialize the CAD viewer with the internal canvas
   // Initialize the CAD viewer with the internal canvas
   if (canvasRef.value) {
+    console.log('initializeCadViewer', canvasRef.value)
     initializeCadViewer({
       canvas: canvasRef.value,
       baseUrl: props.baseUrl,

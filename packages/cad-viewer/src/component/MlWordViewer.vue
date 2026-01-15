@@ -41,7 +41,15 @@ const renderDocument = async () => {
       ignoreHeight: false,
       breakPages: true,
       ignoreFonts: false,
-      debug: false
+      debug: false,
+      // 新增配置
+      experimental: true, // 启用实验性功能，改善样式保真度
+      trimXmlDeclaration: true,
+      ignoreLastRenderedPageBreak: false,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      renderEndnotes: true
     })
     if (props.highlightText) {
       setTimeout(() => highlightAndScroll(props.highlightText!), 500)

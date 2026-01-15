@@ -4,8 +4,8 @@
       locale="zh"
       base-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/"
       :project-name="projectName"
-      preview-url="http://192.168.3.184:8012/onlinePreview?url=aHR0cDovL21pbmlvOjkwMDAvZGVzaWduLXNwZWNzLzIwMjUvMTIvMzAvODY3MjhjMjUtY2MwOS00NThjLThiYjgtYTg2NzZiZTI4NmMzLmRvY3g/WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1taW5pb2FkbWluJTJGMjAyNjAxMTMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYwMTEzVDA3MTkyNlomWC1BbXotRXhwaXJlcz0zNjAwJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZYLUFtei1TaWduYXR1cmU9YTA3ZDgwMzM5MWM2Y2M5ZTljMTQ1ZTU5ZDFkZDY3ZmIzOWYwMWVhYzA2MDc1ZDdjYmMwZGI0MDZmNDEyOTAyNg=="
-      fileName="YB11844S-D101-01-设计说明书.docx"
+      :url="cadUrl"
+      :currentFileId="'123'"
     />
   </div>
 </template>
@@ -13,9 +13,15 @@
 <script setup lang="ts">
 // import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
+import { ref, onMounted } from 'vue'
 
-const projectName = encodeURIComponent('测试项目变电一次专业')
-// import { ref } from 'vue'
+const projectName = encodeURIComponent('测试项目变电一次专业.dwg')
+const cadUrl = ref<string>('')
+onMounted(async () => {
+  // 使用Blob URL加载CAD文件
+  cadUrl.value =
+    'http://192.168.3.184:9000/temp/2026/01/15/0df91a45-038a-47ee-8cc0-1cf682117588.dwg'
+})
 
 // import FileUpload from './components/FileUpload.vue'
 
