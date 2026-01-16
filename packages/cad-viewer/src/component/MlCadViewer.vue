@@ -428,8 +428,16 @@
           <el-button
             type="primary"
             size="small"
-            @click="locateInDrawing(selectedViolation.geometry_ref)"
-            :disabled="!selectedViolation.geometry_ref.extents"
+            @click.stop="
+              handleLocateClick(
+                selectedViolation.geometry_ref,
+                selectedViolation
+              )
+            "
+            :disabled="
+              !selectedViolation.geometry_ref?.extents &&
+              selectedViolation.risk_level === 0
+            "
           >
             定位
           </el-button>
@@ -644,6 +652,7 @@ const props = withDefaults(defineProps<Props>(), {
 // Word文档查看相关
 const wordPreviewUrl = ref<string>('')
 const highlightText = ref<string>('')
+const highlightedIds = ref<string[]>([]) // 记录通过 highlight() 高亮的实体ID
 
 const projectName = computed(() => decodeURIComponent(props.projectName))
 
@@ -847,7 +856,7 @@ const handleLocateClick = async (geometry: any, row: any) => {
 
     if (props.currentFileId !== geometry.file_id) {
       await emit('switchDrawing', geometry.file_id)
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      await new Promise(resolve => setTimeout(resolve, 2000))
     }
 
     currentLocateInfo.value = {
@@ -900,244 +909,197 @@ const reportData = computed(() => {
   return {
     rules: [
       {
-        code: 'DESIGN-SPEC-001',
-        name: '工程设计说明编制规范',
-        type: '行业标准',
+        code: 'EQUIP-COMP-001',
+        name: '设备清册与主接线图一致性规范',
+        type: '企业标准',
         articles: [
           {
-            id: '1.4',
-            title: '核查建所必要性及负荷审查',
-            content: '核查建所必要性及负荷审查',
+            id: 'equipment_consistency',
+            title: '设备一致性检查',
+            content:
+              '设备清册与主接线图应在设备数量、规格参数、设备存在性上一致',
             violations: [
               {
-                title: '核查建所必要性及负荷审查',
+                title: '数量不一致',
                 risk_level: 'medium',
                 suggestion: [
-                  '补充详细的建所必要性论证报告，包括负荷预测、增长率分析、供电可靠性分析等。',
-                  '提供负荷计算书，包括本期和远景负荷的计算过程和结果。'
+                  '请检查主接线图中电力变压器的标注数量',
+                  '如清册数量正确，请在主接线图中删除3台'
                 ],
                 description:
-                  '设计说明中仅提及“核查建所必要性及负荷审查”，但未提供任何核查结果或依据。这违反了规范条目1.4的要求，需要提供详细的必要性论证和负荷计算结果。',
+                  "设备清册中'电力变压器'数量为2，主接线图中找到5处。",
                 geometry_ref: {
+                  chapter: null,
+                  extents: {
+                    max_point: {
+                      x: -191263.8487640288,
+                      y: -148261.9242404943
+                    },
+                    min_point: {
+                      x: -192003.7783722929,
+                      y: -148457.4648572067
+                    }
+                  },
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
+                  handles: ['1010F5', '101102', '101104', '10111A', '1010BF']
+                }
+              },
+              {
+                title: '数量不一致',
+                risk_level: 'medium',
+                suggestion: [
+                  '请检查主接线图中中性点隔离开关的标注数量',
+                  '如清册数量正确，请在主接线图中删除16台'
+                ],
+                description:
+                  "设备清册中'中性点隔离开关'数量为2，主接线图中找到18处。",
+                geometry_ref: {
+                  chapter: null,
+                  extents: {
+                    max_point: {
+                      x: -191522.1778335525,
+                      y: -147955.0857898176
+                    },
+                    min_point: {
+                      x: -191976.574422797,
+                      y: -148090.4402612335
+                    }
+                  },
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
+                  handles: [
+                    'FE7EE',
+                    '1016DC',
+                    'FE775',
+                    '1016CC',
+                    'FE9AF',
+                    'FE9B9',
+                    'FE76B',
+                    '1016C3',
+                    'FEC66',
+                    'FEAEB',
+                    'FED2B',
+                    'FED51',
+                    'FEC4E',
+                    'FEDA2',
+                    'FEC71',
+                    'FEAF6',
+                    'FED36',
+                    'FED5C'
+                  ]
+                }
+              },
+              {
+                title: '设备缺失',
+                risk_level: 'medium',
+                suggestion: [
+                  '请在主接线图中补充放电间隙的标注',
+                  '如该设备不在主接线图范围内，请在设备清册中说明'
+                ],
+                description:
+                  "设备清册中有'放电间隙'（数量：2），但主接线图中未找到对应设备。",
+                geometry_ref: {
+                  chapter: null,
                   extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
                   handles: null
                 }
               },
               {
-                title: '110kV进线方式',
+                title: '数量不一致',
                 risk_level: 'medium',
                 suggestion: [
-                  '提供延太730线的详细信息，包括其设计规范、运行经验、安全可靠性等。',
-                  '提供电缆进线的详细设计，包括电缆的型号、规格、敷设方式、保护措施等。',
-                  '提供与相关部门的协调和审批文件。'
+                  '请检查主接线图中主变端子箱的标注数量',
+                  '如清册数量正确，请在主接线图中删除3台'
                 ],
                 description:
-                  '110kV进线采用电缆进线，T接110kV延太733线，未明确该延太733线是否符合规范要求，以及是否经过了必要的协调和审批。电缆进线需要考虑电缆的敷设条件、安全距离、防火保护等。',
+                  "设备清册中'主变端子箱'数量为2，主接线图中找到5处。",
                 geometry_ref: {
+                  chapter: null,
+                  extents: {
+                    max_point: {
+                      x: -191263.8487640288,
+                      y: -148261.9242404943
+                    },
+                    min_point: {
+                      x: -192003.7783722929,
+                      y: -148457.4648572067
+                    }
+                  },
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
+                  handles: ['1010F5', '101102', '101104', '10111A', '1010BF']
+                }
+              },
+              {
+                title: '设备缺失',
+                risk_level: 'medium',
+                suggestion: [
+                  '请在主接线图中补充支柱绝缘子的标注',
+                  '如该设备不在主接线图范围内，请在设备清册中说明'
+                ],
+                description:
+                  "设备清册中有'支柱绝缘子'（数量：30），但主接线图中未找到对应设备。",
+                geometry_ref: {
+                  chapter: null,
                   extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
                   handles: null
                 }
               },
               {
-                title: '110kV侧中性点接地方式',
+                title: '设备缺失',
                 risk_level: 'medium',
                 suggestion: [
-                  '提供110kV侧中性点保护间隙的阻抗值计算结果，并进行验证。',
-                  '提供110kV侧中性点接地保护系统的设计说明，包括保护继电器的整定值、动作特性等。',
-                  '提供相关试验报告，验证保护系统的协调性和可靠性。'
+                  '请在主接线图中补充钢芯铝绞线的标注',
+                  '如该设备不在主接线图范围内，请在设备清册中说明'
                 ],
                 description:
-                  '110kV侧中性点采用保护间隙方式，这在某些情况下是允许的，但需要满足特定的条件，例如保护间隙的阻抗值、保护系统的协调性等。设计说明中未提及这些条件是否满足。',
+                  "设备清册中有'钢芯铝绞线'（数量：40），但主接线图中未找到对应设备。",
                 geometry_ref: {
+                  chapter: null,
                   extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
                   handles: null
                 }
               },
               {
-                title: '10kV系统接地方式',
+                title: '设备缺失',
                 risk_level: 'medium',
                 suggestion: [
-                  '提供10kV系统不接地方式的可行性研究报告，包括对电网稳定性和可靠性的影响分析。',
-                  '提供电网公司的审核意见，确认不接地方式的可行性。'
+                  '请在主接线图中补充铜排的标注',
+                  '如该设备不在主接线图范围内，请在设备清册中说明'
                 ],
                 description:
-                  '10kV系统采用不接地方式，这在某些情况下是允许的，但需要满足特定的条件，例如电网的稳定性和可靠性。设计说明中未提及这些条件是否满足，以及是否经过了电网公司的审核。',
+                  "设备清册中有'铜排'（数量：100），但主接线图中未找到对应设备。",
                 geometry_ref: {
+                  chapter: null,
                   extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
                   handles: null
                 }
               },
               {
-                title: '消谐滤波补偿装置容量',
+                title: '设备缺失',
                 risk_level: 'medium',
                 suggestion: [
-                  '提供消谐滤波补偿装置容量的计算书，包括谐波分析、补偿效果评估等。',
-                  '提供谐波分析报告，确定谐波的含量和频率。'
+                  '请在主接线图中补充热缩套的标注',
+                  '如该设备不在主接线图范围内，请在设备清册中说明'
                 ],
                 description:
-                  '10kV消谐滤波补偿装置容量为1×12000kvar，相对于10kV母线容量，该补偿容量是否合理？是否考虑了谐波的实际情况？设计说明中未提供相关计算依据。',
+                  "设备清册中有'热缩套'（数量：100），但主接线图中未找到对应设备。",
                 geometry_ref: {
+                  chapter: null,
                   extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '户内变电站布局',
-                risk_level: 'medium',
-                suggestion: [
-                  '提供详细的户内变电站布局图，标明各设备之间的安全距离。',
-                  '提供通风和消防系统的设计说明，确保各设备的安全。',
-                  '进行人流疏散模拟，确保人员的安全。'
-                ],
-                description:
-                  '户内变电站配电装置楼长29米，宽21米，110kV配置装置室位于东北侧，变压器室位于北侧，10kV配电装置室位于南侧，10kV消谐补偿成套装置室位于西侧，10kV电容器室位于东北侧。需要考虑各设备之间的安全距离、通风、消防等因素。东北侧同时布置10kV电容器室和消谐补偿装置室，是否会影响通风和消防？',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              }
-            ]
-          },
-          {
-            id: '2.1',
-            title: '核查配电装置选择的合理性',
-            content: '核查配电装置选择的合理性',
-            violations: []
-          },
-          {
-            id: '3.1',
-            title: '短路电流审查',
-            content: '短路电流审查',
-            violations: [
-              {
-                title: '编号: 3.1 短路电流审查',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中增加短路电流审查的具体内容，包括计算方法、计算结果、设备选型依据等。',
-                  '确保短路电流计算符合相关规范要求，并对设备选型进行验证。'
-                ],
-                description:
-                  '设计说明中缺少短路电流审查的具体内容和结果。规范要求进行短路电流审查，但设计说明仅提及了审查本身，没有提供任何审查结果或分析。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '全局项目参数',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计说明中明确列出所有全局项目参数，例如电压等级、频率、阻抗等。',
-                  '确保所有设计文件和计算都基于相同的全局参数。'
-                ],
-                description:
-                  '设计说明中没有提供全局项目参数信息。全局参数对于设计的一致性和可追溯性至关重要。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '设计内容及范围 - 设计内容',
-                risk_level: 'medium',
-                suggestion: [
-                  '在设计内容中详细说明电容器组的控制方式（例如：自动控制、手动控制），以及相关的保护措施（例如：过电压保护、过电流保护）。'
-                ],
-                description:
-                  '设计内容中提到“无功补偿并联电容器装置安装”，但没有明确说明电容器组的控制方式和保护措施。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '电气主接线和平面布置 - 电气主接线 - 110kV进线',
-                risk_level: 'medium',
-                suggestion: [
-                  '避免使用过于具体的项目信息，例如线路名称。使用更通用的描述，例如“采用电缆进线”。',
-                  '补充说明进线电缆的规格（例如：截面积、绝缘等级）和敷设方式（例如：电缆沟、隧道）。'
-                ],
-                description:
-                  '描述中提到“T接110kV延太733线”，这部分信息过于具体，可能与特定项目相关，缺乏通用性。此外，需要说明进线电缆的规格和敷设方式。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '电气主接线和平面布置 - 电气主接线 - 10kV母线',
-                risk_level: 'medium',
-                suggestion: [
-                  '说明是否考虑了10kV母线的冗余性或备用电源。如果采用单母线接线，需要明确说明其适用条件和风险。',
-                  '如果需要提高可靠性，可以考虑采用双母线接线或备用电源。'
-                ],
-                description:
-                  '描述中提到“采用单母线接线”，但没有说明是否考虑了冗余性或备用电源。在重要变电站，单母线接线通常需要考虑备用电源或冗余母线。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '电气主接线和平面布置 - 电气平面布置',
-                risk_level: 'medium',
-                suggestion: [
-                  '在平面布置图中明确标示设备之间的最小安全距离，以及检修通道的宽度。',
-                  '确保平面布置符合安全规范和维护要求。'
-                ],
-                description:
-                  '平面布置中没有提及设备之间的距离要求，以及安全通道的设置。这可能影响设备的维护和检修。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '过电压保护与接地 - 接地',
-                risk_level: 'medium',
-                suggestion: [
-                  '补充说明接地电阻的测量方法和频率，例如采用膜片法或三极法测量，频率为10kHz。'
-                ],
-                description:
-                  '虽然提到接地电阻不应大于0.378Ω，但没有说明接地电阻的测量方法和频率。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
-                  handles: null
-                }
-              },
-              {
-                title: '电缆设施及防火',
-                risk_level: 'medium',
-                suggestion: [
-                  '明确防火涂料的类型（例如：有机防火涂料、无机防火涂料）和性能指标（例如：耐火极限、热释放率）。'
-                ],
-                description:
-                  '虽然提到阻火墙和防火封堵，但没有说明防火涂料的类型和性能指标。',
-                geometry_ref: {
-                  extents: null,
-                  file_id: 'c8f50371-a428-435f-a2d9-35d6048f1670',
+                  file_id: 'd372aedb-6c37-460b-97fe-2e95a3bf099e',
                   handles: null
                 }
               }
             ]
           }
         ],
-        category: '设计说明审查'
+        category: '设备一致性审查'
       }
-    ]
+    ],
+    discipline_id: '27aaf0a9-a389-4ef8-96be-da843ed77fcd'
   }
 })
 
@@ -1377,9 +1339,7 @@ let resizeObserver: ResizeObserver | null = null
 // Component lifecycle: Initialize and load initial file if URL or localFile is provided
 onMounted(async () => {
   // Initialize the CAD viewer with the internal canvas
-  // Initialize the CAD viewer with the internal canvas
   if (canvasRef.value) {
-    console.log('initializeCadViewer', canvasRef.value)
     initializeCadViewer({
       canvas: canvasRef.value,
       baseUrl: props.baseUrl,
@@ -1525,6 +1485,8 @@ onUnmounted(() => {
   wordPreviewUrl.value = ''
   highlightText.value = ''
   currentLocateInfo.value = {}
+  // ✅ 清除高亮
+  clearAllHighlights()
 })
 // Set up global event listeners for various CAD operations and notifications
 // These events are emitted by the underlying CAD engine and other components
@@ -1643,7 +1605,7 @@ const getRiskText = (level: string) => {
   }
 }
 
-// 定位到图纸 - 实际实现
+// 修改 locateInDrawing 函数
 const locateInDrawing = (geometry: any) => {
   try {
     if (!geometry?.extents) {
@@ -1651,41 +1613,26 @@ const locateInDrawing = (geometry: any) => {
       return
     }
 
+    console.log('开始定位，准备清除之前的高亮...')
+
+    // ✅ 清除所有高亮（关键步骤）
+    clearAllHighlights()
+
     // 提取坐标范围
     const { min_point, max_point } = geometry.extents
-
-    // 创建边界框
     const box = new AcGeBox2d(
       { x: min_point.x, y: min_point.y },
       { x: max_point.x, y: max_point.y }
     )
 
-    // 获取CAD查看器实例
-    const docManager = AcApDocManager.instance
-
-    if (!docManager || !docManager.curView) {
-      ElMessage.warning('CAD查看器未初始化')
-      return
-    }
-
-    // 清除当前选择
-    // docManager.editor.selectionSet.clear()
-
-    // 高亮相关实体（如果有句柄信息）
+    // 高亮新实体
     if (geometry.handles && geometry.handles.length > 0) {
-      try {
-        // 尝试通过句柄获取对象ID并高亮显示
-        highlightEntitiesByHandles(geometry.handles)
-      } catch (error) {
-        console.warn('高亮实体失败:', error)
-      }
+      highlightEntitiesByHandles(geometry.handles)
     }
 
     // 定位到违规区域
-    docManager.curView.zoomTo(box, 1.5) // 1.5倍边距，让区域更明显
-
-    // 可选：添加临时标注
-    // addTemporaryMark(box)
+    const view = AcApDocManager.instance.curView
+    view.zoomTo(box, 0.5)
 
     ElMessage.success({
       message: `已定位到违规区域 (${min_point.x.toFixed(2)}, ${min_point.y.toFixed(2)})`,
@@ -1697,42 +1644,64 @@ const locateInDrawing = (geometry: any) => {
   }
 }
 
-// 通过句柄高亮实体
+// 修改 highlightEntitiesByHandles 函数，增加ID记录
 const highlightEntitiesByHandles = (handles: string[]) => {
   try {
     const docManager = AcApDocManager.instance
-    const database = docManager.curDocument?.database
+    const view = docManager.curView
+    const ids: string[] = []
 
-    if (!database) return
-
-    const objectIds: any[] = []
-
-    // 遍历句柄，获取对象ID
     handles.forEach(handle => {
-      try {
-        // 这里需要根据你的CAD库API来获取对象ID
-        // 假设有一个方法可以根据句柄获取对象ID
-        // const objectId = database.getObjectIdFromHandle?.(handle)
-        // if (objectId) {
-        //   objectIds.push(objectId)
-        // }
-      } catch (error) {
-        console.warn(`句柄 ${handle} 获取失败:`, error)
-      }
+      const num = parseInt(handle, 16).toString(10)
+      ids.push(num)
     })
 
-    if (objectIds.length > 0) {
-      // 高亮显示这些实体
-      docManager.curView.highlight(objectIds)
+    // 高亮新实体
+    view.highlight(ids)
 
-      // 也可以添加到选择集
-      // docManager.editor.selectionSet.add(objectIds);
-    }
+    // ✅ 记录到我们的维护列表中（支持多次高亮）
+    highlightedIds.value = [...highlightedIds.value, ...ids]
+
+    console.log('高亮ids:', ids, '当前维护列表:', highlightedIds.value)
   } catch (error) {
     console.error('高亮实体失败:', error)
   }
 }
 
+/**
+ * 清除所有高亮（包括点击高亮和程序高亮）
+ */
+const clearAllHighlights = () => {
+  try {
+    const view = AcApDocManager.instance.curView
+
+    // 1. 获取点击高亮的ID（来自 selectionSet）
+    const clickedIds = view.selectionSet?.ids || []
+
+    // 2. 合并所有高亮ID（去重）
+    const allHighlightedIds = [
+      ...new Set([...clickedIds, ...highlightedIds.value])
+    ]
+
+    if (allHighlightedIds.length > 0) {
+      view.unhighlight(allHighlightedIds)
+      console.log(`已清除 ${allHighlightedIds.length} 个高亮实体`, {
+        点击高亮: clickedIds,
+        程序高亮: highlightedIds.value
+      })
+    }
+
+    // 3. 清空我们维护的列表
+    highlightedIds.value = []
+
+    // 4. 清空选择集（如果API支持）
+    // if (view.selectionSet && view.clearSelection) {
+    //   view.clearSelection()
+    // }
+  } catch (error) {
+    console.error('清除高亮失败:', error)
+  }
+}
 // 在onMounted或watch中添加：
 watch(
   () => isPanelCollapsed.value,
