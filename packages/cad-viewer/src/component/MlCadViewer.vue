@@ -450,7 +450,7 @@
         <div class="related-article">
           <div class="article-title">
             {{
-              getArticleContent(selectedViolation.articleId)?.title ||
+              getArticleContent(selectedViolation.articleId)?.origin ||
               '未找到条文信息'
             }}
           </div>
@@ -540,7 +540,7 @@
         <div class="related-article">
           <div class="article-title">
             {{
-              getArticleContent(selectedViolation.articleId)?.title ||
+              getArticleContent(selectedViolation.articleId)?.origin ||
               '未找到条文信息'
             }}
           </div>
