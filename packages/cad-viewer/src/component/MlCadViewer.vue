@@ -2252,6 +2252,38 @@ const getFileCategoryTagType = (category: string): TagType => {
 const goBack = () => {
   window.history.back()
 }
+
+// 批注列表
+const annotations = ref<
+  Array<{
+    id: string
+    position: { x: number; y: number } // 世界坐标
+    text: string
+    createdAt: number
+  }>
+>([])
+
+// 当前正在编辑的批注
+const editingAnnotation = ref<string | null>(null)
+const annotationInputRef = ref<HTMLDivElement | null>(null)
+
+// 临时批注位置（右键点击时的坐标）
+const tempAnnotationPos = ref<{
+  x: number
+  y: number
+  screenX: number
+  screenY: number
+} | null>(null)
+
+/**
+ * 将屏幕坐标转换为CAD世界坐标
+ */
+const screenToWorld = (screenX: number, screenY: number): { x: number; y: number } => {
+  const view = AcApDocManager.instance.curView
+  if (!view) return { x: 0, y: 0 }
+  // 使用CAD查看器的坐标转换方法
+  return view.screenToWorld(screenX, screenY)
+}
 </script>
 
 <style scoped lang="scss">
