@@ -143,7 +143,7 @@
                 @click="filterRisk = null"
               >
                 <el-icon><List /></el-icon>
-                <span>全部问题</span>
+                <span>全部审查</span>
                 <span class="filter-count">{{ totalViolations }}</span>
               </div>
 
@@ -251,14 +251,14 @@
                 </el-table-column>
                 <el-table-column
                   prop="title"
-                  label="违规问题"
+                  label="审查内容"
                   min-width="200"
                   show-overflow-tooltip
                 >
                   <template #default="{ row }">
                     <span
                       style="color: var(--color-primary-dark); font-weight: 700"
-                      >{{ row.title || row.articleTitle }}</span
+                      >{{ row.articleTitle }}</span
                     >
                   </template>
                 </el-table-column>
@@ -328,10 +328,10 @@
     </div>
   </div>
 
-  <!-- 添加违规详情对话框 -->
+  <!-- 修改后的详情对话框 -->
   <el-dialog
     v-model="showViolationDetail"
-    :title="'违规问题详情'"
+    title="审查内容详情"
     width="800px"
     class="violation-detail-dialog-wrapper"
     :style="{ maxHeight: '85vh' }"
@@ -344,7 +344,6 @@
           <span class="detail-label">检查内容:</span>
           <span>{{ selectedViolation.articleTitle }}</span>
         </div>
-
         <div class="detail-row">
           <span class="detail-label">风险等级:</span>
           <el-tag
@@ -365,97 +364,62 @@
         </div>
       </div>
 
-      <!-- 详细描述 -->
+      <!-- 合并显示所有 violations 的问题描述 -->
       <div class="detail-section">
         <h4>问题描述</h4>
-        <div
-          class="detail-content description-content"
-          v-html="formatDescription(selectedViolation.description)"
-        ></div>
+        <div class="detail-content description-content">
+          <div v-if="selectedViolation.allViolations.length > 0">
+            <div
+              v-for="(violation, index) in selectedViolation.allViolations"
+              :key="'desc-' + index"
+            >
+              <div v-if="violation.description">
+                <div class="description-item">
+                  <span class="item-number">{{ index + 1 }}.</span>
+                  <span
+                    class="item-content"
+                    v-html="formatDescription(violation.description)"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="description-text">审查已通过</div>
+        </div>
       </div>
 
-      <!-- 修改建议 -->
-      <div class="detail-section">
+      <!-- 合并显示所有 violations 的修改建议 -->
+      <div class="detail-section" v-if="hasSuggestions">
         <h4>修改建议</h4>
-        <div
-          v-if="
-            Array.isArray(selectedViolation.suggestion) &&
-            selectedViolation.suggestion.length > 0
-          "
-          class="detail-content suggestion"
-        >
+        <div class="detail-content suggestion">
           <ol class="suggestion-ol">
             <li
-              v-for="(item, index) in selectedViolation.suggestion"
-              :key="index"
+              v-for="(violation, index) in selectedViolation.allViolations"
+              :key="'sug-' + index"
             >
-              {{ item }}
+              <template
+                v-if="violation.suggestion && violation.suggestion.length > 0"
+              >
+                <div style="margin-top: 6px">
+                  <span v-for="(item, idx) in violation.suggestion" :key="idx">
+                    {{ item }}
+                  </span>
+                </div>
+              </template>
             </li>
           </ol>
         </div>
-        <div v-else class="detail-content suggestion">
-          {{ selectedViolation.suggestion }}
-        </div>
-      </div>
-      <!-- 几何信息 -->
-      <div v-if="selectedViolation.geometry_ref" class="detail-section">
-        <h4>图纸位置</h4>
-        <div class="violation-geometry">
-          <div
-            v-if="selectedViolation.geometry_ref.extents"
-            class="geometry-info"
-          >
-            <!-- ✅ 新增：检查extents -->
-            <span>坐标范围：</span>
-            <span>
-              ({{
-                selectedViolation.geometry_ref.extents.min_point.x.toFixed(2)
-              }},
-              {{
-                selectedViolation.geometry_ref.extents.min_point.y.toFixed(2)
-              }}) - ({{
-                selectedViolation.geometry_ref.extents.max_point.x.toFixed(2)
-              }},
-              {{
-                selectedViolation.geometry_ref.extents.max_point.y.toFixed(2)
-              }})
-            </span>
-          </div>
-          <div v-else class="geometry-info">
-            <span>坐标范围：</span>
-            <span>未提供</span>
-          </div>
-          <el-button
-            type="primary"
-            size="small"
-            @click.stop="
-              handleLocateClick(
-                selectedViolation.geometry_ref,
-                selectedViolation
-              )
-            "
-            :disabled="
-              !selectedViolation.geometry_ref?.extents &&
-              selectedViolation.risk_level === 0
-            "
-          >
-            定位
-          </el-button>
-        </div>
       </div>
 
-      <!-- 相关条目 -->
+      <!-- 相关规范条文 -->
       <div class="detail-section">
         <h4>相关规范条文</h4>
         <div class="related-article">
-          <div class="article-title">
+          <div class="article-content">
             {{
               getArticleContent(selectedViolation.articleId)?.origin ||
               '未找到条文信息'
             }}
-          </div>
-          <div class="article-content">
-            {{ getArticleContent(selectedViolation.articleId)?.content || '' }}
           </div>
         </div>
       </div>
@@ -469,6 +433,7 @@
       </div>
     </template>
   </el-dialog>
+
   <!-- 新增：审查规范详情弹窗（仅用于 risk_level 为 0 的条目） -->
   <el-dialog
     v-model="showPassedDetail"
@@ -1227,7 +1192,7 @@ const riskCounts = computed(() => {
   const counts = { high: 0, medium: 0, low: 0 }
   reportData.value.rules.forEach((rule: any) => {
     rule.articles.forEach((article: any) => {
-      article.violations.forEach((violation: any) => {
+      ;[article.violations[0] || []].forEach((violation: any) => {
         if (violation.risk_level === 'high') counts.high++
         else if (violation.risk_level === 'medium') counts.medium++
         else if (violation.risk_level === 'low') counts.low++
@@ -1241,37 +1206,40 @@ const riskCounts = computed(() => {
 const totalViolations = computed(() => {
   let count = 0
   reportData.value.rules.forEach((rule: any) => {
-    rule.articles.forEach((article: any) => {
-      count += article.violations.length
+    rule.articles.forEach(() => {
+      count += 1
     })
   })
   return count
 })
 
-// 扁平化的违规项列表（用于表格展示）
+// 扁平化的违规项列表（用于表格展示）- 修改：只显示每个 article 的第一条 violation
 const flattenedViolations = computed(() => {
   const violations: any[] = []
   reportData.value.rules.forEach((rule: any) => {
     rule.articles.forEach((article: any) => {
-      article.violations.forEach((violation: any) => {
+      if (article.violations && article.violations.length > 0) {
+        // 只取第一个 violation 用于表格显示，但保留所有 violations 用于详情
+        const firstViolation = article.violations[0]
         violations.push({
-          ...violation,
+          ...firstViolation,
           ruleName: rule.name,
           ruleCode: rule.code,
           articleId: article.id,
           articleTitle: article.title,
-          category: rule.category?.slice(0, 4) // 添加问题来源
+          category: rule.category?.slice(0, 4),
+          allViolations: article.violations // 保存所有 violations 用于详情弹窗
         })
-      })
-
-      if (!article.violations.length) {
+      } else {
+        // 处理没有 violations 的情况（risk_level 为 0）
         violations.push({
           ruleName: rule.name,
           ruleCode: rule.code,
           articleId: article.id,
           articleTitle: article.title,
-          category: rule.category?.slice(0, 4), // 添加问题来源
-          risk_level: 0
+          category: rule.category?.slice(0, 4),
+          risk_level: 0,
+          allViolations: [] // 空数组
         })
       }
     })
@@ -1738,11 +1706,11 @@ const showViolationDetail = ref(false)
 const selectedViolation = ref<any>(null)
 const showPassedDetail = ref(false)
 
-// 修改行点击处理函数（替换原有的 handleRowClick）
+// 修改行点击处理函数
 const handleRowClick = (row: any) => {
   selectedViolation.value = row
 
-  // 更新定位信息，但不清除，因为用户可能只是查看详情
+  // 更新定位信息
   if (row.violation_id !== currentLocateInfo.value.rowId) {
     currentLocateInfo.value = {}
   }
@@ -1782,6 +1750,7 @@ watch(filterRisk, () => {
 
 // 格式化描述文本 - 修复重复渲染问题
 const formatDescription = (description: string): string => {
+  return description
   if (!description || typeof description !== 'string') return ''
 
   try {
@@ -2008,7 +1977,7 @@ const exportReport = async () => {
       { header: '序号', key: 'index', width: 8 },
       { header: '风险等级', key: 'riskLevel', width: 18 },
       { header: '问题来源', key: 'category', width: 18 },
-      { header: '违规问题', key: 'title', width: 40 },
+      { header: '审查内容', key: 'articleTitle', width: 40 },
       { header: '问题描述', key: 'description', width: 50 },
       { header: '处理建议', key: 'suggestion', width: 60 },
       { header: '相关规范', key: 'articleTitle', width: 30 }
@@ -2252,6 +2221,15 @@ const getFileCategoryTagType = (category: string): TagType => {
 const goBack = () => {
   window.history.back()
 }
+
+// 判断是否有有效的建议
+const hasSuggestions = computed(() => {
+  if (!selectedViolation.value?.allViolations) return false
+
+  return selectedViolation.value.allViolations.some(
+    (violation: any) => violation.suggestion && violation.suggestion.length > 0
+  )
+})
 </script>
 
 <style scoped lang="scss">
@@ -2894,7 +2872,11 @@ const goBack = () => {
   margin-bottom: 8px;
   line-height: 1.6;
   font-size: 14px;
-  font-weight: bold;
+}
+.suggestion-ol li > strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-primary-dark);
 }
 
 /* 新增预览相关样式 */
@@ -3089,7 +3071,6 @@ const goBack = () => {
     // 数字部分（固定宽度，右对齐）
     .item-number {
       flex-shrink: 0;
-      width: 28px; // 固定宽度，确保所有数字对齐
       text-align: right;
       padding-right: 8px;
       font-weight: 500;
@@ -3098,6 +3079,7 @@ const goBack = () => {
 
     // 内容部分（自动填充剩余空间）
     .item-content {
+      text-indent: 0;
       flex: 1;
       padding-left: 0; // 取消内容缩进
     }
@@ -3148,5 +3130,28 @@ const goBack = () => {
       color: var(--color-warning);
     }
   }
+}
+
+/* 新增：详情中多个 violation 的分组样式 */
+.violation-detail-group {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--color-gray-200);
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+
+/* 调整 h4 样式 */
+.violation-detail-group h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #262626;
+  background: var(--color-gray-100);
+  padding: 8px 12px;
+  border-radius: 4px;
 }
 </style>
