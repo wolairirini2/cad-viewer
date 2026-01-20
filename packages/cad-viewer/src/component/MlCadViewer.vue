@@ -4157,7 +4157,7 @@ const flattenedViolations = computed(() => {
           articleTitle: article.title,
           category: rule.category?.slice(0, 4),
           risk_level: 0,
-          allViolations: [],// 空数组
+          allViolations: [], // 空数组
           origin: article.origin
         })
       }
@@ -4759,46 +4759,6 @@ const handleSelectionChange = (val: any[]) => {
   selection.value = val
 }
 
-// 完整的 exportReport 函数
-// 添加格式化函数
-const formatTextForExcel = (text: string | string[]): string => {
-  if (!text) return ''
-
-  // 如果是数组（处理建议）
-  if (Array.isArray(text)) {
-    return text.map((item, index) => `${index + 1}. ${item}`).join('\n')
-  }
-
-  // 如果是字符串（问题描述）
-  if (typeof text === 'string') {
-    // 匹配数字条目：数字+点/顿号+内容+分号/句号
-    const regex = /(\d+)[.、]\s*([^；。]+?)(?:；|。|$)/g
-    const matches = [...text.matchAll(regex)]
-
-    if (matches.length > 0) {
-      let formatted = ''
-
-      // 添加前缀文本
-      const firstMatchIndex = matches[0].index!
-      if (firstMatchIndex > 0) {
-        const prefixText = text.substring(0, firstMatchIndex).trim()
-        if (prefixText) formatted += `${prefixText}\n\n`
-      }
-
-      // 格式化数字条目
-      matches.forEach(match => {
-        const num = match[1]
-        const content = match[2]
-        const separator = match[0].endsWith('；') ? '；' : '。'
-        formatted += `${num}. ${content}${separator}\n`
-      })
-
-      return formatted.trim()
-    }
-  }
-
-  return String(text)
-}
 // 修改 exportReport 函数
 const exportReport = async () => {
   // 获取原始数据（已筛选排序）

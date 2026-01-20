@@ -68,12 +68,11 @@ const normalizeText = (text: string): string => {
 
 // 将文本分割成可匹配的段落
 const splitTextToSegments = (text: string): string[] => {
-  // 按双换行符分割成段落，再处理每个段落
   const paragraphs = text.split(/\n\s*\n/)
   return paragraphs.map(p => normalizeText(p)).filter(p => p.length > 0)
 }
 
-// 检查文本节点是否匹配段落内容
+// 查找从第一段到最后一段的完整匹配区域 - 流式匹配最终版
 const findMatchingRegion = (
   textNodes: Text[],
   segments: string[]
@@ -85,62 +84,90 @@ const findMatchingRegion = (
 } | null => {
   if (segments.length === 0) return null
 
-  // 对于多段落文本，主要匹配第一个段落
   const firstSegment = segments[0]
+  const lastSegment = segments[segments.length - 1]
 
-  for (let i = 0; i < textNodes.length; i++) {
-    const nodeText = textNodes[i].textContent || ''
-    const normalized = normalizeText(nodeText)
-    const index = normalized.indexOf(firstSegment)
-
-    if (index !== -1) {
-      // 找到第一个段落的匹配
-      const startNode = textNodes[i]
-      const startOffset = index
-
-      // 如果只有一个段落，或者第一段后面内容足够长，直接返回
-      let endNode = startNode
-      let endOffset = index + firstSegment.length
-
-      // 如果有多个段落，尝试匹配后续段落
-      if (segments.length > 1) {
-        let currentNodeIndex = i
-        let currentSegmentIndex = 1
-
-        while (
-          currentSegmentIndex < segments.length &&
-          currentNodeIndex < textNodes.length
-        ) {
-          const currentNode = textNodes[currentNodeIndex]
-          const currentText = normalizeText(currentNode.textContent || '')
-
-          const nextSegment = segments[currentSegmentIndex]
-          const segmentIndex = currentText.indexOf(nextSegment)
-
-          if (segmentIndex !== -1) {
-            // 找到后续段落的匹配
-            endNode = currentNode
-            endOffset = segmentIndex + nextSegment.length
-            currentSegmentIndex++
-          } else {
-            // 检查是否在当前节点的文本中开始
-            if (currentText.length > 0) {
-              currentNodeIndex++
-              if (currentNodeIndex >= textNodes.length) break
-            } else {
-              break
-            }
-          }
+  // 情况1：只有一个段落（首尾相同）
+  if (firstSegment === lastSegment) {
+    for (let i = 0; i < textNodes.length; i++) {
+      const nodeText = normalizeText(textNodes[i].textContent || '')
+      const index = nodeText.indexOf(firstSegment)
+      
+      if (index !== -1) {
+        return {
+          startNode: textNodes[i],
+          endNode: textNodes[i],
+          startOffset: index,
+          endOffset: index + firstSegment.length
         }
       }
+    }
+    return null
+  }
 
-      return { startNode, endNode, startOffset, endOffset }
+  // 情况2：多个段落需要跨节点匹配
+
+  // 步骤2.1：构建节点位置映射表
+  const nodeMap = textNodes.map((node, index) => ({
+    node,
+    index,
+    text: normalizeText(node.textContent || ''),
+    startPos: 0, // 在拼接文本中的起始位置
+    endPos: 0    // 在拼接文本中的结束位置
+  }))
+
+  // 计算每个节点在虚拟拼接文本中的位置
+  let currentPos = 0
+  nodeMap.forEach(item => {
+    item.startPos = currentPos
+    item.endPos = currentPos + item.text.length
+    currentPos = item.endPos
+  })
+
+  // 步骤2.2：将所有文本拼接成一个完整文本
+  const fullText = nodeMap.map(item => item.text).join('')
+  
+  // 步骤2.3：在完整文本中搜索首尾位置
+  const firstGlobalStart = fullText.indexOf(firstSegment)
+  const lastGlobalStart = fullText.lastIndexOf(lastSegment)
+  
+  if (firstGlobalStart === -1 || lastGlobalStart === -1) return null
+  
+  // 确保尾段在首段之后
+  if (lastGlobalStart <= firstGlobalStart) return null
+
+  const lastGlobalEnd = lastGlobalStart + lastSegment.length
+
+  // 步骤2.4：将全局位置映射回节点和偏移量
+  let startNode: Text | null = null
+  let endNode: Text | null = null
+  let startOffset = 0
+  let endOffset = 0
+
+  for (const item of nodeMap) {
+    // 映射startNode（首段开始位置）
+    if (!startNode && firstGlobalStart >= item.startPos && firstGlobalStart < item.endPos) {
+      startNode = item.node
+      startOffset = firstGlobalStart - item.startPos
+    }
+    
+    // 映射endNode（尾段结束位置）
+    if (lastGlobalEnd > item.startPos && lastGlobalEnd <= item.endPos) {
+      endNode = item.node
+      endOffset = lastGlobalEnd - item.startPos
     }
   }
 
-  return null
-}
+  // 必须找到两个端点
+  if (!startNode || !endNode) return null
 
+  return {
+    startNode,
+    endNode,
+    startOffset,
+    endOffset
+  }
+}
 // 在highlightAndScroll函数中，修改匹配项的处理逻辑
 const highlightAndScroll = (text: string) => {
   if (!viewerContainer.value || !text) return
