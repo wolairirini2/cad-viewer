@@ -309,6 +309,7 @@
                       type="info"
                       plain
                       :disabled="row.risk_level === 0"
+                      @click.stop=""
                       >发送</el-button
                     >
                   </template>
@@ -798,10 +799,10 @@ const handleLocateClick = async (geometry: any, row: any) => {
     return
   }
 
-  if (!geometry?.extents) {
-    ElMessage.warning('无法获取几何信息')
-    return
-  }
+  // if (!geometry?.extents) {
+  //   ElMessage.warning('无法获取几何信息')
+  //   return
+  // }
 
   try {
     if (geometry.violation_id) {
