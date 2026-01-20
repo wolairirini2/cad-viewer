@@ -623,6 +623,46 @@ export class AcTrView2d extends AcEdBaseView {
   public updateSize(): void {
     this.onWindowResize()
   }
+  // 在 AcTrView2d 类中添加或修改以下方法：
+
+  /**
+   * Convert screen coordinates to world coordinates
+   * @param screenX Screen X coordinate relative to canvas
+   * @param screenY Screen Y coordinate relative to canvas
+   * @returns World coordinates
+   */
+  public screenToWorld(screenX: number, screenY: number): AcGePoint2d {
+    // 将屏幕坐标转换为当前视图坐标
+    const cwcsX = screenX - this.width / 2
+    const cwcsY = this.height / 2 - screenY // Y轴翻转
+
+    // 将当前视图坐标转换为世界坐标
+    return this.cwcs2Wcs({ x: cwcsX, y: cwcsY })
+  }
+
+  /**
+   * Convert world coordinates to screen coordinates
+   * @param worldX World X coordinate
+   * @param worldY World Y coordinate
+   * @returns Screen coordinates relative to canvas
+   */
+  public worldToScreen(worldX: number, worldY: number): AcGePoint2d {
+    // 将世界坐标转换为当前视图坐标
+    const cwcsPoint = this.wcs2Cwcs({ x: worldX, y: worldY })
+
+    // 将当前视图坐标转换为屏幕坐标
+    const screenX = cwcsPoint.x + this.width / 2
+    const screenY = this.height / 2 - cwcsPoint.y // Y轴翻转
+
+    return new AcGePoint2d(screenX, screenY)
+  }
+
+  /**
+   * Get canvas element
+   */
+  public getCanvas(): HTMLCanvasElement {
+    return this.canvas
+  }
   protected onWindowResize() {
     super.onWindowResize()
     this._renderer.setSize(this.width, this.height)
