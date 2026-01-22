@@ -22,17 +22,13 @@ const loading = ref(false)
 
 // 渲染文档
 const renderDocument = async () => {
-  console.log('正在渲染文档...', props.src)
-
   if (!props.src || !viewerContainer.value) return
 
-  loading.value = true // 🔄 显示加载动画
-
+  loading.value = true
   try {
     viewerContainer.value.innerHTML = ''
     const response = await fetch(props.src)
     const blob = await response.blob()
-    console.log('文档加载成功', blob)
 
     await renderAsync(blob, viewerContainer.value, null as any, {
       className: 'docx-preview',
@@ -42,8 +38,7 @@ const renderDocument = async () => {
       breakPages: true,
       ignoreFonts: false,
       debug: false,
-      // 新增配置
-      experimental: true, // 启用实验性功能，改善样式保真度
+      experimental: true,
       trimXmlDeclaration: true,
       ignoreLastRenderedPageBreak: false,
       renderHeaders: true,
@@ -51,28 +46,248 @@ const renderDocument = async () => {
       renderFootnotes: true,
       renderEndnotes: true
     })
+
     if (props.highlightText) {
-      setTimeout(() => highlightAndScroll(props.highlightText!), 500)
+      setTimeout(() => highlightAndScroll(props.highlightText!), 300)
     }
   } catch (error) {
     console.error('Word文档渲染失败:', error)
     ElMessage.error('文档加载失败，请稍后重试')
   } finally {
-    loading.value = false // ✅ 隐藏加载动画
+    loading.value = false
   }
 }
-// 文本规范化处理
+
+// 🔥 智能文本规范化（核心修复）
 const normalizeText = (text: string): string => {
-  return text.replace(/\s+/g, ' ').trim()
+  return (
+    text
+      // 统一各种空格（包括不间断空格\u00A0、全角空格\u3000等）
+      .replace(/[\s\u00A0\u1680\u180e\u2000-\u2009\u202f\u205f\u3000]+/g, ' ')
+      // 移除零宽度字符和不可见符号
+      .replace(/[\u200b-\u200d\ufeff]/g, '')
+      // 统一各种引号
+      .replace(/[""'']/g, '"')
+      // 统一各种连字符和破折号
+      .replace(/[-‑‒–—]/g, '-')
+      // 统一各种省略号
+      .replace(/[…]/g, '...')
+      // 移除文档渲染插入的特殊标记符号
+      .replace(/[·.:：：]{2,}/g, '') // 移除连续的.、:、·等
+      .trim()
+  )
 }
 
-// 将文本分割成可匹配的段落
+// 🔥 改进：保留序号标记，不移除（重要特征）
 const splitTextToSegments = (text: string): string[] => {
   const paragraphs = text.split(/\n\s*\n/)
   return paragraphs.map(p => normalizeText(p)).filter(p => p.length > 0)
+  // 不再移除序号标记！保留 (1), (2) 等重要特征
 }
 
-// 查找从第一段到最后一段的完整匹配区域 - 流式匹配最终版
+// 在文档中搜索匹配的文本区域（增强版）
+const findMatchInDocument = (
+  textNodes: Text[],
+  searchText: string
+): {
+  startNode: Text
+  endNode: Text
+  startOffset: number
+  endOffset: number
+} | null => {
+  // 1. 构建完整文档文本和节点映射
+  let fullText = ''
+  const nodeRanges: Array<{
+    node: Text
+    start: number
+    end: number
+    rawText: string
+  }> = []
+
+  textNodes.forEach(node => {
+    const rawText = node.textContent || ''
+    const normalized = normalizeText(rawText)
+    const start = fullText.length
+    fullText += normalized
+    const end = fullText.length
+    nodeRanges.push({ node, start, end, rawText })
+  })
+
+  // 2. 规范化搜索文本
+  const normalizedSearch = normalizeText(searchText)
+
+  // 3. 精确搜索，同时考虑字符可能被跨节点分割的情况
+  let matchStart = -1
+
+  // 先尝试直接匹配
+  matchStart = fullText.indexOf(normalizedSearch)
+
+  // 如果精确搜索失败，尝试特殊字符分割情况（如 "TFT-LCD" 可能渲染为 "TFT-LC" 和 "D"）
+  if (matchStart === -1 && normalizedSearch.includes('-')) {
+    console.log('⚠️ 精确匹配失败，尝试处理连字符分割情况...')
+
+    // 移除连字符后再匹配
+    const searchWithoutHyphen = normalizedSearch.replace(/-/g, '')
+    const docWithoutHyphen = fullText.replace(/-/g, '')
+
+    const hyphenMatchStart = docWithoutHyphen.indexOf(searchWithoutHyphen)
+
+    if (hyphenMatchStart !== -1) {
+      // 找到无连字符版本，尝试在原文本中定位近似位置
+      // 寻找主要关键词（最长的词）
+      const keywords = normalizedSearch.split(/\s+/).filter(w => w.length > 3)
+      keywords.sort((a, b) => b.length - a.length)
+
+      if (keywords.length > 0) {
+        for (const keyword of keywords) {
+          const keywordMatch = fullText.indexOf(keyword.replace(/-/g, ''))
+          if (keywordMatch !== -1) {
+            matchStart = Math.max(0, keywordMatch - 10) // 往前扩展一点
+            break
+          }
+        }
+      }
+    }
+  }
+
+  // 4. 如果仍然找不到，尝试关键词模糊匹配
+  if (matchStart === -1) {
+    console.log('⚠️ 仍无法匹配，尝试关键词模糊搜索...')
+    const keywords = normalizedSearch.split(/\s+/).filter(w => w.length > 3)
+    keywords.sort((a, b) => b.length - a.length)
+
+    if (keywords.length > 0) {
+      const primaryKeyword = keywords[0]
+      matchStart = fullText.indexOf(primaryKeyword)
+
+      if (matchStart === -1) {
+        // 仍然找不到，返回null
+        return null
+      }
+
+      console.log('✅ 模糊匹配到关键词:', primaryKeyword, '位置:', matchStart)
+      // 只高亮匹配到的关键词部分
+      const matchEnd = matchStart + primaryKeyword.length
+
+      // 辅助函数：将文本范围映射到DOM节点
+      const mapRangeToNodes = (
+        nodeRanges: Array<{
+          node: Text
+          start: number
+          end: number
+          rawText: string
+        }>,
+        matchStart: number,
+        matchEnd: number
+      ): {
+        startNode: Text
+        endNode: Text
+        startOffset: number
+        endOffset: number
+      } | null => {
+        let startNode: Text | null = null
+        let endNode: Text | null = null
+        let startOffset = 0
+        let endOffset = 0
+
+        for (const range of nodeRanges) {
+          // 起始位置
+          if (
+            !startNode &&
+            matchStart >= range.start &&
+            matchStart < range.end
+          ) {
+            startNode = range.node
+            const keywordStartInRaw = matchStart - range.start
+            // 尝试在原始文本中找到关键词
+            const snippet = normalizedSearch.substring(0, 20)
+            const idxInRaw = range.rawText.indexOf(snippet)
+            if (idxInRaw !== -1) {
+              startOffset = idxInRaw
+            } else {
+              startOffset = Math.min(keywordStartInRaw, range.rawText.length)
+            }
+          }
+
+          // 结束位置
+          if (matchEnd > range.start && matchEnd <= range.end) {
+            endNode = range.node
+            const keywordEndInRaw = matchEnd - range.start
+            endOffset = Math.min(keywordEndInRaw, range.rawText.length)
+          }
+
+          if (startNode && endNode) break
+        }
+
+        if (!startNode || !endNode) return null
+
+        return { startNode, endNode, startOffset, endOffset }
+      }
+      return mapRangeToNodes(nodeRanges, matchStart, matchEnd)
+    }
+
+    return null
+  }
+
+  // 5. 精确匹配成功，映射到DOM节点
+  const matchEnd = matchStart + normalizedSearch.length
+  console.log('✅ 精确匹配成功，位置:', matchStart, '-', matchEnd)
+
+  // 辅助函数：将文本范围映射到DOM节点
+  const mapRangeToNodes = (
+    nodeRanges: Array<{
+      node: Text
+      start: number
+      end: number
+      rawText: string
+    }>,
+    matchStart: number,
+    matchEnd: number
+  ): {
+    startNode: Text
+    endNode: Text
+    startOffset: number
+    endOffset: number
+  } | null => {
+    let startNode: Text | null = null
+    let endNode: Text | null = null
+    let startOffset = 0
+    let endOffset = 0
+
+    for (const range of nodeRanges) {
+      // 起始位置
+      if (!startNode && matchStart >= range.start && matchStart < range.end) {
+        startNode = range.node
+        const keywordStartInRaw = matchStart - range.start
+        // 尝试在原始文本中找到关键词
+        const snippet = normalizedSearch.substring(0, 20)
+        const idxInRaw = range.rawText.indexOf(snippet)
+        if (idxInRaw !== -1) {
+          startOffset = idxInRaw
+        } else {
+          startOffset = Math.min(keywordStartInRaw, range.rawText.length)
+        }
+      }
+
+      // 结束位置
+      if (matchEnd > range.start && matchEnd <= range.end) {
+        endNode = range.node
+        const keywordEndInRaw = matchEnd - range.start
+        endOffset = Math.min(keywordEndInRaw, range.rawText.length)
+      }
+
+      if (startNode && endNode) break
+    }
+
+    if (!startNode || !endNode) return null
+
+    return { startNode, endNode, startOffset, endOffset }
+  }
+
+  return mapRangeToNodes(nodeRanges, matchStart, matchEnd)
+}
+
+// 修改：将多段落匹配改为逐个段落精确匹配
 const findMatchingRegion = (
   textNodes: Text[],
   segments: string[]
@@ -84,163 +299,21 @@ const findMatchingRegion = (
 } | null => {
   if (segments.length === 0) return null
 
-  const firstSegment = segments[0]
-  const lastSegment = segments[segments.length - 1]
-
-  // 情况1：只有一个段落（首尾相同）
-  if (firstSegment === lastSegment) {
-    for (let i = 0; i < textNodes.length; i++) {
-      const nodeText = normalizeText(textNodes[i].textContent || '')
-      const index = nodeText.indexOf(firstSegment)
-      
-      if (index !== -1) {
-        return {
-          startNode: textNodes[i],
-          endNode: textNodes[i],
-          startOffset: index,
-          endOffset: index + firstSegment.length
-        }
-      }
-    }
-    return null
-  }
-
-  // 情况2：多个段落需要跨节点匹配
-
-  // 步骤2.1：构建节点位置映射表
-  const nodeMap = textNodes.map((node, index) => ({
-    node,
-    index,
-    text: normalizeText(node.textContent || ''),
-    startPos: 0, // 在拼接文本中的起始位置
-    endPos: 0    // 在拼接文本中的结束位置
-  }))
-
-  // 计算每个节点在虚拟拼接文本中的位置
-  let currentPos = 0
-  nodeMap.forEach(item => {
-    item.startPos = currentPos
-    item.endPos = currentPos + item.text.length
-    currentPos = item.endPos
-  })
-
-  // 步骤2.2：将所有文本拼接成一个完整文本
-  const fullText = nodeMap.map(item => item.text).join('')
-  
-  // 步骤2.3：在完整文本中搜索首尾位置
-  const firstGlobalStart = fullText.indexOf(firstSegment)
-  const lastGlobalStart = fullText.lastIndexOf(lastSegment)
-  
-  if (firstGlobalStart === -1 || lastGlobalStart === -1) return null
-  
-  // 确保尾段在首段之后
-  if (lastGlobalStart <= firstGlobalStart) return null
-
-  const lastGlobalEnd = lastGlobalStart + lastSegment.length
-
-  // 步骤2.4：将全局位置映射回节点和偏移量
-  let startNode: Text | null = null
-  let endNode: Text | null = null
-  let startOffset = 0
-  let endOffset = 0
-
-  for (const item of nodeMap) {
-    // 映射startNode（首段开始位置）
-    if (!startNode && firstGlobalStart >= item.startPos && firstGlobalStart < item.endPos) {
-      startNode = item.node
-      startOffset = firstGlobalStart - item.startPos
-    }
-    
-    // 映射endNode（尾段结束位置）
-    if (lastGlobalEnd > item.startPos && lastGlobalEnd <= item.endPos) {
-      endNode = item.node
-      endOffset = lastGlobalEnd - item.startPos
-    }
-  }
-
-  // 必须找到两个端点
-  if (!startNode || !endNode) return null
-
-  return {
-    startNode,
-    endNode,
-    startOffset,
-    endOffset
-  }
-}
-// 在highlightAndScroll函数中，修改匹配项的处理逻辑
-const highlightAndScroll = (text: string) => {
-  if (!viewerContainer.value || !text) return
-
-  removeHighlights()
-
-  // 将搜索文本分割成段落
-  const segments = splitTextToSegments(text)
-  if (segments.length === 0) return
-
-  console.log('搜索段落:', segments)
-
-  // 收集所有文本节点
-  const walker = document.createTreeWalker(
-    viewerContainer.value,
-    NodeFilter.SHOW_TEXT,
-    null
-  )
-
-  const textNodes: Text[] = []
-  let node: Node | null
-
-  while ((node = walker.nextNode())) {
-    const parent = node.parentNode as HTMLElement
-    // 过滤掉script、style等标签的文本
-    if (parent && !['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(parent.nodeName)) {
-      const textContent = node.textContent || ''
-      // 只包含非空文本节点
-      if (textContent.trim().length > 0) {
-        textNodes.push(node as Text)
+  // 🔥 修改：对于多个编号项（如(1)到(4)），只匹配第一个找到的段落
+  // 这样可以避免跨段落匹配的复杂性
+  for (const segment of segments) {
+    if (segment.trim()) {
+      const match = findMatchInDocument(textNodes, segment)
+      if (match) {
+        console.log('✅ 找到匹配段落:', segment.substring(0, 50))
+        return match
       }
     }
   }
 
-  console.log('文本节点数量:', textNodes.length)
-
-  // 查找匹配区域
-  let match = findMatchingRegion(textNodes, segments)
-
-  console.log('找到匹配项:', match)
-
-  if (!match) {
-    ElMessage.warning('未找到要定位的内容')
-    return
-  }
-
-  // 高亮匹配区域
-  const highlight = highlightRegion(match, true)
-
-  // 滚动到匹配项
-  if (highlight) {
-    setTimeout(() => {
-      highlight.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      })
-
-      // 闪烁动画
-      highlight.animate(
-        [
-          { backgroundColor: 'var(--color-warning)' },
-          { backgroundColor: 'var(--color-danger)' },
-          { backgroundColor: 'var(--color-warning)' }
-        ],
-        {
-          duration: 1000,
-          iterations: 3
-        }
-      )
-    }, 100)
-  }
+  return null
 }
-// 高亮指定区域 - 修复版
+// 高亮区域（保持不变）
 const highlightRegion = (
   region: {
     startNode: Text
@@ -253,11 +326,9 @@ const highlightRegion = (
   const { startNode, endNode, startOffset, endOffset } = region
 
   try {
-    // 如果开始和结束是同一个节点
     if (startNode === endNode) {
       return highlightSingleNode(startNode, startOffset, endOffset, isPrimary)
     } else {
-      // 跨多个节点，需要分别处理
       return highlightMultipleNodes(
         startNode,
         endNode,
@@ -272,7 +343,7 @@ const highlightRegion = (
   }
 }
 
-// 高亮单个节点
+// 高亮单个节点（保持不变）
 const highlightSingleNode = (
   textNode: Text,
   startOffset: number,
@@ -300,7 +371,7 @@ const highlightSingleNode = (
   return highlight
 }
 
-// 高亮跨多个节点的区域
+// 高亮多个节点（保持不变）
 const highlightMultipleNodes = (
   startNode: Text,
   endNode: Text,
@@ -308,7 +379,6 @@ const highlightMultipleNodes = (
   endOffset: number,
   isPrimary: boolean
 ): HTMLElement | null => {
-  // 收集所有需要高亮的节点
   const nodesToHighlight: Array<{
     node: Text
     fullHighlight: boolean
@@ -316,7 +386,6 @@ const highlightMultipleNodes = (
     endOffset?: number
   }> = []
 
-  // 使用TreeWalker找到两个节点之间的所有文本节点
   const walker = document.createTreeWalker(
     viewerContainer.value!,
     NodeFilter.SHOW_TEXT,
@@ -327,22 +396,19 @@ const highlightMultipleNodes = (
   let foundStart = false
   let foundEnd = false
 
-  // 遍历找到所有需要高亮的节点
   while ((currentNode = walker.nextNode()) && !foundEnd) {
     const textNode = currentNode as Text
 
     if (textNode === startNode) {
       foundStart = true
-      // 开始节点：从startOffset到末尾
       nodesToHighlight.push({
         node: textNode,
         fullHighlight: false,
         startOffset: startOffset,
-        endOffset: undefined // 到末尾
+        endOffset: undefined
       })
     } else if (textNode === endNode) {
       foundEnd = true
-      // 结束节点：从开始到endOffset
       nodesToHighlight.push({
         node: textNode,
         fullHighlight: false,
@@ -350,7 +416,6 @@ const highlightMultipleNodes = (
         endOffset: endOffset
       })
     } else if (foundStart) {
-      // 中间节点：完全高亮
       nodesToHighlight.push({
         node: textNode,
         fullHighlight: true
@@ -358,7 +423,6 @@ const highlightMultipleNodes = (
     }
   }
 
-  // 从后往前处理节点，避免DOM操作影响后续节点引用
   let firstHighlight: HTMLElement | null = null
 
   for (let i = nodesToHighlight.length - 1; i >= 0; i--) {
@@ -370,7 +434,6 @@ const highlightMultipleNodes = (
     } = nodesToHighlight[i]
 
     if (fullHighlight) {
-      // 完全高亮整个节点
       const highlight = document.createElement('mark')
       highlight.className = 'docx-highlight'
       if (isPrimary) {
@@ -384,9 +447,8 @@ const highlightMultipleNodes = (
         firstHighlight = highlight
       }
     } else if (offsetStart !== undefined) {
-      // 部分高亮节点
-      const text = node.textContent || ''
-      const endPos = offsetEnd !== undefined ? offsetEnd : text.length
+      const textLen = (node.textContent || '').length
+      const endPos = offsetEnd !== undefined ? offsetEnd : textLen
 
       const highlight = highlightSingleNode(
         node,
@@ -404,7 +466,7 @@ const highlightMultipleNodes = (
   return firstHighlight
 }
 
-// 移除高亮
+// 移除高亮（保持不变）
 const removeHighlights = () => {
   if (!viewerContainer.value) return
 
@@ -423,7 +485,67 @@ const removeHighlights = () => {
   })
 }
 
+// 主高亮和滚动函数（保持不变）
+const highlightAndScroll = (text: string) => {
+  if (!viewerContainer.value || !text) return
+
+  removeHighlights()
+
+  const segments = splitTextToSegments(text)
+  if (segments.length === 0) return
+
+  const walker = document.createTreeWalker(
+    viewerContainer.value,
+    NodeFilter.SHOW_TEXT,
+    null
+  )
+
+  const textNodes: Text[] = []
+  let node: Node | null
+
+  while ((node = walker.nextNode())) {
+    const parent = node.parentNode as HTMLElement
+    if (parent && !['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(parent.nodeName)) {
+      const textContent = node.textContent || ''
+      if (textContent.trim().length > 0) {
+        textNodes.push(node as Text)
+      }
+    }
+  }
+
+  const match = findMatchingRegion(textNodes, segments)
+
+  if (!match) {
+    ElMessage.warning('未找到要定位的内容')
+    return
+  }
+
+  const highlight = highlightRegion(match, true)
+
+  if (highlight) {
+    setTimeout(() => {
+      highlight.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      })
+
+      // highlight.animate(
+      //   [
+      //     { backgroundColor: 'var(--color-warning)' },
+      //     { backgroundColor: 'var(--color-danger)' },
+      //     { backgroundColor: 'var(--color-warning)' }
+      //   ],
+      //   {
+      //     duration: 1000,
+      //     iterations: 3
+      //   }
+      // )
+    }, 100)
+  }
+}
+
 watch(() => props.src, renderDocument)
+
 watch(
   () => props.highlightText,
   newText => {
@@ -452,7 +574,8 @@ onMounted(() => {
 }
 
 :deep(mark.docx-highlight) {
-  background-color: var(--color-warning);
+  // background-color: var(--color-warning);
+  background-color: #edf50b;
   color: var(--color-text-primary);
   padding: 2px 4px;
   border-radius: 3px;
