@@ -7,14 +7,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { renderAsync } from 'docx-preview'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 
 const props = defineProps<{
-  src: any // 文档URL
-  highlightText?: string // 要高亮的文本
+  src: any
+  highlightText?: string
 }>()
 
 const viewerContainer = ref<HTMLElement>()
@@ -48,6 +48,7 @@ const renderDocument = async () => {
     })
 
     if (props.highlightText) {
+      await nextTick()
       setTimeout(() => highlightAndScroll(props.highlightText!), 300)
     }
   } catch (error) {
@@ -58,498 +59,415 @@ const renderDocument = async () => {
   }
 }
 
-// 🔥 智能文本规范化（核心修复）
-const normalizeText = (text: string): string => {
-  return (
-    text
-      // 统一各种空格（包括不间断空格\u00A0、全角空格\u3000等）
-      .replace(/[\s\u00A0\u1680\u180e\u2000-\u2009\u202f\u205f\u3000]+/g, ' ')
-      // 移除零宽度字符和不可见符号
-      .replace(/[\u200b-\u200d\ufeff]/g, '')
-      // 统一各种引号
-      .replace(/[""'']/g, '"')
-      // 统一各种连字符和破折号
-      .replace(/[-‑‒–—]/g, '-')
-      // 统一各种省略号
-      .replace(/[…]/g, '...')
-      // 移除文档渲染插入的特殊标记符号
-      .replace(/[·.:：：]{2,}/g, '') // 移除连续的.、:、·等
-      .trim()
+// 文本清理：保留中文字符、字母、数字，用于模糊匹配
+const extractKeyChars = (text: string): string => {
+  return text.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')
+}
+
+// 获取所有文本节点
+const getAllTextNodes = (container: HTMLElement): Text[] => {
+  const walker = document.createTreeWalker(
+    container,
+    NodeFilter.SHOW_TEXT,
+    node => {
+      const parent = node.parentElement
+      if (parent && ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(parent.tagName)) {
+        return NodeFilter.FILTER_REJECT
+      }
+      return node.textContent?.trim().length
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT
+    }
   )
+
+  const nodes: Text[] = []
+  let node: Node | null
+  while ((node = walker.nextNode())) {
+    nodes.push(node as Text)
+  }
+  return nodes
 }
 
-// 🔥 改进：保留序号标记，不移除（重要特征）
-const splitTextToSegments = (text: string): string[] => {
-  const paragraphs = text.split(/\n\s*\n/)
-  return paragraphs.map(p => normalizeText(p)).filter(p => p.length > 0)
-  // 不再移除序号标记！保留 (1), (2) 等重要特征
-}
-
-// 在文档中搜索匹配的文本区域（增强版）
-const findMatchInDocument = (
+// 查找文本起始位置（返回节点和偏移量）
+const findTextStart = (
   textNodes: Text[],
   searchText: string
-): {
-  startNode: Text
-  endNode: Text
-  startOffset: number
-  endOffset: number
-} | null => {
-  // 1. 构建完整文档文本和节点映射
+): { node: Text; offset: number } | null => {
+  // 取搜索文本的前100个字符作为定位锚点
+  const anchor = searchText
+    .substring(0, Math.min(100, searchText.length))
+    .trim()
+  const keyAnchor = extractKeyChars(anchor)
+
+  if (!keyAnchor) return null
+
+  // 构建文本映射
   let fullText = ''
-  const nodeRanges: Array<{
-    node: Text
-    start: number
-    end: number
-    rawText: string
-  }> = []
+  const ranges: Array<{ node: Text; start: number; text: string }> = []
 
-  textNodes.forEach(node => {
-    const rawText = node.textContent || ''
-    const normalized = normalizeText(rawText)
-    const start = fullText.length
-    fullText += normalized
-    const end = fullText.length
-    nodeRanges.push({ node, start, end, rawText })
-  })
+  for (const node of textNodes) {
+    const text = node.textContent || ''
+    ranges.push({ node, start: fullText.length, text })
+    fullText += text
+  }
 
-  // 2. 规范化搜索文本
-  const normalizedSearch = normalizeText(searchText)
+  // 先尝试精确匹配锚点
+  let index = fullText.indexOf(anchor)
 
-  // 3. 精确搜索，同时考虑字符可能被跨节点分割的情况
-  let matchStart = -1
+  // 如果失败，尝试清理后的模糊匹配
+  if (index === -1) {
+    const cleanFullText = extractKeyChars(fullText)
+    const cleanAnchor = extractKeyChars(anchor)
+    index = cleanFullText.indexOf(cleanAnchor)
 
-  // 先尝试直接匹配
-  matchStart = fullText.indexOf(normalizedSearch)
-
-  // 如果精确搜索失败，尝试特殊字符分割情况（如 "TFT-LCD" 可能渲染为 "TFT-LC" 和 "D"）
-  if (matchStart === -1 && normalizedSearch.includes('-')) {
-    console.log('⚠️ 精确匹配失败，尝试处理连字符分割情况...')
-
-    // 移除连字符后再匹配
-    const searchWithoutHyphen = normalizedSearch.replace(/-/g, '')
-    const docWithoutHyphen = fullText.replace(/-/g, '')
-
-    const hyphenMatchStart = docWithoutHyphen.indexOf(searchWithoutHyphen)
-
-    if (hyphenMatchStart !== -1) {
-      // 找到无连字符版本，尝试在原文本中定位近似位置
-      // 寻找主要关键词（最长的词）
-      const keywords = normalizedSearch.split(/\s+/).filter(w => w.length > 3)
-      keywords.sort((a, b) => b.length - a.length)
-
-      if (keywords.length > 0) {
-        for (const keyword of keywords) {
-          const keywordMatch = fullText.indexOf(keyword.replace(/-/g, ''))
-          if (keywordMatch !== -1) {
-            matchStart = Math.max(0, keywordMatch - 10) // 往前扩展一点
-            break
-          }
-        }
-      }
+    if (index !== -1) {
+      // 将清理后的索引映射回原始文本索引（近似）
+      index = mapCleanIndexToOriginal(fullText, index)
     }
   }
 
-  // 4. 如果仍然找不到，尝试关键词模糊匹配
-  if (matchStart === -1) {
-    console.log('⚠️ 仍无法匹配，尝试关键词模糊搜索...')
-    const keywords = normalizedSearch.split(/\s+/).filter(w => w.length > 3)
-    keywords.sort((a, b) => b.length - a.length)
+  if (index === -1) return null
 
-    if (keywords.length > 0) {
-      const primaryKeyword = keywords[0]
-      matchStart = fullText.indexOf(primaryKeyword)
-
-      if (matchStart === -1) {
-        // 仍然找不到，返回null
-        return null
-      }
-
-      console.log('✅ 模糊匹配到关键词:', primaryKeyword, '位置:', matchStart)
-      // 只高亮匹配到的关键词部分
-      const matchEnd = matchStart + primaryKeyword.length
-
-      // 辅助函数：将文本范围映射到DOM节点
-      const mapRangeToNodes = (
-        nodeRanges: Array<{
-          node: Text
-          start: number
-          end: number
-          rawText: string
-        }>,
-        matchStart: number,
-        matchEnd: number
-      ): {
-        startNode: Text
-        endNode: Text
-        startOffset: number
-        endOffset: number
-      } | null => {
-        let startNode: Text | null = null
-        let endNode: Text | null = null
-        let startOffset = 0
-        let endOffset = 0
-
-        for (const range of nodeRanges) {
-          // 起始位置
-          if (
-            !startNode &&
-            matchStart >= range.start &&
-            matchStart < range.end
-          ) {
-            startNode = range.node
-            const keywordStartInRaw = matchStart - range.start
-            // 尝试在原始文本中找到关键词
-            const snippet = normalizedSearch.substring(0, 20)
-            const idxInRaw = range.rawText.indexOf(snippet)
-            if (idxInRaw !== -1) {
-              startOffset = idxInRaw
-            } else {
-              startOffset = Math.min(keywordStartInRaw, range.rawText.length)
-            }
-          }
-
-          // 结束位置
-          if (matchEnd > range.start && matchEnd <= range.end) {
-            endNode = range.node
-            const keywordEndInRaw = matchEnd - range.start
-            endOffset = Math.min(keywordEndInRaw, range.rawText.length)
-          }
-
-          if (startNode && endNode) break
-        }
-
-        if (!startNode || !endNode) return null
-
-        return { startNode, endNode, startOffset, endOffset }
-      }
-      return mapRangeToNodes(nodeRanges, matchStart, matchEnd)
-    }
-
-    return null
-  }
-
-  // 5. 精确匹配成功，映射到DOM节点
-  const matchEnd = matchStart + normalizedSearch.length
-  console.log('✅ 精确匹配成功，位置:', matchStart, '-', matchEnd)
-
-  // 辅助函数：将文本范围映射到DOM节点
-  const mapRangeToNodes = (
-    nodeRanges: Array<{
-      node: Text
-      start: number
-      end: number
-      rawText: string
-    }>,
-    matchStart: number,
-    matchEnd: number
-  ): {
-    startNode: Text
-    endNode: Text
-    startOffset: number
-    endOffset: number
-  } | null => {
-    let startNode: Text | null = null
-    let endNode: Text | null = null
-    let startOffset = 0
-    let endOffset = 0
-
-    for (const range of nodeRanges) {
-      // 起始位置
-      if (!startNode && matchStart >= range.start && matchStart < range.end) {
-        startNode = range.node
-        const keywordStartInRaw = matchStart - range.start
-        // 尝试在原始文本中找到关键词
-        const snippet = normalizedSearch.substring(0, 20)
-        const idxInRaw = range.rawText.indexOf(snippet)
-        if (idxInRaw !== -1) {
-          startOffset = idxInRaw
-        } else {
-          startOffset = Math.min(keywordStartInRaw, range.rawText.length)
-        }
-      }
-
-      // 结束位置
-      if (matchEnd > range.start && matchEnd <= range.end) {
-        endNode = range.node
-        const keywordEndInRaw = matchEnd - range.start
-        endOffset = Math.min(keywordEndInRaw, range.rawText.length)
-      }
-
-      if (startNode && endNode) break
-    }
-
-    if (!startNode || !endNode) return null
-
-    return { startNode, endNode, startOffset, endOffset }
-  }
-
-  return mapRangeToNodes(nodeRanges, matchStart, matchEnd)
-}
-
-// 修改：将多段落匹配改为逐个段落精确匹配
-const findMatchingRegion = (
-  textNodes: Text[],
-  segments: string[]
-): {
-  startNode: Text
-  endNode: Text
-  startOffset: number
-  endOffset: number
-} | null => {
-  if (segments.length === 0) return null
-
-  // 🔥 修改：对于多个编号项（如(1)到(4)），只匹配第一个找到的段落
-  // 这样可以避免跨段落匹配的复杂性
-  for (const segment of segments) {
-    if (segment.trim()) {
-      const match = findMatchInDocument(textNodes, segment)
-      if (match) {
-        console.log('✅ 找到匹配段落:', segment.substring(0, 50))
-        return match
+  // 映射到具体节点
+  for (const range of ranges) {
+    if (index >= range.start && index < range.start + range.text.length) {
+      return {
+        node: range.node,
+        offset: index - range.start
       }
     }
   }
 
   return null
 }
-// 高亮区域（保持不变）
-const highlightRegion = (
-  region: {
-    startNode: Text
-    endNode: Text
-    startOffset: number
-    endOffset: number
-  },
-  isPrimary: boolean
-): HTMLElement | null => {
-  const { startNode, endNode, startOffset, endOffset } = region
 
-  try {
-    if (startNode === endNode) {
-      return highlightSingleNode(startNode, startOffset, endOffset, isPrimary)
+// 查找文本结束位置（从后往前找）
+const findTextEnd = (
+  textNodes: Text[],
+  searchText: string
+): { node: Text; offset: number } | null => {
+  // 取搜索文本的后100个字符作为定位锚点
+  const anchor = searchText
+    .substring(Math.max(0, searchText.length - 100))
+    .trim()
+  const keyAnchor = extractKeyChars(anchor)
+
+  if (!keyAnchor) return null
+
+  let fullText = ''
+  const ranges: Array<{ node: Text; start: number; text: string }> = []
+
+  for (const node of textNodes) {
+    const text = node.textContent || ''
+    ranges.push({ node, start: fullText.length, text })
+    fullText += text
+  }
+
+  // 先尝试精确匹配（从后往前）
+  let index = fullText.lastIndexOf(anchor)
+
+  // 如果失败，尝试清理后的模糊匹配
+  if (index === -1) {
+    const cleanFullText = extractKeyChars(fullText)
+    const cleanAnchor = extractKeyChars(anchor)
+    index = cleanFullText.lastIndexOf(cleanAnchor)
+
+    if (index !== -1) {
+      index = mapCleanIndexToOriginal(fullText, index + cleanAnchor.length)
     } else {
-      return highlightMultipleNodes(
-        startNode,
-        endNode,
-        startOffset,
-        endOffset,
-        isPrimary
-      )
+      return null
     }
-  } catch (error) {
-    console.error('高亮区域失败:', error)
-    return null
+  } else {
+    index = index + anchor.length
   }
+
+  // 映射到具体节点
+  for (const range of ranges) {
+    if (index > range.start && index <= range.start + range.text.length) {
+      return {
+        node: range.node,
+        offset: index - range.start
+      }
+    }
+  }
+
+  return null
 }
 
-// 高亮单个节点（保持不变）
-const highlightSingleNode = (
-  textNode: Text,
-  startOffset: number,
-  endOffset: number,
-  isPrimary: boolean
-): HTMLElement | null => {
-  const text = textNode.textContent || ''
-  const beforeText = text.substring(0, startOffset)
-  const matchText = text.substring(startOffset, endOffset)
-  const afterText = text.substring(endOffset)
-
-  const highlight = document.createElement('mark')
-  highlight.className = 'docx-highlight'
-  if (isPrimary) {
-    highlight.classList.add('primary-highlight')
+// 将清理后的文本索引映射回原始文本索引
+const mapCleanIndexToOriginal = (
+  originalText: string,
+  cleanIndex: number
+): number => {
+  let cleanCount = 0
+  for (let i = 0; i < originalText.length; i++) {
+    if (/[\u4e00-\u9fa5a-zA-Z0-9]/.test(originalText[i])) {
+      if (cleanCount === cleanIndex) return i
+      cleanCount++
+    }
   }
-  highlight.textContent = matchText
-
-  const fragment = document.createDocumentFragment()
-  if (beforeText) fragment.appendChild(document.createTextNode(beforeText))
-  fragment.appendChild(highlight)
-  if (afterText) fragment.appendChild(document.createTextNode(afterText))
-
-  textNode.parentNode?.replaceChild(fragment, textNode)
-  return highlight
+  return originalText.length
 }
 
-// 高亮多个节点（保持不变）
-const highlightMultipleNodes = (
-  startNode: Text,
-  endNode: Text,
-  startOffset: number,
-  endOffset: number,
-  isPrimary: boolean
+// 高亮指定范围内的所有内容（包括中间的所有节点）
+const highlightRange = (
+  startInfo: { node: Text; offset: number },
+  endInfo: { node: Text; offset: number }
 ): HTMLElement | null => {
-  const nodesToHighlight: Array<{
+  const { node: startNode, offset: startOffset } = startInfo
+  const { node: endNode, offset: endOffset } = endInfo
+
+  // 收集所有需要高亮的文本节点
+  const nodesToProcess: Array<{
     node: Text
-    fullHighlight: boolean
+    type: 'start' | 'middle' | 'end'
     startOffset?: number
     endOffset?: number
   }> = []
 
-  const walker = document.createTreeWalker(
-    viewerContainer.value!,
-    NodeFilter.SHOW_TEXT,
-    null
-  )
+  if (startNode === endNode) {
+    // 同一个节点内
+    nodesToProcess.push({
+      node: startNode,
+      type: 'start',
+      startOffset,
+      endOffset
+    })
+  } else {
+    // 跨节点：先收集起始节点
+    nodesToProcess.push({
+      node: startNode,
+      type: 'start',
+      startOffset
+    })
 
-  let currentNode: Node | null = null
-  let foundStart = false
-  let foundEnd = false
+    // 遍历收集中间节点
+    let current: Node | null = startNode
+    let found = false
+    let safetyCounter = 0 // 防止无限循环
 
-  while ((currentNode = walker.nextNode()) && !foundEnd) {
-    const textNode = currentNode as Text
+    while (current && !found && safetyCounter < 1000) {
+      safetyCounter++
+      let next = getNextTextNode(current)
 
-    if (textNode === startNode) {
-      foundStart = true
-      nodesToHighlight.push({
-        node: textNode,
-        fullHighlight: false,
-        startOffset: startOffset,
-        endOffset: undefined
-      })
-    } else if (textNode === endNode) {
-      foundEnd = true
-      nodesToHighlight.push({
-        node: textNode,
-        fullHighlight: false,
-        startOffset: 0,
-        endOffset: endOffset
-      })
-    } else if (foundStart) {
-      nodesToHighlight.push({
-        node: textNode,
-        fullHighlight: true
-      })
+      while (next && next !== endNode) {
+        nodesToProcess.push({
+          node: next,
+          type: 'middle'
+        })
+        next = getNextTextNode(next)
+      }
+
+      if (next === endNode) {
+        nodesToProcess.push({
+          node: endNode,
+          type: 'end',
+          endOffset
+        })
+        found = true
+      }
+
+      current = next
     }
   }
 
-  let firstHighlight: HTMLElement | null = null
+  // 从后往前处理，避免节点替换影响遍历
+  let firstHighlightEl: HTMLElement | null = null
 
-  for (let i = nodesToHighlight.length - 1; i >= 0; i--) {
-    const {
-      node,
-      fullHighlight,
-      startOffset: offsetStart,
-      endOffset: offsetEnd
-    } = nodesToHighlight[i]
+  for (let i = nodesToProcess.length - 1; i >= 0; i--) {
+    const { node, type, startOffset: sOff, endOffset: eOff } = nodesToProcess[i]
 
-    if (fullHighlight) {
-      const highlight = document.createElement('mark')
-      highlight.className = 'docx-highlight'
-      if (isPrimary) {
-        highlight.classList.add('primary-highlight')
-      }
-      highlight.textContent = node.textContent || ''
+    // 检查节点是否仍在DOM中（可能被之前的替换操作移除）
+    if (!node.parentNode) continue
 
-      node.parentNode?.replaceChild(highlight, node)
+    const text = node.textContent || ''
+    let highlightEl: HTMLElement | null = null
 
-      if (i === 0) {
-        firstHighlight = highlight
-      }
-    } else if (offsetStart !== undefined) {
-      const textLen = (node.textContent || '').length
-      const endPos = offsetEnd !== undefined ? offsetEnd : textLen
+    if (type === 'start') {
+      // 起始节点：高亮从startOffset到末尾
+      const before = text.substring(0, sOff!)
+      const match = text.substring(sOff!)
 
-      const highlight = highlightSingleNode(
-        node,
-        offsetStart,
-        endPos,
-        isPrimary
-      )
+      const fragment = document.createDocumentFragment()
+      if (before) fragment.appendChild(document.createTextNode(before))
 
-      if (i === 0 && highlight) {
-        firstHighlight = highlight
-      }
+      highlightEl = document.createElement('mark')
+      highlightEl.className = 'docx-highlight'
+      highlightEl.textContent = match
+      fragment.appendChild(highlightEl)
+
+      node.parentNode?.replaceChild(fragment, node)
+    } else if (type === 'end') {
+      // 结束节点：高亮从开头到endOffset
+      const match = text.substring(0, eOff!)
+      const after = text.substring(eOff!)
+
+      const fragment = document.createDocumentFragment()
+      highlightEl = document.createElement('mark')
+      highlightEl.className = 'docx-highlight'
+      highlightEl.textContent = match
+      fragment.appendChild(highlightEl)
+
+      if (after) fragment.appendChild(document.createTextNode(after))
+      node.parentNode?.replaceChild(fragment, node)
+    } else {
+      // 中间节点：全部高亮
+      highlightEl = document.createElement('mark')
+      highlightEl.className = 'docx-highlight'
+      highlightEl.textContent = text
+      node.parentNode?.replaceChild(highlightEl, node)
     }
+
+    if (i === 0) firstHighlightEl = highlightEl
   }
 
-  return firstHighlight
+  return firstHighlightEl
 }
 
-// 移除高亮（保持不变）
+// 获取下一个文本节点（跨标签遍历）
+const getNextTextNode = (node: Node): Text | null => {
+  // 先尝试nextSibling
+  let next: Node | null = node.nextSibling
+
+  while (!next && node.parentNode) {
+    node = node.parentNode
+    next = node.nextSibling
+  }
+
+  // 如果nextSibling是元素，深入查找其第一个文本子节点
+  while (next && next.nodeType === Node.ELEMENT_NODE) {
+    const walker = document.createTreeWalker(next, NodeFilter.SHOW_TEXT, null)
+    const firstText = walker.nextNode() as Text
+    if (firstText && firstText.textContent?.trim()) {
+      return firstText
+    }
+    next = next.nextSibling
+  }
+
+  // 如果是文本节点直接返回
+  if (next && next.nodeType === Node.TEXT_NODE) {
+    return next as Text
+  }
+
+  // 继续向上查找
+  if (next) {
+    return getNextTextNode(next)
+  }
+
+  return null
+}
+
+// 移除高亮 - 修复：确保能清除所有高亮
 const removeHighlights = () => {
   if (!viewerContainer.value) return
 
+  // 使用 viewerContainer 作为范围，避免影响外部DOM
   const highlights = viewerContainer.value.querySelectorAll(
     'mark.docx-highlight'
   )
+
+  if (highlights.length === 0) return
+
+  console.log(`清除 ${highlights.length} 个高亮标记`)
+
   highlights.forEach(highlight => {
     const parent = highlight.parentNode
     if (parent) {
-      parent.replaceChild(
-        document.createTextNode(highlight.textContent || ''),
-        highlight
-      )
-      parent.normalize()
+      // 创建文本节点替换高亮标记
+      const text = highlight.textContent || ''
+      parent.replaceChild(document.createTextNode(text), highlight)
     }
   })
+
+  // 合并相邻的文本节点，清理DOM
+  viewerContainer.value.normalize()
 }
 
-// 主高亮和滚动函数（保持不变）
+// 主高亮函数：先找首尾，再高亮中间
+// 修复：每次调用都清除之前的高亮，不管是否是相同文本
 const highlightAndScroll = (text: string) => {
-  if (!viewerContainer.value || !text) return
+  if (!viewerContainer.value) return
 
+  // 关键修复：每次高亮前都清除之前的高亮，不管text是否相同
   removeHighlights()
 
-  const segments = splitTextToSegments(text)
-  if (segments.length === 0) return
+  // 如果text为空，只清除不高亮
+  if (!text) return
 
-  const walker = document.createTreeWalker(
-    viewerContainer.value,
-    NodeFilter.SHOW_TEXT,
-    null
-  )
+  const textNodes = getAllTextNodes(viewerContainer.value)
+  if (textNodes.length === 0) return
 
-  const textNodes: Text[] = []
-  let node: Node | null
+  // 分别查找起始和结束位置
+  const startInfo = findTextStart(textNodes, text)
+  const endInfo = findTextEnd(textNodes, text)
 
-  while ((node = walker.nextNode())) {
-    const parent = node.parentNode as HTMLElement
-    if (parent && !['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(parent.nodeName)) {
-      const textContent = node.textContent || ''
-      if (textContent.trim().length > 0) {
-        textNodes.push(node as Text)
-      }
-    }
-  }
-
-  const match = findMatchingRegion(textNodes, segments)
-
-  if (!match) {
+  if (!startInfo) {
+    console.warn('未找到起始位置')
     ElMessage.warning('未找到要定位的内容')
     return
   }
 
-  const highlight = highlightRegion(match, true)
+  // 如果找不到结束位置，就高亮从起始位置开始的500个字符
+  if (
+    !endInfo ||
+    (startInfo.node === endInfo.node && startInfo.offset >= endInfo.offset)
+  ) {
+    console.log('未找到结束位置，使用备用方案高亮前500字符')
+    const text = startInfo.node.textContent || ''
+    const endOffset = Math.min(startInfo.offset + 500, text.length)
 
-  if (highlight) {
-    setTimeout(() => {
-      highlight.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      })
+    const highlightEl = highlightRange(startInfo, {
+      node: startInfo.node,
+      offset: endOffset
+    })
 
-      // highlight.animate(
-      //   [
-      //     { backgroundColor: 'var(--color-warning)' },
-      //     { backgroundColor: 'var(--color-danger)' },
-      //     { backgroundColor: 'var(--color-warning)' }
-      //   ],
-      //   {
-      //     duration: 1000,
-      //     iterations: 3
-      //   }
-      // )
-    }, 100)
+    if (highlightEl) {
+      scrollToHighlight(highlightEl)
+    }
+    return
+  }
+
+  // 正常情况：高亮从起始到结束的完整范围
+  const highlightEl = highlightRange(startInfo, endInfo)
+
+  if (highlightEl) {
+    scrollToHighlight(highlightEl)
   }
 }
 
+// 滚动到高亮位置并添加动画
+const scrollToHighlight = (element: HTMLElement) => {
+  setTimeout(() => {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+
+    // 添加闪烁动画
+    element.animate?.(
+      [
+        { backgroundColor: '#edf50b' },
+        { backgroundColor: '#ff9500' },
+        { backgroundColor: '#edf50b' }
+      ],
+      { duration: 800, iterations: 2 }
+    )
+  }, 100)
+}
+
+// 监听src变化，重新渲染
 watch(() => props.src, renderDocument)
 
+// 监听highlightText变化 - 修复：处理空字符串情况
 watch(
   () => props.highlightText,
-  newText => {
-    if (newText && viewerContainer.value?.hasChildNodes()) {
+  async newText => {
+    // 注意：这里要处理 undefined 和空字符串的情况
+    if (newText === undefined) return
+
+    if (viewerContainer.value?.hasChildNodes()) {
+      await nextTick()
+      // 延迟执行，确保DOM已更新
       setTimeout(() => highlightAndScroll(newText), 100)
     }
   }
@@ -566,7 +484,7 @@ onMounted(() => {
   height: 100%;
   overflow-y: auto;
   background: white;
-  position: relative; /* 确保loading overlay定位正确 */
+  position: relative;
 }
 
 :deep(.docx-preview) {
@@ -574,12 +492,14 @@ onMounted(() => {
 }
 
 :deep(mark.docx-highlight) {
-  // background-color: var(--color-warning);
   background-color: #edf50b;
-  color: var(--color-text-primary);
-  padding: 2px 4px;
-  border-radius: 3px;
+  color: #000;
+  padding: 2px 0;
+  border-radius: 2px;
   font-weight: bold;
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* 加载动画遮罩 */
