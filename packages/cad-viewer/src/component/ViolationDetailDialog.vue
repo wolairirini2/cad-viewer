@@ -34,31 +34,6 @@
         </div>
       </div>
 
-      <!-- 问题描述 -->
-      <div class="detail-section" v-if="descriptions.length">
-        <h4>问题描述</h4>
-        <div class="detail-content description-content">
-          <div
-            v-for="(desc, index) in descriptions"
-            :key="index"
-            class="description-item"
-          >
-            <span class="item-number">{{ index + 1 }}.</span>
-            <span class="item-content" v-html="desc"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 修改建议 -->
-      <div class="detail-section" v-if="suggestions.length">
-        <h4>修改建议</h4>
-        <div class="detail-content suggestion">
-          <ol class="suggestion-ol">
-            <li v-for="(sug, index) in suggestions" :key="index">{{ sug }}</li>
-          </ol>
-        </div>
-      </div>
-
       <!-- 提取参数 -->
       <div class="detail-section" v-if="reviewTrace?.extracted_parameters">
         <h4>提取参数</h4>
@@ -72,6 +47,27 @@
               {{ formatValue(reviewTrace.extracted_parameters[key], key) }}
             </el-descriptions-item>
           </el-descriptions>
+        </div>
+      </div>
+
+      <!-- 计算公式 (新增) -->
+      <div class="detail-section" v-if="calculationSteps.length">
+        <h4>计算过程</h4>
+        <div class="detail-content formula-content">
+          <div
+            v-for="(step, index) in calculationSteps"
+            :key="index"
+            class="formula-step"
+          >
+            <div class="formula-step-title">
+              <span class="step-number">{{ index + 1 }}.</span>
+              {{ step.title }}
+            </div>
+            <div
+              class="formula-latex"
+              v-html="renderFormula(step.formula)"
+            ></div>
+          </div>
         </div>
       </div>
 
@@ -118,6 +114,31 @@
         </div>
       </div>
 
+      <!-- 问题描述 -->
+      <div class="detail-section" v-if="descriptions.length">
+        <h4>问题描述</h4>
+        <div class="detail-content description-content">
+          <div
+            v-for="(desc, index) in descriptions"
+            :key="index"
+            class="description-item"
+          >
+            <span class="item-number">{{ index + 1 }}.</span>
+            <span class="item-content" v-html="desc"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 修改建议 -->
+      <div class="detail-section" v-if="suggestions.length">
+        <h4>修改建议</h4>
+        <div class="detail-content suggestion">
+          <ol class="suggestion-ol">
+            <li v-for="(sug, index) in suggestions" :key="index">{{ sug }}</li>
+          </ol>
+        </div>
+      </div>
+
       <!-- 相关规范条文 -->
       <div class="detail-section">
         <h4>相关规范条文</h4>
@@ -137,10 +158,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 interface Props {
   modelValue: boolean
   data: any
+}
+
+interface CalculationStep {
+  title: string
+  formula: string
 }
 
 const props = defineProps<Props>()
@@ -186,6 +214,31 @@ const reviewTrace = computed(() => {
   if (!props.data?.allViolations?.length) return null
   return props.data.allViolations[0]?.review_trace || null
 })
+
+// 计算步骤列表
+const calculationSteps = computed<CalculationStep[]>(() => {
+  return reviewTrace.value?.calculation_result?.calculation_steps || []
+})
+
+// 渲染 LaTeX 公式
+const renderFormula = (formula: string): string => {
+  try {
+    // 移除 $$ 包裹符号并清理
+    const cleanFormula = formula.replace(/^\$\$|\$\$/g, '').trim()
+
+    if (!cleanFormula) return ''
+
+    return katex.renderToString(cleanFormula, {
+      throwOnError: false,
+      displayMode: true,
+      strict: false
+    })
+  } catch (error) {
+    console.warn('KaTeX 渲染失败:', error)
+    // 失败时返回原始文本（移除 $$）
+    return formula.replace(/^\$\$|\$\$/g, '').trim()
+  }
+}
 
 // 格式化提取参数的值和单位
 const formatValue = (value: any, key: string): string => {
@@ -397,5 +450,59 @@ const getCategoryType = (category: string) => {
   margin: 16px 0 8px 0;
   padding-left: 8px;
   border-left: 3px solid #909399;
+}
+
+/* 计算公式样式 (新增) */
+.formula-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formula-step {
+  border-radius: 6px;
+  padding: 12px 16px;
+  border-left: 3px solid #409eff;
+  display: flex;
+}
+
+.formula-step-title {
+  font-size: 14px;  
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-number {
+  color: #409eff;
+  font-weight: 700;
+  min-width: 20px;
+}
+
+.formula-latex {
+  flex: 1;
+  font-size: 14px;
+  overflow-x: auto;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: 4px;
+}
+
+/* KaTeX 渲染后的样式微调 */
+.formula-latex :deep(.katex) {
+  font-size: 1.1em;
+}
+
+.formula-latex :deep(.katex-display) {
+  margin: 0;
+}
+
+.formula-latex :deep(.katex-html) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
 }
 </style>

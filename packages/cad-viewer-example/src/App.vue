@@ -63,6 +63,78 @@ reviewReportData.value = {
                 calculation_result: {
                   hv_bus_Isc_ka: 8.31,
                   lv_bus_Isc_ka: 11.45,
+                  calculation_steps: [
+                    {
+                      title: '计算高压侧基准阻抗',
+                      formula:
+                        '$$Z_{j,hv}=\\frac{U_{hv}^2}{S_{base}}=\\frac{115.0^2}{1000.0}=13.225\\ \\Omega$$'
+                    },
+                    {
+                      title: '计算高压侧基准电流',
+                      formula:
+                        '$$I_{j,hv}=\\frac{S_{base}}{\\sqrt{3}U_{hv}}=\\frac{1000.0}{\\sqrt{3}\\times115.0}=5.0204\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算低压侧基准阻抗',
+                      formula:
+                        '$$Z_{j,lv}=\\frac{U_{lv}^2}{S_{base}}=\\frac{10.5^2}{1000.0}=0.1103\\ \\Omega$$'
+                    },
+                    {
+                      title: '计算低压侧基准电流',
+                      formula:
+                        '$$I_{j,lv}=\\frac{S_{base}}{\\sqrt{3}U_{lv}}=\\frac{1000.0}{\\sqrt{3}\\times10.5}=54.9857\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算系统电抗标幺值',
+                      formula:
+                        '$$X^{*}_{sys}=\\frac{S_{base}}{S_{sc}}=\\frac{1000.0}{2222.0}=0.45005$$'
+                    },
+                    {
+                      title: '计算线路电抗有名值',
+                      formula:
+                        '$$X_{line}=L_{oh}x_{oh}+L_{cab}x_{cab}=4.1\\times0.4+1.0\\times0.12=1.76\\ \\Omega$$'
+                    },
+                    {
+                      title: '计算线路电抗标幺值',
+                      formula:
+                        '$$X^{*}_{line}=\\frac{X_{line}}{Z_{j,hv}}=\\frac{1.76}{13.225}=0.13308$$'
+                    },
+                    {
+                      title: '计算变压器电抗标幺值',
+                      formula:
+                        '$$X^{*}_{T}=\\frac{Uk\\%}{100}\\times\\frac{S_{base}}{S_{tr}}=\\frac{10.5}{100}\\times\\frac{1000.0}{20.0}=5.25$$'
+                    },
+                    {
+                      title: '计算高压侧总电抗标幺值',
+                      formula:
+                        '$$X^{*}_{HV}=X^{*}_{sys}+X^{*}_{line}=0.45005+0.13308=0.58313$$'
+                    },
+                    {
+                      title: '计算高压侧短路电流标幺值',
+                      formula:
+                        '$$I^{*}_{HV}=\\frac{1}{X^{*}_{HV}}=\\frac{1}{0.58313}=1.7149$$'
+                    },
+                    {
+                      title: '计算高压侧短路电流',
+                      formula:
+                        '$$I_{k,HV}=I^{*}_{HV}\\times I_{j,hv}=1.7149\\times5.0204=8.61\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算低压侧总电抗标幺值',
+                      formula:
+                        '$$X^{*}_{LV}=X^{*}_{HV}+X^{*}_{T}=0.58313+5.25=5.83313$$'
+                    },
+                    {
+                      title: '计算低压侧短路电流标幺值',
+                      formula:
+                        '$$I^{*}_{LV}=\\frac{1}{X^{*}_{LV}}=\\frac{1}{5.83313}=0.1714$$'
+                    },
+                    {
+                      title: '计算低压侧短路电流',
+                      formula:
+                        '$$I_{k,LV}=I^{*}_{LV}\\times I_{j,lv}=0.1714\\times54.9857=9.43\\ \\text{kA}$$'
+                    }
+                  ],
                   calculation_details: {
                     Ij_hv: 0.502,
                     Ij_lv: 5.4986,
@@ -108,6 +180,78 @@ reviewReportData.value = {
                 calculation_result: {
                   hv_bus_Isc_ka: 8.31,
                   lv_bus_Isc_ka: 11.45,
+                  calculation_steps: [
+                    {
+                      title: '计算高压侧基准阻抗',
+                      formula:
+                        '$$Z_{j,hv}=\\frac{U_{hv}^2}{S_{base}}=\\frac{115.0^2}{1000.0}=13.225\\ \\Omega$$'
+                    },
+                    {
+                      title: '计算高压侧基准电流',
+                      formula:
+                        '$$I_{j,hv}=\\frac{S_{base}}{\\sqrt{3}U_{hv}}=\\frac{1000.0}{\\sqrt{3}\\times115.0}=5.0204\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算低压侧基准阻抗',
+                      formula:
+                        '$$Z_{j,lv}=\\frac{U_{lv}^2}{S_{base}}=\\frac{10.5^2}{1000.0}=0.1103\\ \\Omega$$'
+                    },
+                    {
+                      title: '计算低压侧基准电流',
+                      formula:
+                        '$$I_{j,lv}=\\frac{S_{base}}{\\sqrt{3}U_{lv}}=\\frac{1000.0}{\\sqrt{3}\\times10.5}=54.9857\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算系统电抗标幺值',
+                      formula:
+                        '$$X^{*}_{sys}=\\frac{S_{base}}{S_{sc}}=\\frac{1000.0}{2222.0}=0.45005$$'
+                    },
+                    {
+                      title: '计算线路电抗有名值',
+                      formula:
+                        '$$X_{line}=L_{oh}x_{oh}+L_{cab}x_{cab}=4.1\\times0.4+1.0\\times0.12=1.76\\ \\Omega$$'
+                    },
+                    {
+                      title: '计算线路电抗标幺值',
+                      formula:
+                        '$$X^{*}_{line}=\\frac{X_{line}}{Z_{j,hv}}=\\frac{1.76}{13.225}=0.13308$$'
+                    },
+                    {
+                      title: '计算变压器电抗标幺值',
+                      formula:
+                        '$$X^{*}_{T}=\\frac{Uk\\%}{100}\\times\\frac{S_{base}}{S_{tr}}=\\frac{10.5}{100}\\times\\frac{1000.0}{20.0}=5.25$$'
+                    },
+                    {
+                      title: '计算高压侧总电抗标幺值',
+                      formula:
+                        '$$X^{*}_{HV}=X^{*}_{sys}+X^{*}_{line}=0.45005+0.13308=0.58313$$'
+                    },
+                    {
+                      title: '计算高压侧短路电流标幺值',
+                      formula:
+                        '$$I^{*}_{HV}=\\frac{1}{X^{*}_{HV}}=\\frac{1}{0.58313}=1.7149$$'
+                    },
+                    {
+                      title: '计算高压侧短路电流',
+                      formula:
+                        '$$I_{k,HV}=I^{*}_{HV}\\times I_{j,hv}=1.7149\\times5.0204=8.61\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算低压侧总电抗标幺值',
+                      formula:
+                        '$$X^{*}_{LV}=X^{*}_{HV}+X^{*}_{T}=0.58313+5.25=5.83313$$'
+                    },
+                    {
+                      title: '计算低压侧短路电流标幺值',
+                      formula:
+                        '$$I^{*}_{LV}=\\frac{1}{X^{*}_{LV}}=\\frac{1}{5.83313}=0.1714$$'
+                    },
+                    {
+                      title: '计算低压侧短路电流',
+                      formula:
+                        '$$I_{k,LV}=I^{*}_{LV}\\times I_{j,lv}=0.1714\\times54.9857=9.43\\ \\text{kA}$$'
+                    }
+                  ],
                   calculation_details: {
                     Ij_hv: 0.502,
                     Ij_lv: 5.4986,
