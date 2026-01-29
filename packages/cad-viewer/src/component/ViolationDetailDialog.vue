@@ -52,21 +52,60 @@
 
       <!-- 计算公式 (新增) -->
       <div class="detail-section" v-if="calculationSteps.length">
-        <h4>计算过程</h4>
-        <div class="detail-content formula-content">
+        <div class="section-header">
+          <h4>计算过程</h4>
+          <el-button
+            type="text"
+            size="small"
+            @click="toggleCalculationSteps"
+            class="toggle-btn"
+          >
+            {{ isCalculationStepsExpanded ? '折叠' : '展开' }}
+            <el-icon :class="{ 'rotate-icon': isCalculationStepsExpanded }">
+              <ArrowDown />
+            </el-icon>
+          </el-button>
+        </div>
+        <div
+          class="detail-content formula-content"
+          :class="{ collapsed: !isCalculationStepsExpanded }"
+        >
           <div
-            v-for="(step, index) in calculationSteps"
+            v-for="(step, index) in displayCalculationSteps"
             :key="index"
             class="formula-step"
           >
             <div class="formula-step-title">
-              <span class="step-number">{{ index + 1 }}.</span>
+              <span class="step-number">{{ getStepNumber(index) }}.</span>
               {{ step.title }}
             </div>
             <div
               class="formula-latex"
               v-html="renderFormula(step.formula)"
             ></div>
+          </div>
+
+          <!-- 折叠时的提示 -->
+          <div
+            v-if="
+              !isCalculationStepsExpanded &&
+              calculationSteps.length > MAX_COLLAPSED_STEPS
+            "
+            class="collapse-hint"
+          >
+            <span class="hint-text"
+              >... 还有
+              {{ calculationSteps.length - MAX_COLLAPSED_STEPS }}
+              个计算步骤</span
+            >
+            <el-button
+              type="text"
+              size="small"
+              @click="expandCalculationSteps"
+              class="expand-btn"
+            >
+              点击展开查看全部
+            </el-button>
           </div>
         </div>
       </div>
@@ -155,9 +194,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
+import { ArrowDown } from '@element-plus/icons-vue'
 
 interface Props {
   modelValue: boolean
@@ -178,6 +218,43 @@ const visible = computed({
   get: () => props.modelValue,
   set: val => emit('update:modelValue', val)
 })
+
+// 折叠/展开状态
+const isCalculationStepsExpanded = ref(false)
+const MAX_COLLAPSED_STEPS = 3 // 折叠时显示的最大步骤数
+
+// 切换折叠/展开状态
+const toggleCalculationSteps = () => {
+  isCalculationStepsExpanded.value = !isCalculationStepsExpanded.value
+}
+
+// 直接展开
+const expandCalculationSteps = () => {
+  isCalculationStepsExpanded.value = true
+}
+
+// 根据折叠状态显示的计算步骤
+const displayCalculationSteps = computed(() => {
+  if (
+    isCalculationStepsExpanded.value ||
+    calculationSteps.value.length <= MAX_COLLAPSED_STEPS
+  ) {
+    return calculationSteps.value
+  }
+  return calculationSteps.value.slice(0, MAX_COLLAPSED_STEPS)
+})
+
+// 获取步骤编号（考虑折叠状态）
+const getStepNumber = (index: number) => {
+  if (isCalculationStepsExpanded.value) {
+    return index + 1
+  }
+  // 折叠时，如果步骤数超过最大折叠步骤数，显示实际编号
+  if (calculationSteps.value.length > MAX_COLLAPSED_STEPS) {
+    return index + 1
+  }
+  return index + 1
+}
 
 // 提取参数映射表
 const extractedParamsMap = {
@@ -312,11 +389,37 @@ const getCategoryType = (category: string) => {
   margin-bottom: 0;
 }
 
-.detail-section h4 {
-  margin: 0 0 12px 0;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h4 {
+  margin: 0;
   font-size: 16px;
   font-weight: bold;
   color: #262626;
+}
+
+.toggle-btn {
+  color: #409eff;
+  font-size: 13px;
+  padding: 2px 6px;
+}
+
+.toggle-btn:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.toggle-btn .el-icon {
+  margin-left: 4px;
+  transition: transform 0.3s ease;
+}
+
+.rotate-icon {
+  transform: rotate(180deg);
 }
 
 .detail-row {
@@ -443,6 +546,15 @@ const getCategoryType = (category: string) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-height: initial;
+  transition: max-height 0.3s ease;
+  padding-right: 4px;
+}
+
+.formula-content.collapsed {
+  max-height: 300px;
+  overflow-y: hidden;
+  position: relative;
 }
 
 .formula-step {
@@ -488,5 +600,51 @@ const getCategoryType = (category: string) => {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 4px 0;
+}
+
+/* 折叠提示区域 */
+.collapse-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.8),
+    rgba(245, 247, 250, 0.95)
+  );
+  border-radius: 4px;
+  margin-top: 8px;
+  position: relative;
+}
+
+.collapse-hint::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(245, 247, 250, 0.95)
+  );
+}
+
+.hint-text {
+  color: #909399;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.expand-btn {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.expand-btn:hover {
+  color: #66b1ff;
 }
 </style>
