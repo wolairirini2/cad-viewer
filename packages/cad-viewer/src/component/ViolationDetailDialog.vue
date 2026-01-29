@@ -573,7 +573,6 @@ const getCategoryType = (category: string) => {
 }
 
 .step-number {
-  color: #409eff;
   font-weight: 700;
   min-width: 20px;
 }
