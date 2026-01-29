@@ -82,17 +82,15 @@
             border
             class="calc-result-main"
           >
-            <el-descriptions-item label="高压侧母线短路电流">
+            <el-descriptions-item label="高压侧母线短路电流(kA)">
               <span class="highlight-value">{{
                 reviewTrace.calculation_result.hv_bus_Isc_ka?.toFixed(2)
               }}</span>
-              kA
             </el-descriptions-item>
-            <el-descriptions-item label="低压侧母线短路电流">
+            <el-descriptions-item label="低压侧母线短路电流(kA)">
               <span class="highlight-value">{{
                 reviewTrace.calculation_result.lv_bus_Isc_ka?.toFixed(2)
               }}</span>
-              kA
             </el-descriptions-item>
           </el-descriptions>
 
@@ -183,30 +181,32 @@ const visible = computed({
 
 // 提取参数映射表
 const extractedParamsMap = {
-  system_short_circuit_capacity_mva: '系统短路容量 (MVA)',
+  upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
+  upstream_main_transformer_capacity_mva: '上级系统主变容量 (MVA)',
+  upstream_main_transformer_impedance_percent: '上级系统主变短路阻抗百分比 (%)',
   base_capacity_mva: '基准容量 (MVA)',
   hv_base_voltage_kv: '高压侧基准电压 (kV)',
   lv_base_voltage_kv: '低压侧基准电压 (kV)',
   overhead_line_length_km: '架空线长度 (km)',
-  overhead_line_unit_reactance_ohm_per_km: '架空线单位电抗 (Ω)',
+  overhead_line_unit_reactance_ohm_per_km: '架空线单位电抗 (Ω/km)',
   cable_length_km: '电缆长度 (km)',
-  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω)',
+  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω/km)',
   transformer_capacity_mva: '变压器容量 (MVA)',
   transformer_impedance_percent: '变压器短路阻抗百分比 (%)'
 }
 
 // 计算详情映射表
 const calculationDetailsMap = {
-  Zj_hv: '高压侧基准阻抗',
-  Ij_hv: '高压侧基准电流',
-  Zj_lv: '低压侧基准阻抗',
-  Ij_lv: '低压侧基准电流',
-  X_sys_star: '系统标幺电抗',
-  X_line_star: '线路标幺电抗',
-  X_line_ohm: '线路有名电抗',
-  X_transformer_star: '变压器标幺电抗',
-  X_total_hv_star: '高压侧总电抗',
-  X_total_lv_star: '低压侧总电抗'
+  Zj_hv: '高压侧基准阻抗 (Ω)',
+  Ij_hv: '高压侧基准电流 (kA)',
+  Zj_lv: '低压侧基准阻抗 (Ω)',
+  Ij_lv: '低压侧基准电流 (kA)',
+  X_sys_star: '系统标幺电抗 (Ω)',
+  X_line_star: '线路标幺电抗 (Ω)',
+  X_line_ohm: '线路有名电抗 (Ω)',
+  X_transformer_star: '变压器标幺电抗 (Ω)',
+  X_total_hv_star: '高压侧总电抗 (Ω)',
+  X_total_lv_star: '低压侧总电抗 (Ω)'
 }
 
 // 获取第一条violation的review_trace（所有条目一致）
@@ -338,7 +338,7 @@ const getCategoryType = (category: string) => {
   color: #595959;
   font-size: 14px;
   :deep(.el-descriptions__label) {
-    width: 160px;
+    width: 200px;
   }
 }
 
@@ -447,8 +447,7 @@ const getCategoryType = (category: string) => {
 
 .formula-step {
   border-radius: 6px;
-  padding: 12px 16px;
-  border-left: 3px solid #409eff;
+  padding: 0 16px;
   display: flex;
 }
 
@@ -456,7 +455,6 @@ const getCategoryType = (category: string) => {
   font-size: 14px;
   font-weight: 600;
   color: #262626;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
