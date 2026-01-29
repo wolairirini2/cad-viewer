@@ -44,7 +44,7 @@
               :key="key"
               :label="label"
             >
-              {{ formatValue(reviewTrace.extracted_parameters[key], key) }}
+              {{ formatValue(reviewTrace.extracted_parameters[key]) }}
             </el-descriptions-item>
           </el-descriptions>
         </div>
@@ -123,7 +123,7 @@
             :key="index"
             class="description-item"
           >
-            <span class="item-number">{{ index + 1 }}.</span>
+            <span class="item-number">{{ +index + 1 }}.</span>
             <span class="item-content" v-html="desc"></span>
           </div>
         </div>
@@ -183,16 +183,16 @@ const visible = computed({
 
 // 提取参数映射表
 const extractedParamsMap = {
-  system_short_circuit_capacity_mva: '系统短路容量',
-  base_capacity_mva: '基准容量',
-  hv_base_voltage_kv: '高压侧基准电压',
-  lv_base_voltage_kv: '低压侧基准电压',
-  overhead_line_length_km: '架空线长度',
-  overhead_line_unit_reactance_ohm_per_km: '架空线单位电抗',
-  cable_length_km: '电缆长度',
-  cable_unit_reactance_ohm_per_km: '电缆单位电抗',
-  transformer_capacity_mva: '变压器容量',
-  transformer_impedance_percent: '变压器短路阻抗百分比'
+  system_short_circuit_capacity_mva: '系统短路容量 (MVA)',
+  base_capacity_mva: '基准容量 (MVA)',
+  hv_base_voltage_kv: '高压侧基准电压 (kV)',
+  lv_base_voltage_kv: '低压侧基准电压 (kV)',
+  overhead_line_length_km: '架空线长度 (km)',
+  overhead_line_unit_reactance_ohm_per_km: '架空线单位电抗 (Ω)',
+  cable_length_km: '电缆长度 (km)',
+  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω)',
+  transformer_capacity_mva: '变压器容量 (MVA)',
+  transformer_impedance_percent: '变压器短路阻抗百分比 (%)'
 }
 
 // 计算详情映射表
@@ -240,26 +240,9 @@ const renderFormula = (formula: string): string => {
   }
 }
 
-// 格式化提取参数的值和单位
-const formatValue = (value: any, key: string): string => {
+// 格式化提取参数的值（现在只返回纯数值，单位已在名称中）
+const formatValue = (value: any): string => {
   if (value === undefined || value === null) return '-'
-
-  // 根据字段添加单位
-  if (key.includes('capacity') || key.includes('mva')) {
-    return `${value} MVA`
-  } else if (key.includes('voltage') || key.includes('kv')) {
-    return `${value} kV`
-  } else if (key.includes('length') || key.includes('km')) {
-    return `${value} km`
-  } else if (key.includes('reactance') && key.includes('ohm')) {
-    if (key.includes('unit')) {
-      return `${value} Ω/km`
-    }
-    return `${value} Ω`
-  } else if (key.includes('percent')) {
-    return `${value}%`
-  }
-
   return value.toString()
 }
 
@@ -354,6 +337,9 @@ const getCategoryType = (category: string) => {
   line-height: 1.6;
   color: #595959;
   font-size: 14px;
+  :deep(.el-descriptions__label) {
+    width: 160px;
+  }
 }
 
 .detail-content.suggestion {
@@ -467,7 +453,7 @@ const getCategoryType = (category: string) => {
 }
 
 .formula-step-title {
-  font-size: 14px;  
+  font-size: 14px;
   font-weight: 600;
   color: #262626;
   margin-bottom: 8px;
