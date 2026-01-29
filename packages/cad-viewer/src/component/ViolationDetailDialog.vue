@@ -44,7 +44,7 @@
               :key="key"
               :label="label"
             >
-              {{ formatValue(reviewTrace.extracted_parameters[key]) }}
+              {{ formatValue(reviewTrace.extracted_parameters[key], key) }}
             </el-descriptions-item>
           </el-descriptions>
         </div>
@@ -76,7 +76,7 @@
             class="formula-step"
           >
             <div class="formula-step-title">
-              <span class="step-number">{{ getStepNumber(index) }}.</span>
+              <span class="step-number">({{ getStepNumber(index) }})</span>
               {{ step.title }}
             </div>
             <div
@@ -94,7 +94,7 @@
             class="collapse-hint"
           >
             <span class="hint-text"
-              >... 还有
+              >还有
               {{ calculationSteps.length - MAX_COLLAPSED_STEPS }}
               个计算步骤</span
             >
@@ -161,7 +161,17 @@
             class="description-item"
           >
             <span class="item-number">{{ +index + 1 }}.</span>
-            <span class="item-content" v-html="desc"></span>
+            <span class="item-content" v-html="desc.text"></span>
+            <el-button
+              type="primary"
+              size="small"
+              plain
+              @click="handleLocate(desc.violation)"
+              icon="Position"
+              v-if="data.category == '设备材料'"
+            >
+              定位
+            </el-button>
           </div>
         </div>
       </div>
@@ -212,6 +222,7 @@ interface CalculationStep {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
+  (e: 'locate', violation: any): void
 }>()
 
 const visible = computed({
@@ -274,16 +285,16 @@ const extractedParamsMap = {
 
 // 计算详情映射表
 const calculationDetailsMap = {
-  Zj_hv: '高压侧基准阻抗 (Ω)',
+  Zj_hv: '高压侧基准电抗 (Ω)',
   Ij_hv: '高压侧基准电流 (kA)',
-  Zj_lv: '低压侧基准阻抗 (Ω)',
+  Zj_lv: '低压侧基准电抗 (Ω)',
   Ij_lv: '低压侧基准电流 (kA)',
-  X_sys_star: '系统标幺电抗 (Ω)',
-  X_line_star: '线路标幺电抗 (Ω)',
+  X_sys_star: '系统标幺电抗',
+  X_line_star: '线路标幺电抗',
   X_line_ohm: '线路有名电抗 (Ω)',
-  X_transformer_star: '变压器标幺电抗 (Ω)',
-  X_total_hv_star: '高压侧总电抗 (Ω)',
-  X_total_lv_star: '低压侧总电抗 (Ω)'
+  X_transformer_star: '变压器标幺电抗',
+  X_total_hv_star: '高压侧总标幺电抗',
+  X_total_lv_star: '低压侧总标幺电抗'
 }
 
 // 获取第一条violation的review_trace（所有条目一致）
@@ -318,8 +329,14 @@ const renderFormula = (formula: string): string => {
 }
 
 // 格式化提取参数的值（现在只返回纯数值，单位已在名称中）
-const formatValue = (value: any): string => {
+const formatValue = (value: any, key: string): string => {
   if (value === undefined || value === null) return '-'
+  if (
+    reviewTrace.value.defaults_applied &&
+    reviewTrace.value.defaults_applied[key]
+  ) {
+    return `${value.toString()} (根据工程经验取典型值)`
+  }
   return value.toString()
 }
 
@@ -330,12 +347,23 @@ const formatCalcDetail = (value: number | undefined): string => {
   return value.toFixed(4).replace(/\.?0+$/, '')
 }
 
+// 修改 descriptions 计算属性，保留完整的 violation 数据
 const descriptions = computed(() => {
   if (!props.data?.allViolations) return []
   return props.data.allViolations
     .filter((v: any) => v.description)
-    .map((v: any) => v.description)
+    .map((v: any) => ({
+      text: v.description,
+      violation: v
+    }))
 })
+
+// 处理定位点击
+const handleLocate = (violation: any) => {
+  emit('locate', violation)
+  // 可选：定位后关闭弹窗，根据需要取消注释
+  // visible.value = false
+}
 
 const suggestions = computed(() => {
   if (!props.data?.allViolations) return []
@@ -396,13 +424,6 @@ const getCategoryType = (category: string) => {
   margin-bottom: 12px;
 }
 
-.section-header h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #262626;
-}
-
 .toggle-btn {
   color: #409eff;
   font-size: 13px;
@@ -440,8 +461,14 @@ const getCategoryType = (category: string) => {
   line-height: 1.6;
   color: #595959;
   font-size: 14px;
+  /* 提取参数内容区域样式 */
   :deep(.el-descriptions__label) {
-    width: 200px;
+    word-break: break-all;
+    white-space: nowrap;
+  }
+
+  :deep(.el-descriptions__content) {
+    width: 50%;
   }
 }
 
@@ -552,7 +579,7 @@ const getCategoryType = (category: string) => {
 }
 
 .formula-content.collapsed {
-  max-height: 300px;
+  /* max-height: 300px; */
   overflow-y: hidden;
   position: relative;
 }

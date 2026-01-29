@@ -34,250 +34,120 @@ reviewReportData.value = {
       articles: [
         {
           id: '0',
-          title:
-            '检查计量用CT、PT绕组是否独立，二次回路是否专用，端子盒是否可铅封',
-          origin: 'DL/T 448-2016',
-          content:
-            '检查计量用CT、PT绕组是否独立，二次回路是否专用，端子盒是否可铅封',
-          violations: []
-        },
-        {
-          id: '1',
           title: '短路电流审查',
           origin: 'GB/T 15544.1-2023',
           content: '短路电流审查',
           violations: [
             {
               risk_level: 'high',
-              suggestion: ['检查设计说明中的计算参数是否正确'],
+              suggestion: ['检查设计说明中的高压母线侧短路电流计算是否正确'],
               description:
-                '高压侧母线计算值与设计说明差异过大：计算值8.31kA与设计值14.11kA 差异41.1%',
+                '高压侧母线计算值与设计说明差异过大：计算值8.61kA与设计值9.63kA 差异10.6%',
               geometry_ref: {
                 chapter:
-                  '计算采用短路电流最大的接入方式时的电流值。计算时不考虑康源印染变两台主变低压侧并供。短路电流计算条件如下：\n\n短路电流计算采用标幺制，取基准值分别为Sj=100MVA，Uj1=115kV，Ij1=0.502kA；Uj2=10.5kV，Ij2=5.5kA。\n\n1、220kV延陵变#1主变压器阻抗参数Uk1-2%=9.02，Uk1-3%=34.08，Uk2-3%=22.19；接入点的220kV延陵变110kV母线短路阻抗标幺值考虑220kV系统短路容量为无穷大计算得0.0501。\n\n3、本期规模下，东华铝业变电站主变容量分别为25MVA，短路阻抗为10.5%。\n\n4、线路：从延陵变733间隔至T接部分线路长2.5km，导线型号LGJ-300/25。新建110kV架空线路0.8公里，导线型号1×JL/G1A-300/25。电缆线路0.45公里，电缆型号1×ZC-YJLW03-64/110-1*400mm2。\n\n三相短路电流计算短路阻抗图：\n\n图3.2.1-1 短路阻抗图\n\n本期短路电流计算结果见下表：\n\n表3.2.1-1  稳态短路电流计算结果表\n\n注：表中ich＝2.55I”，Ich＝1.51I”。\n\n经计算江阴东华铝材科技有限公司110kV变电站110kV侧三相最大短路电流为14.11kA，10kV侧三相最大短路电流为12.07kA。\n\n根据短路电流计算结果，对主要设备选择和校验，110kV设备额定开断电流40kA，10kV主变间隔、分段间隔断路器额定开断电流选31.5kA，其余出线柜断路器选择额定开断电流25kA，可满足本工程要求。',
+                  '按照《城市电力网规划设计导则》要求,为了取得合理的经济效益,各级电压的短路容量应该从网络设计、电压等级、变压器容量、短路阻抗和运行方式等多方面控制,使各级电压断路器的开断电流以及设备的动稳定电流得到配合,并根据计算结果进行设备选择及校验。\n\n220kV七里庙变2008年最大方式下110kV短路容量为2221MVA，新建架空线路8.30km，导线型号LGJ-300，电缆线路1.0km，电缆采用单芯400mm2；220kV福前变2008年最大方式下110kV短路容量为2222MVA，新建架空线路4.10km，导线型号LGJ-300，电缆线路1.0km，电缆采用单芯400mm2。\n\n根据《电力工程电气设计手册》电气一次部分中短路电流计算条件的一般规定：确定短路电流时，应按可能发生最大短路电流的正常接线方式，而不应按仅在切换过程中可能并列运行的接线方式。\n\n根据上述情况，本期短路电流计算按较大的接入方式即福前变供电情况下计算。\n\n本设计按照如下的条件计算：\n\n1、220kV福前变至110kV彩虹平板变电站的110kV架空线路长度为4.10km，导线型号为LGJ-300。电缆长度1.0km，电缆为单芯400 mm2。\n\n2、主变容量为20MVA，主变短路阻抗按Uk%=10.5计算。\n\n3、基准容量Sj＝1000MVA，基准电压Uj=115kV，Uj=10.5kV\n\n正常供电情况下计算阻抗图如下（已归算为标么值）:\n\n计算结果\n\n经计算，得到如下的110kV彩虹平板变电站三相短路电流值：\n\n变电站110kV母线短路电流：I1”=9.626kA,\n\n变电站10kV母线短路电流: I2”=9.429kA。\n\n合环运行情况下计算阻抗图如下（已归算为标么值）:\n\n经计算，得到如下的110kV彩虹平板变电站三相短路电流值：\n\n变电站110kV母线短路电流：I1”=14.50kA,\n\n变电站10kV母线短路电流: I2”=18.51kA。\n\n设备选择时按正常供电情况考虑。',
                 extents: null,
-                file_id: 'cebcfa23-6d10-43f0-b4fb-0530495aac35',
+                file_id: 'cdbff4a3-0233-46e2-97d9-444326aed3fb',
                 handles: null
               },
               review_trace: {
+                defaults_applied: {
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4
+                },
                 calculation_result: {
-                  hv_bus_Isc_ka: 8.31,
-                  lv_bus_Isc_ka: 11.45,
+                  hv_bus_Isc_ka: 8.6095,
+                  lv_bus_Isc_ka: 9.4265,
                   calculation_steps: [
-                    {
-                      title: '计算高压侧基准阻抗',
-                      formula:
-                        '$$Z_{j,hv}=\\frac{U_{hv}^2}{S_{base}}=\\frac{115.0^2}{1000.0}=13.225\\ \\Omega$$'
-                    },
                     {
                       title: '计算高压侧基准电流',
                       formula:
-                        '$$I_{j,hv}=\\frac{S_{base}}{\\sqrt{3}U_{hv}}=\\frac{1000.0}{\\sqrt{3}\\times115.0}=5.0204\\ \\text{kA}$$'
+                        '$$I_{B}^{(高)}=\\frac{S_{B}}{\\sqrt{3} \\cdot U_{B}^{(高)}}=\\frac{1000.0\\ \\text{MVA}}{\\sqrt{3}\\times115.0\\ \\text{kV}}=5.0204\\ \\text{kA}$$'
                     },
                     {
-                      title: '计算低压侧基准阻抗',
+                      title: '计算高压侧基准电抗',
                       formula:
-                        '$$Z_{j,lv}=\\frac{U_{lv}^2}{S_{base}}=\\frac{10.5^2}{1000.0}=0.1103\\ \\Omega$$'
+                        '$$X_{B}^{(高)}=\\frac{\\left(U_{B}^{(高)}\\right)^2}{S_{B}}=\\frac{(115.0\\ \\text{kV})^2}{1000.0\\ \\text{MVA}}=13.225\\ \\Omega$$'
                     },
                     {
                       title: '计算低压侧基准电流',
                       formula:
-                        '$$I_{j,lv}=\\frac{S_{base}}{\\sqrt{3}U_{lv}}=\\frac{1000.0}{\\sqrt{3}\\times10.5}=54.9857\\ \\text{kA}$$'
+                        '$$I_{B}^{(低)}=\\frac{S_{B}}{\\sqrt{3} \\cdot U_{B}^{(低)}}=\\frac{1000.0\\ \\text{MVA}}{\\sqrt{3}\\times10.5\\ \\text{kV}}=54.9857\\ \\text{kA}$$'
+                    },
+                    {
+                      title: '计算低压侧基准电抗',
+                      formula:
+                        '$$X_{B}^{(低)}=\\frac{\\left(U_{B}^{(低)}\\right)^2}{S_{B}}=\\frac{(10.5\\ \\text{kV})^2}{1000.0\\ \\text{MVA}}=0.1103\\ \\Omega$$'
                     },
                     {
                       title: '计算系统电抗标幺值',
                       formula:
-                        '$$X^{*}_{sys}=\\frac{S_{base}}{S_{sc}}=\\frac{1000.0}{2222.0}=0.45005$$'
+                        '$$X_{\\mathrm{s}{*}}=\\frac{S_{B}}{S_{\\mathrm{k}}^{\\prime\\prime}}=\\frac{1000.0\\ \\text{MVA}}{2222.0\\ \\text{MVA}}=0.45$$'
                     },
                     {
                       title: '计算线路电抗有名值',
                       formula:
-                        '$$X_{line}=L_{oh}x_{oh}+L_{cab}x_{cab}=4.1\\times0.4+1.0\\times0.12=1.76\\ \\Omega$$'
+                        '$$X_{\\mathrm{有名值}}=L_{\\mathrm{架空}}\\times x_{\\mathrm{架空}}+L_{\\mathrm{电缆}}\\times x_{\\mathrm{电缆}}=4.1\\ \\text{km}\\times0.4\\ \\Omega/\\text{km}+1.0\\ \\text{km}\\times0.12\\ \\Omega/\\text{km}=1.76\\ \\Omega$$'
                     },
                     {
                       title: '计算线路电抗标幺值',
                       formula:
-                        '$$X^{*}_{line}=\\frac{X_{line}}{Z_{j,hv}}=\\frac{1.76}{13.225}=0.13308$$'
+                        '$$X_{\\ell{*}}=\\frac{X_{\\mathrm{有名值}}}{X_{B}^{(高)}}=\\frac{1.76\\ \\Omega}{13.225\\ \\Omega}=0.1331$$'
                     },
                     {
                       title: '计算变压器电抗标幺值',
                       formula:
-                        '$$X^{*}_{T}=\\frac{Uk\\%}{100}\\times\\frac{S_{base}}{S_{tr}}=\\frac{10.5}{100}\\times\\frac{1000.0}{20.0}=5.25$$'
+                        '$$X_{\\mathrm{b}{*}}=\\frac{U_{k}{(\\%)}}{100}\\times\\frac{S_{B}}{S_{\\mathrm{N}}}=\\frac{10.5\\ \\%}{100}\\times\\frac{1000.0\\ \\text{MVA}}{20.0\\ \\text{MVA}}=5.25$$'
                     },
                     {
                       title: '计算高压侧总电抗标幺值',
                       formula:
-                        '$$X^{*}_{HV}=X^{*}_{sys}+X^{*}_{line}=0.45005+0.13308=0.58313$$'
-                    },
-                    {
-                      title: '计算高压侧短路电流标幺值',
-                      formula:
-                        '$$I^{*}_{HV}=\\frac{1}{X^{*}_{HV}}=\\frac{1}{0.58313}=1.7149$$'
+                        '$$X_{\\Sigma*}^{(高)}=X_{\\mathrm{s*}}+X_{\\mathrm{L}{*}}=0.45+0.1331=0.5831$$'
                     },
                     {
                       title: '计算高压侧短路电流',
                       formula:
-                        '$$I_{k,HV}=I^{*}_{HV}\\times I_{j,hv}=1.7149\\times5.0204=8.61\\ \\text{kA}$$'
+                        '$$I_{d}^{(高)}= \\frac{1}{X_{\\Sigma*}^{(高)}} \\times I_{B}^{(高)}=\\frac{1}{0.5831} \\times5.0204\\ \\text{kA}=8.6095\\ \\text{kA}$$'
                     },
                     {
                       title: '计算低压侧总电抗标幺值',
                       formula:
-                        '$$X^{*}_{LV}=X^{*}_{HV}+X^{*}_{T}=0.58313+5.25=5.83313$$'
-                    },
-                    {
-                      title: '计算低压侧短路电流标幺值',
-                      formula:
-                        '$$I^{*}_{LV}=\\frac{1}{X^{*}_{LV}}=\\frac{1}{5.83313}=0.1714$$'
+                        '$$X_{\\Sigma}^{(低)*}=X_{\\mathrm{s*}}+X_{\\mathrm{L}{*}}+X_{\\mathrm{b}^{*}}=0.45+0.1331+5.25=5.8331$$'
                     },
                     {
                       title: '计算低压侧短路电流',
                       formula:
-                        '$$I_{k,LV}=I^{*}_{LV}\\times I_{j,lv}=0.1714\\times54.9857=9.43\\ \\text{kA}$$'
+                        '$$I_{d}^{(低)}= \\frac{1}{X_{\\Sigma*}^{(低)}} \\times I_{B}^{(低)}=\\frac{1}{5.8331} \\times54.9857\\ \\text{kA}=9.4265\\ \\text{kA}$$'
                     }
                   ],
                   calculation_details: {
-                    Ij_hv: 0.502,
-                    Ij_lv: 5.4986,
-                    Zj_hv: 132.25,
-                    Zj_lv: 1.1025,
-                    X_line_ohm: 1.374,
-                    X_sys_star: 0.05,
-                    X_line_star: 0.01039,
-                    X_total_hv_star: 0.06039,
-                    X_total_lv_star: 0.48039,
-                    X_transformer_star: 0.42
+                    Ij_hv: 5.0204,
+                    Ij_lv: 54.9857,
+                    Zj_hv: 13.225,
+                    Zj_lv: 0.1103,
+                    X_line_ohm: 1.76,
+                    X_sys_star: 0.45,
+                    X_line_star: 0.1331,
+                    X_total_hv_star: 0.5831,
+                    X_total_lv_star: 5.8331,
+                    X_transformer_star: 5.25
                   }
                 },
                 extracted_parameters: {
-                  cable_length_km: 0.45,
-                  base_capacity_mva: 100,
+                  cable_length_km: 1,
+                  base_capacity_mva: 1000,
                   hv_base_voltage_kv: 115,
                   lv_base_voltage_kv: 10.5,
-                  overhead_line_length_km: 3.3,
-                  transformer_capacity_mva: 25,
-                  normal_supply_hv_bus_Isc_ka: 14.11,
-                  normal_supply_lv_bus_Isc_ka: 12.07,
+                  overhead_line_length_km: 4.1,
+                  transformer_capacity_mva: 20,
+                  normal_supply_hv_bus_Isc_ka: 9.626,
+                  normal_supply_lv_bus_Isc_ka: 9.429,
                   transformer_impedance_percent: 10.5,
                   cable_unit_reactance_ohm_per_km: 0.12,
-                  system_short_circuit_capacity_mva: 2000,
-                  overhead_line_unit_reactance_ohm_per_km: 0.4
-                }
-              }
-            },
-            {
-              risk_level: 'medium',
-              suggestion: ['检查设计说明中的计算参数是否正确'],
-              description:
-                '低压侧母线计算值与设计说明差异过大：计算值11.45kA与设计值12.07kA 差异5.1%',
-              geometry_ref: {
-                chapter:
-                  '计算采用短路电流最大的接入方式时的电流值。计算时不考虑康源印染变两台主变低压侧并供。短路电流计算条件如下：\n\n短路电流计算采用标幺制，取基准值分别为Sj=100MVA，Uj1=115kV，Ij1=0.502kA；Uj2=10.5kV，Ij2=5.5kA。\n\n1、220kV延陵变#1主变压器阻抗参数Uk1-2%=9.02，Uk1-3%=34.08，Uk2-3%=22.19；接入点的220kV延陵变110kV母线短路阻抗标幺值考虑220kV系统短路容量为无穷大计算得0.0501。\n\n3、本期规模下，东华铝业变电站主变容量分别为25MVA，短路阻抗为10.5%。\n\n4、线路：从延陵变733间隔至T接部分线路长2.5km，导线型号LGJ-300/25。新建110kV架空线路0.8公里，导线型号1×JL/G1A-300/25。电缆线路0.45公里，电缆型号1×ZC-YJLW03-64/110-1*400mm2。\n\n三相短路电流计算短路阻抗图：\n\n图3.2.1-1 短路阻抗图\n\n本期短路电流计算结果见下表：\n\n表3.2.1-1  稳态短路电流计算结果表\n\n注：表中ich＝2.55I”，Ich＝1.51I”。\n\n经计算江阴东华铝材科技有限公司110kV变电站110kV侧三相最大短路电流为14.11kA，10kV侧三相最大短路电流为12.07kA。\n\n根据短路电流计算结果，对主要设备选择和校验，110kV设备额定开断电流40kA，10kV主变间隔、分段间隔断路器额定开断电流选31.5kA，其余出线柜断路器选择额定开断电流25kA，可满足本工程要求。',
-                extents: null,
-                file_id: 'cebcfa23-6d10-43f0-b4fb-0530495aac35',
-                handles: null
-              },
-              review_trace: {
-                calculation_result: {
-                  hv_bus_Isc_ka: 8.31,
-                  lv_bus_Isc_ka: 11.45,
-                  calculation_steps: [
-                    {
-                      title: '计算高压侧基准阻抗',
-                      formula:
-                        '$$Z_{j,hv}=\\frac{U_{hv}^2}{S_{base}}=\\frac{115.0^2}{1000.0}=13.225\\ \\Omega$$'
-                    },
-                    {
-                      title: '计算高压侧基准电流',
-                      formula:
-                        '$$I_{j,hv}=\\frac{S_{base}}{\\sqrt{3}U_{hv}}=\\frac{1000.0}{\\sqrt{3}\\times115.0}=5.0204\\ \\text{kA}$$'
-                    },
-                    {
-                      title: '计算低压侧基准阻抗',
-                      formula:
-                        '$$Z_{j,lv}=\\frac{U_{lv}^2}{S_{base}}=\\frac{10.5^2}{1000.0}=0.1103\\ \\Omega$$'
-                    },
-                    {
-                      title: '计算低压侧基准电流',
-                      formula:
-                        '$$I_{j,lv}=\\frac{S_{base}}{\\sqrt{3}U_{lv}}=\\frac{1000.0}{\\sqrt{3}\\times10.5}=54.9857\\ \\text{kA}$$'
-                    },
-                    {
-                      title: '计算系统电抗标幺值',
-                      formula:
-                        '$$X^{*}_{sys}=\\frac{S_{base}}{S_{sc}}=\\frac{1000.0}{2222.0}=0.45005$$'
-                    },
-                    {
-                      title: '计算线路电抗有名值',
-                      formula:
-                        '$$X_{line}=L_{oh}x_{oh}+L_{cab}x_{cab}=4.1\\times0.4+1.0\\times0.12=1.76\\ \\Omega$$'
-                    },
-                    {
-                      title: '计算线路电抗标幺值',
-                      formula:
-                        '$$X^{*}_{line}=\\frac{X_{line}}{Z_{j,hv}}=\\frac{1.76}{13.225}=0.13308$$'
-                    },
-                    {
-                      title: '计算变压器电抗标幺值',
-                      formula:
-                        '$$X^{*}_{T}=\\frac{Uk\\%}{100}\\times\\frac{S_{base}}{S_{tr}}=\\frac{10.5}{100}\\times\\frac{1000.0}{20.0}=5.25$$'
-                    },
-                    {
-                      title: '计算高压侧总电抗标幺值',
-                      formula:
-                        '$$X^{*}_{HV}=X^{*}_{sys}+X^{*}_{line}=0.45005+0.13308=0.58313$$'
-                    },
-                    {
-                      title: '计算高压侧短路电流标幺值',
-                      formula:
-                        '$$I^{*}_{HV}=\\frac{1}{X^{*}_{HV}}=\\frac{1}{0.58313}=1.7149$$'
-                    },
-                    {
-                      title: '计算高压侧短路电流',
-                      formula:
-                        '$$I_{k,HV}=I^{*}_{HV}\\times I_{j,hv}=1.7149\\times5.0204=8.61\\ \\text{kA}$$'
-                    },
-                    {
-                      title: '计算低压侧总电抗标幺值',
-                      formula:
-                        '$$X^{*}_{LV}=X^{*}_{HV}+X^{*}_{T}=0.58313+5.25=5.83313$$'
-                    },
-                    {
-                      title: '计算低压侧短路电流标幺值',
-                      formula:
-                        '$$I^{*}_{LV}=\\frac{1}{X^{*}_{LV}}=\\frac{1}{5.83313}=0.1714$$'
-                    },
-                    {
-                      title: '计算低压侧短路电流',
-                      formula:
-                        '$$I_{k,LV}=I^{*}_{LV}\\times I_{j,lv}=0.1714\\times54.9857=9.43\\ \\text{kA}$$'
-                    }
-                  ],
-                  calculation_details: {
-                    Ij_hv: 0.502,
-                    Ij_lv: 5.4986,
-                    Zj_hv: 132.25,
-                    Zj_lv: 1.1025,
-                    X_line_ohm: 1.374,
-                    X_sys_star: 0.05,
-                    X_line_star: 0.01039,
-                    X_total_hv_star: 0.06039,
-                    X_total_lv_star: 0.48039,
-                    X_transformer_star: 0.42
-                  }
-                },
-                extracted_parameters: {
-                  cable_length_km: 0.45,
-                  base_capacity_mva: 100,
-                  hv_base_voltage_kv: 115,
-                  lv_base_voltage_kv: 10.5,
-                  overhead_line_length_km: 3.3,
-                  transformer_capacity_mva: 25,
-                  normal_supply_hv_bus_Isc_ka: 14.11,
-                  normal_supply_lv_bus_Isc_ka: 12.07,
-                  transformer_impedance_percent: 10.5,
-                  cable_unit_reactance_ohm_per_km: 0.12,
-                  system_short_circuit_capacity_mva: 2000,
-                  overhead_line_unit_reactance_ohm_per_km: 0.4
+                  upstream_short_circuit_capacity_mva: 2222,
+                  upstream_main_transformer_capacity_mva: null,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4,
+                  upstream_main_transformer_impedance_percent: null
                 }
               }
             }
@@ -287,7 +157,7 @@ reviewReportData.value = {
       category: '设计说明'
     }
   ],
-  discipline_id: 'cebcfa23-6d10-43f0-b4fb-0530495aac35'
+  discipline_id: 'cdbff4a3-0233-46e2-97d9-444326aed3fb'
 }
 // import FileUpload from './components/FileUpload.vue'
 

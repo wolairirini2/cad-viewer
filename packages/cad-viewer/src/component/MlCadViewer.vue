@@ -62,6 +62,7 @@
     <ViolationDetailDialog
       v-model="showViolationDetail"
       :data="selectedViolation"
+      @locate="handleLocate"
     />
     <PassedDetailDialog
       v-model="showPassedDetail"
