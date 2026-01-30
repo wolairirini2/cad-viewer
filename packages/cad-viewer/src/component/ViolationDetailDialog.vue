@@ -163,14 +163,11 @@
             <span class="item-number">{{ +index + 1 }}.</span>
             <span class="item-content" v-html="desc.text"></span>
             <el-button
-              type="primary"
-              size="small"
-              plain
-              @click="handleLocate(desc.violation)"
-              icon="Position"
               v-if="data.category == '设备材料'"
+              type="text"
+              @click="handleLocate(desc.violation)"
+              icon="Location"
             >
-              定位
             </el-button>
           </div>
         </div>
