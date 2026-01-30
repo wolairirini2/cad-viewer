@@ -359,7 +359,7 @@ const getRiskText = (level: string) => {
     case 'low':
       return '轻微问题'
     default:
-      return level
+      return '审查通过'
   }
 }
 
