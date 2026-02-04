@@ -693,7 +693,7 @@ export class AcTrView2d extends AcEdBaseView {
 
     // Show Stats component at the right-bottom corner of the window
     const statsDom = stats.dom
-    statsDom.style.position = 'fixed'
+    statsDom.style.position = 'absolute'
     statsDom.style.inset = 'unset'
     statsDom.style.bottom = '30px'
     statsDom.style.right = '0px'

@@ -97,7 +97,7 @@ watch(visible, async val => {
 
 <style scoped>
 .ml-entity-info {
-  position: fixed;
+  position: absolute;
   left: v-bind(left);
   top: v-bind(top);
   width: 180px;

@@ -50,7 +50,7 @@ const handleClick = (lang: string) => {
 
 <style scoped>
 .ml-language-selector {
-  position: fixed;
+  position: absolute;
   right: 40px;
   top: 20px;
   z-index: 1000;

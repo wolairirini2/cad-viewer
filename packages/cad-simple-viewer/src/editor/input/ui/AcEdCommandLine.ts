@@ -184,7 +184,7 @@ export class AcEdCommandLine {
     const style = document.createElement('style')
     style.textContent = `
       .ml-cli-container {
-        position: fixed;
+        position: absolute;
         bottom: 45px;
         left: 50%;
         transform: translateX(-50%);
@@ -202,7 +202,6 @@ export class AcEdCommandLine {
         background: linear-gradient(#ededed, #e0e0e0);
         border: 1px solid rgba(0, 0, 0, 0.35);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-        min-width: 300px;
         height: 30px;
       }
 
@@ -794,7 +793,7 @@ export class AcEdCommandLine {
     let w = Math.max(this.minWidth, window.innerWidth * this.widthRatio)
     // Clamp width so it never exceeds the window width
     w = Math.min(w, window.innerWidth - 20) // optional 20px margin from edges
-    this.bar.style.width = w + 'px'
+    // this.bar.style.width = w + 'px'
 
     // Reposition popups to match new width
     this.positionMsgPanel()

@@ -84,7 +84,7 @@ export class AcEdRubberBand {
     // Create parent container
     // --------------------------------------------------------------------
     this.container = document.createElement('div')
-    this.container.style.position = 'fixed'
+    this.container.style.position = 'absolute'
     this.container.style.left = '0'
     this.container.style.top = '0'
     this.container.style.pointerEvents = 'none'
@@ -95,13 +95,13 @@ export class AcEdRubberBand {
     // Always create baseLine
     // --------------------------------------------------------------------
     this.baseLine = document.createElement('div')
-    this.baseLine.style.position = 'fixed'
+    this.baseLine.style.position = 'absolute'
     this.baseLine.style.borderTop = `1px solid ${color}`
     this.container.appendChild(this.baseLine)
 
     const createDashed = () => {
       const el = document.createElement('div')
-      el.style.position = 'fixed'
+      el.style.position = 'absolute'
       el.style.borderTop = `1px dashed ${color}`
       this.container!.appendChild(el)
       return el
@@ -115,7 +115,7 @@ export class AcEdRubberBand {
 
       // distance label
       this.labelEl = document.createElement('div')
-      this.labelEl.style.position = 'fixed'
+      this.labelEl.style.position = 'absolute'
       // this.labelEl.style.background = 'rgba(0,0,0,0.6)'
       this.labelEl.style.color = color
       this.labelEl.style.fontSize = '12px'
@@ -125,7 +125,7 @@ export class AcEdRubberBand {
 
       // X-axis reference line
       this.xAxisLine = document.createElement('div')
-      this.xAxisLine.style.position = 'fixed'
+      this.xAxisLine.style.position = 'absolute'
       this.xAxisLine.style.borderTop = `1px solid ${color}`
       this.container.appendChild(this.xAxisLine)
 
@@ -154,7 +154,7 @@ export class AcEdRubberBand {
 
       // Angle label (HTML) positioned in screen coords at arc midpoint
       this.angleLabelEl = document.createElement('div')
-      this.angleLabelEl.style.position = 'fixed'
+      this.angleLabelEl.style.position = 'absolute'
       // this.angleLabelEl.style.background = 'rgba(0,0,0,0.6)'
       this.angleLabelEl.style.color = color
       this.angleLabelEl.style.fontSize = '12px'

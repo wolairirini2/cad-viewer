@@ -88,6 +88,7 @@ const toggleNotificationCenter = () => {
 <style scoped>
 .ml-status-bar {
   box-sizing: border-box;
+  position: absolute!important;
 }
 
 .ml-status-bar-left-button-group {

@@ -96,7 +96,7 @@ function handleCancel() {
 <style scoped>
 /* Base Layout */
 .ml-base-dialog {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 2100;
   display: flex;

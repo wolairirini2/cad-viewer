@@ -1,96 +1,14 @@
-<!--
-  MlCadViewer - Main CAD Viewer Component
-  
-  This is the primary component for displaying and interacting with CAD files (DWG, DXF, etc.).
-  It provides a complete CAD viewing experience with file loading, layer management, 
-  command execution, and various viewing tools.
-  
-  USAGE EXAMPLE:
-  MlCadViewer with locale="en", url="path/to/file.dwg"
-  
-  FEATURES:
-  - File loading from local files (drag & drop or file dialog) or remote URLs
-  - Layer management and visibility control
-  - Command line interface for CAD operations
-  - Toolbars with common CAD tools (zoom, pan, select, etc.)
-  - Entity information display
-  - Multi-language support (English/Chinese)
-  - Dark/light theme support
-  - Status bar with progress and settings
-  - Customizable base URL for fonts, templates, and example files
-  
-  COMPONENTS INCLUDED:
-  - Main menu and language selector
-  - Toolbars with CAD commands
-  - Layer manager for controlling entity visibility
-  - Command line for text-based commands
-  - Status bar with various controls
-  - File reader for local file uploads (supports drag & drop and file dialog)
-  - Entity info panel for object details
-  
-  EVENTS HANDLED:
-  - File loading and error handling
-  - Font loading notifications
-  - General message display
-  - File opening failures
-  
-  DEPENDENCIES:
-  - @mlightcad/cad-simple-viewer: Core CAD functionality
-  - @mlightcad/data-model: File format support
-  - Element Plus: UI components
-  - Vue 3 Composition API
--->
-
 <script setup lang="ts">
-/**
- * MlCadViewer Component
- *
- * A comprehensive CAD viewer component that provides a complete interface for viewing
- * and interacting with CAD files (DWG, DXF, etc.). This component integrates multiple
- * sub-components to deliver a full-featured CAD viewing experience.
- *
- * @example
- * ```vue
- * // Basic usage with remote file
- * <MlCadViewer
- *   :locale="'en'"
- *   :url="'https://example.com/drawing.dwg'"
- * />
- *
- * // Basic usage with local file (File object)
- * <MlCadViewer
- *   :locale="'en'"
- *   :local-file="selectedFile"
- * />
- *
- * // Basic usage for manual file loading (no URL or localFile needed)
- * <MlCadViewer
- *   :locale="'en'"
- * />
- *
- * // Usage with custom baseUrl for fonts and templates
- * <MlCadViewer
- *   :locale="'en'"
- *   :base-url="'https://my-cdn.com/cad-data/'"
- * />
- *
- * // Import statement
- * import { MlCadViewer } from '@mlightcad/cad-viewer'
- * ```
- *
- * @see {@link https://github.com/mlightcad/cad-viewer | Project Repository}
- * @see {@link https://github.com/mlightcad/cad-viewer/blob/main/packages/cad-viewer/src/component/MlCadViewer.vue | Source Code}
- */
-
 import {
   AcApDocManager,
   AcApOpenDatabaseOptions,
   AcEdOpenMode,
   eventBus
 } from '@mlightcad/cad-simple-viewer'
+import { AcGeBox2d } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { initializeCadViewer, store } from '../app'
@@ -107,6 +25,12 @@ import { MlNotificationCenter } from './notification'
 import { MlPaletteManager } from './palette'
 import { MlStatusBar } from './statusBar'
 
+// 导入旧版本新增的功能组件
+import PreviewArea from './PreviewArea.vue'
+import ReviewReportPanel from './ReviewReportPanel.vue'
+import ViolationDetailDialog from './ViolationDetailDialog.vue'
+import PassedDetailDialog from './PassedDetailDialog.vue'
+
 const emit = defineEmits<{
   /**
    * Fired after CAD viewer is fully created and ready to use
@@ -117,6 +41,11 @@ const emit = defineEmits<{
    * Fired right before CAD viewer is destroyed
    */
   (e: 'destroy'): void
+
+  /**
+   * Fired when need to switch drawing file
+   */
+  (e: 'switchDrawing', fileId: string): void
 }>()
 
 // Define component props with their purposes
@@ -146,6 +75,18 @@ interface Props {
    * - Write (8): Full read/write access, compatible with Review and Read
    */
   mode?: AcEdOpenMode
+  /** Whether to show regulation panel */
+  showRegulationPanel?: boolean
+  /** Review report data */
+  reviewReportData?: any
+  /** Current file ID */
+  currentFileId?: string | null
+  /** Preview URL for non-CAD files */
+  previewUrl?: string
+  /** File name */
+  fileName?: string
+  /** Project name */
+  projectName?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -155,8 +96,9 @@ const props = withDefaults(defineProps<Props>(), {
   background: undefined,
   baseUrl: undefined,
   useMainThreadDraw: false,
-  theme: 'dark',
-  mode: AcEdOpenMode.Write
+  theme: 'light',
+  mode: AcEdOpenMode.Write,
+  showRegulationPanel: true
 })
 
 const { t } = useI18n()
@@ -188,6 +130,37 @@ const isDark = useDark({
 const toggleDark = useToggle(isDark)
 
 const features = useSettings()
+
+// ==================== 旧版本新增功能：文件类型判断 ====================
+const fileType = computed(() => {
+  if (props.url || props.localFile) return 'cad'
+  if (!props.previewUrl) return null
+
+  const ext =
+    (props.fileName || props.previewUrl)
+      .toLowerCase()
+      .split('.')
+      .pop()
+      ?.split('?')[0] || ''
+  if (ext === 'pdf') return 'pdf'
+  if (ext === 'docx') return 'docx'
+  if (['doc', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) return 'office'
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(ext)) return 'image'
+  return 'unsupported'
+})
+
+// ==================== 旧版本新增功能：定位相关 ====================
+const highlightText = ref('')
+const currentLocateInfo = ref<{ fileId?: string; rowId?: string }>({})
+
+// ==================== 旧版本新增功能：详情弹窗 ====================
+const showViolationDetail = ref(false)
+const showPassedDetail = ref(false)
+const selectedViolation = ref<any>(null)
+
+// ==================== 旧版本新增功能：计算属性 ====================
+const projectName = computed(() => decodeURIComponent(props.projectName || ''))
+const reportData = computed(() => props.reviewReportData)
 
 /**
  * Handles file read events from the file reader component
@@ -290,6 +263,124 @@ const openLocalFile = async (file: File) => {
   }
 }
 
+// ==================== 旧版本新增功能：工具方法 ====================
+/**
+ * 解码文件名（处理 HTML 实体和 URL 编码）
+ */
+const decodeFileName = (fileName: string): string => {
+  if (!fileName) return ''
+  try {
+    const txt = document.createElement('textarea')
+    txt.innerHTML = fileName
+    let decoded = txt.value
+    try {
+      decoded = decodeURIComponent(decoded)
+    } catch {}
+    return decoded
+  } catch {
+    return fileName
+  }
+}
+
+// ==================== 旧版本新增功能：事件处理 ====================
+/**
+ * 处理行点击事件
+ */
+const handleRowClick = (row: any) => {
+  selectedViolation.value = row
+  currentLocateInfo.value = {}
+  if (row.risk_level === 0) {
+    showPassedDetail.value = true
+  } else {
+    showViolationDetail.value = true
+  }
+}
+
+/**
+ * 处理定位请求
+ */
+const handleLocate = async (row: any) => {
+  if (row.category === '设计说明') {
+    await handleWordLocate(row)
+  } else {
+    await handleCadLocate(row)
+  }
+}
+
+/**
+ * Word 文档定位
+ */
+const handleWordLocate = async (row: any) => {
+  const geometry = row.geometry_ref
+  if (!geometry?.chapter) {
+    ElMessage.warning('无法获取关键词')
+    return
+  }
+
+  const targetFileId = geometry.file_id
+  if (props.currentFileId !== targetFileId) {
+    emit('switchDrawing', targetFileId)
+    await new Promise(r => setTimeout(r, 800))
+  }
+
+  highlightText.value = ''
+  await nextTick()
+  highlightText.value = geometry.chapter
+  currentLocateInfo.value = { fileId: targetFileId, rowId: row.violation_id }
+}
+
+/**
+ * CAD 定位
+ */
+const handleCadLocate = async (row: any) => {
+  const geometry = row.geometry_ref
+  if (!geometry?.file_id) {
+    ElMessage.warning('无法获取图纸信息')
+    return
+  }
+
+  if (props.currentFileId !== geometry.file_id) {
+    emit('switchDrawing', geometry.file_id)
+    await new Promise(r => setTimeout(r, 3000))
+  }
+
+  locateInCad(geometry)
+  currentLocateInfo.value = {
+    fileId: geometry.file_id,
+    rowId: row.violation_id
+  }
+}
+
+/**
+ * 在 CAD 中执行定位
+ */
+const locateInCad = (geometry: any) => {
+  if (!geometry?.extents) return
+
+  const { min_point, max_point } = geometry.extents
+  const box = new AcGeBox2d(
+    { x: min_point.x, y: min_point.y },
+    { x: max_point.x, y: max_point.y }
+  )
+
+  if (geometry.handles?.length) {
+    const ids = geometry.handles.map((h: string) =>
+      parseInt(h, 16).toString(10)
+    )
+    AcApDocManager.instance.curView.highlight(ids)
+  }
+
+  AcApDocManager.instance.curView.zoomTo(box, 0.5)
+  ElMessage.success(`已定位到违规区域`)
+}
+
+/**
+ * 处理切换图纸
+ */
+const handleSwitchDrawing = (fileId: string) => {
+  emit('switchDrawing', fileId)
+}
+
 // Watch for URL changes and automatically open new files
 // This allows dynamic loading of different CAD files without component remounting
 watch(
@@ -371,6 +462,16 @@ onMounted(async () => {
 
 // Destroy the CAD viewer when the component is unmounted
 onUnmounted(() => {
+  // ==================== 旧版本新增功能：清理高亮 ====================
+  highlightText.value = ''
+  currentLocateInfo.value = {}
+  // 清除高亮
+  try {
+    const view = AcApDocManager.instance.curView
+    const ids = view.selectionSet?.ids || []
+    if (ids.length) view.unhighlight(ids)
+  } catch {}
+
   // Notify consumers first
   emit('destroy')
 
@@ -458,59 +559,97 @@ const closeNotificationCenter = () => {
 </script>
 
 <template>
-  <!-- Canvas element for CAD rendering - positioned as background -->
-  <div ref="containerRef" class="ml-cad-container"></div>
+  <div ref="viewerRoot" class="ml-cad-viewer-wrapper">
+    <div class="content-container">
+      <!-- CAD 查看器 -->
+      <div class="cad-container" v-show="fileType === 'cad'">
+        <!-- Canvas element for CAD rendering - positioned as background -->
+        <div ref="containerRef" class="ml-cad-container"></div>
 
-  <!-- Main CAD viewer container with complete UI layout -->
-  <div ref="viewerRoot" v-if="editorRef" class="ml-cad-viewer-container">
-    <!-- Element Plus configuration provider for internationalization -->
-    <el-config-provider :locale="elementPlusLocale">
-      <!-- Header section with main menu and language selector -->
-      <header>
-        <ml-main-menu />
-        <ml-language-selector :current-locale="effectiveLocale" />
-      </header>
+        <!-- Main CAD viewer container with complete UI layout -->
+        <div v-if="editorRef" class="ml-cad-viewer-container ui-overlay">
+          <!-- Element Plus configuration provider for internationalization -->
+          <el-config-provider :locale="elementPlusLocale">
+            <!-- Header section with main menu and language selector -->
+            <header>
+              <ml-main-menu />
+              <ml-language-selector :current-locale="effectiveLocale" />
+            </header>
 
-      <!-- Main content area with CAD viewing tools and controls -->
-      <main>
-        <!-- Display current filename at the top center -->
-        <div v-if="features.isShowFileName" class="ml-file-name">
-          {{ store.fileName }}
+            <!-- Main content area with CAD viewing tools and controls -->
+            <main>
+              <!-- Display current filename at the top center -->
+              <div v-if="features.isShowFileName" class="ml-file-name">
+                {{ decodeFileName(store.fileName) }}
+              </div>
+
+              <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
+              <ml-tool-bars />
+
+              <!-- Layer manager palette and entity properties palette for controlling entity visibility and properties -->
+              <ml-palette-manager :editor="editor" />
+
+              <!-- Dialog manager for modal dialogs and settings -->
+              <ml-dialog-manager />
+            </main>
+
+            <!-- Footer section with command line and status information -->
+            <footer>
+              <!-- Status bar with progress, settings, and theme controls -->
+              <ml-status-bar
+                :is-dark="isDark"
+                :toggle-dark="toggleDark"
+                @toggle-notification-center="toggleNotificationCenter"
+              />
+            </footer>
+
+            <!-- Hidden components for file handling and entity information -->
+            <!-- File reader for local file uploads -->
+            <ml-file-reader @file-read="handleFileRead" />
+
+            <!-- Entity info panel for displaying object properties -->
+            <ml-entity-info />
+
+            <!-- Notification center -->
+            <ml-notification-center
+              v-if="showNotificationCenter"
+              @close="closeNotificationCenter"
+            />
+          </el-config-provider>
         </div>
+      </div>
 
-        <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
-        <ml-tool-bars />
-
-        <!-- Layer manager palette and entity properties palette for controlling entity visibility and properties -->
-        <ml-palette-manager :editor="editor" />
-
-        <!-- Dialog manager for modal dialogs and settings -->
-        <ml-dialog-manager />
-      </main>
-
-      <!-- Footer section with command line and status information -->
-      <footer>
-        <!-- Status bar with progress, settings, and theme controls -->
-        <ml-status-bar
-          :is-dark="isDark"
-          :toggle-dark="toggleDark"
-          @toggle-notification-center="toggleNotificationCenter"
-        />
-      </footer>
-
-      <!-- Hidden components for file handling and entity information -->
-      <!-- File reader for local file uploads -->
-      <ml-file-reader @file-read="handleFileRead" />
-
-      <!-- Entity info panel for displaying object properties -->
-      <ml-entity-info />
-
-      <!-- Notification center -->
-      <ml-notification-center
-        v-if="showNotificationCenter"
-        @close="closeNotificationCenter"
+      <!-- 其他文件预览 -->
+      <PreviewArea
+        v-if="fileType && fileType !== 'cad'"
+        :preview-url="previewUrl || ''"
+        :file-name="fileName || ''"
+        :highlight-text="highlightText"
       />
-    </el-config-provider>
+
+      <!-- 审查报告面板 -->
+      <ReviewReportPanel
+        v-if="showRegulationPanel"
+        :report-data="reportData"
+        :project-name="projectName"
+        :current-file-id="currentFileId"
+        @row-click="handleRowClick"
+        @locate="handleLocate"
+        @switch-drawing="handleSwitchDrawing"
+      />
+    </div>
+
+    <!-- 详情弹窗 -->
+    <ViolationDetailDialog
+      v-model="showViolationDetail"
+      :data="selectedViolation"
+      @locate="handleLocate"
+    />
+    <PassedDetailDialog
+      v-model="showPassedDetail"
+      :data="selectedViolation"
+      @locate="locateInCad"
+    />
   </div>
 </template>
 
@@ -551,5 +690,48 @@ const closeNotificationCenter = () => {
   margin-top: 20px;
   pointer-events: none; /* Allow mouse events to pass through to container */
   z-index: 1; /* Ensure it's above canvas but doesn't block events */
+}
+
+/* ==================== 旧版本新增样式 ==================== */
+.ml-cad-viewer-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.content-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.cad-container {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ui-overlay > * {
+  pointer-events: auto;
+}
+
+.el-overlay-dialog {
+  overflow: hidden;
+}
+.violation-detail-dialog-wrapper {
+  margin-top: 5vh;
 }
 </style>

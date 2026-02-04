@@ -93,7 +93,7 @@ const handleAction = (action: NotificationAction) => {
 
 <style scoped>
 .ml-notification-center {
-  position: fixed;
+  position: absolute;
   bottom: calc(var(--ml-status-bar-height) + 20px);
   right: 0; /* align with right border of the window */
   width: 400px; /* default width on larger screens */

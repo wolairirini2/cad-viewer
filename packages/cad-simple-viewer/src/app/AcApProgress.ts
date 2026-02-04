@@ -214,7 +214,7 @@ export class AcApProgress {
 
     const css = `
   .ml-ccl-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     display: none;
     justify-content: center;

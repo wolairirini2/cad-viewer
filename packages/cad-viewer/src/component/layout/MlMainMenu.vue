@@ -55,7 +55,7 @@ const handleCommand = (command: string) => {
 
 <style scoped>
 .ml-main-menu-container {
-  position: fixed;
+  position: absolute;
   left: 40px;
   top: 20px;
   z-index: 1000;

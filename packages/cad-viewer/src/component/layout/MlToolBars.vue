@@ -61,7 +61,7 @@ const handleCommand = (command: string) => {
 
 <style>
 .ml-vertical-toolbar-container {
-  position: fixed;
+  position: absolute;
   right: 30px;
   top: 50%;
   transform: translateY(-50%);

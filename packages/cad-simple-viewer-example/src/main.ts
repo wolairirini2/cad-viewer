@@ -126,7 +126,7 @@ class CadViewerApp {
     const popup = document.createElement('div')
     popup.className = `popup-message ${type}`
     popup.textContent = message
-    popup.style.position = 'fixed'
+    popup.style.position = 'absolute'
     popup.style.top = '2rem'
     popup.style.left = '50%'
     popup.style.transform = 'translateX(-50%)'
