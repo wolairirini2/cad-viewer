@@ -27,7 +27,6 @@ import { AcApDocManager, AcApSettingManager } from '../app'
 import {
   AcEdBaseView,
   AcEdCalculateSizeCallback,
-  AcEdConditionWaiter,
   AcEdCorsorType,
   AcEdSpatialQueryResultItemEx,
   AcEdViewMode,
@@ -394,7 +393,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  zoomToFitDrawing(timeout: number = 0) {
+  zoomToFitDrawing() {
     // 优先使用数据库的 extents，这与 AcApDocManager 中的逻辑一致
     const db = AcApDocManager.instance.curDocument?.database
 
