@@ -66,10 +66,35 @@ export class AcApAnnotationCmd extends AcEdCommand {
 
     // Set text content
     mtext.contents = this._annotationText
-
+    // 动态计算文字高度：基于当前视图的高度
+    let textHeight = 2.5 // 默认高度
+    // 基础文字高度（在 zoom=1 时的大小）
+    const baseTextHeight = 100
+    try {
+      const view = AcApDocManager.instance.curView as any
+      const layoutView = view?.activeLayoutView
+      console.log('[Annotation] Layout view:', layoutView._camera)
+      if (layoutView?._camera) {
+        // 正交相机：top - bottom 就是视图的世界坐标高度
+        const cam = layoutView._camera
+        if (typeof cam.top === 'number' && typeof cam.bottom === 'number') {
+          const viewHeight = cam.top - cam.bottom
+          // 文字占视图高度的 1/25，这样在任何缩放级别都清晰可见
+          textHeight = baseTextHeight / cam.zoom
+          console.log(
+            '[Annotation] View height:',
+            viewHeight,
+            'Text height:',
+            textHeight
+          )
+        }
+      }
+    } catch (e) {
+      console.warn('[Annotation] Failed to get view height:', e)
+    }
     // Set text properties for annotation style
-    mtext.height = 2.5 // 默认文字高度
-
+    // 确保文字高度不会太小或太大
+    mtext.height = textHeight
     // 注意：AcDbMText 使用 width 而不是 textWidth
     mtext.width = 100 // 默认宽度，自动换行
 
