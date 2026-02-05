@@ -29,7 +29,8 @@ import {
   AcApSysVarCmd,
   AcApZoomCmd,
   AcApZoomToBoxCmd,
-  AcEdCommandStack
+  AcEdCommandStack,
+  AcApAnnotationCmd
 } from '../command'
 import { AcEdCalculateSizeCallback, AcEdOpenMode, eventBus } from '../editor'
 import { AcApI18n } from '../i18n'
@@ -719,6 +720,13 @@ export class AcApDocManager {
       'zoomw',
       'zoomw',
       new AcApZoomToBoxCmd()
+    )
+
+    register.addCommand(
+      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+      'annotation',
+      'annotation',
+      new AcApAnnotationCmd()
     )
 
     // Register system variables as commands

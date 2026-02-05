@@ -395,19 +395,33 @@ export class AcTrView2d extends AcEdBaseView {
    * @inheritdoc
    */
   zoomToFitDrawing(timeout: number = 0) {
-    const waiter = new AcEdConditionWaiter(
-      () => this._numOfEntitiesToProcess <= 0,
-      () => {
-        if (this._scene.box) {
-          const box = AcTrGeometryUtil.threeBox3dToGeBox2d(this._scene.box)
-          this.zoomTo(box)
-          this._isDirty = true
-        }
-      },
-      300, // check every 300 ms
-      timeout
+    // 优先使用数据库的 extents，这与 AcApDocManager 中的逻辑一致
+    const db = AcApDocManager.instance.curDocument?.database
+
+    if (db && !db.extents.isEmpty()) {
+      // 使用数据库的 extents（extmin/extmax）进行缩放
+      const box = new AcGeBox2d(db.extmin, db.extmax)
+      this.zoomTo(box, 1.1)
+      this._isDirty = true
+      return
+    }
+
+    // 如果数据库 extents 为空，回退到使用 scene 的 box
+    // 这种情况通常发生在 DXF 文件或空图纸中
+    if (this._scene.box && !this._scene.box.isEmpty()) {
+      const box = AcTrGeometryUtil.threeBox3dToGeBox2d(this._scene.box)
+      this.zoomTo(box, 1.1)
+      this._isDirty = true
+      return
+    }
+
+    // 如果都没有有效范围，使用默认视图（例如 0,0 中心，一定范围）
+    console.warn(
+      '[AcTrView2d] No valid drawing extents found, using default view'
     )
-    waiter.start()
+    const defaultBox = new AcGeBox2d({ x: -100, y: -100 }, { x: 100, y: 100 })
+    this.zoomTo(defaultBox, 1.1)
+    this._isDirty = true
   }
 
   /**

@@ -1,15 +1,161 @@
+<template>
+  <div ref="viewerRoot" class="ml-cad-viewer-wrapper">
+    <div class="content-container">
+      <!-- CAD 查看器 -->
+      <div class="cad-container" v-show="fileType === 'cad'">
+        <!-- Canvas element for CAD rendering - positioned as background -->
+        <div
+          ref="containerRef"
+          class="ml-cad-container"
+          @contextmenu.prevent="handleContextMenu"
+        ></div>
+
+        <!-- Main CAD viewer container with complete UI layout -->
+        <div v-if="editorRef" class="ml-cad-viewer-container ui-overlay">
+          <!-- Element Plus configuration provider for internationalization -->
+          <el-config-provider :locale="elementPlusLocale">
+            <!-- Header section with main menu and language selector -->
+            <header>
+              <ml-main-menu />
+              <ml-language-selector :current-locale="effectiveLocale" />
+            </header>
+
+            <!-- Main content area with CAD viewing tools and controls -->
+            <main>
+              <!-- Display current filename at the top center -->
+              <div v-if="features.isShowFileName" class="ml-file-name">
+                {{ decodeFileName(store.fileName) }}
+              </div>
+
+              <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
+              <ml-tool-bars />
+
+              <!-- Layer manager palette and entity properties palette for controlling entity visibility and properties -->
+              <ml-palette-manager :editor="editor" />
+
+              <!-- Dialog manager for modal dialogs and settings -->
+              <ml-dialog-manager />
+            </main>
+
+            <!-- Footer section with command line and status information -->
+            <footer>
+              <!-- Status bar with progress, settings, and theme controls -->
+              <ml-status-bar
+                :is-dark="isDark"
+                :toggle-dark="toggleDark"
+                @toggle-notification-center="toggleNotificationCenter"
+              />
+            </footer>
+
+            <!-- Hidden components for file handling and entity information -->
+            <!-- File reader for local file uploads -->
+            <ml-file-reader @file-read="handleFileRead" />
+
+            <!-- Entity info panel for displaying object properties -->
+            <ml-entity-info />
+
+            <!-- Notification center -->
+            <ml-notification-center
+              v-if="showNotificationCenter"
+              @close="closeNotificationCenter"
+            />
+          </el-config-provider>
+        </div>
+      </div>
+
+      <!-- 其他文件预览 -->
+      <PreviewArea
+        v-if="fileType && fileType !== 'cad'"
+        :preview-url="previewUrl || ''"
+        :file-name="fileName || ''"
+        :highlight-text="highlightText"
+      />
+
+      <!-- 审查报告面板 -->
+      <ReviewReportPanel
+        v-if="showRegulationPanel"
+        :report-data="reportData"
+        :project-name="projectName"
+        :current-file-id="currentFileId"
+        @row-click="handleRowClick"
+        @locate="handleLocate"
+        @switch-drawing="handleSwitchDrawing"
+      />
+    </div>
+
+    <!-- 详情弹窗 -->
+    <ViolationDetailDialog
+      v-model="showViolationDetail"
+      :data="selectedViolation"
+      @locate="handleLocate"
+    />
+    <PassedDetailDialog
+      v-model="showPassedDetail"
+      :data="selectedViolation"
+      @locate="locateInCad"
+    />
+  </div>
+
+  <!-- 右键批注菜单 -->
+  <div
+    v-if="showAnnotationMenu"
+    class="annotation-context-menu"
+    :style="{
+      left: annotationMenuPosition.x + 'px',
+      top: annotationMenuPosition.y + 'px'
+    }"
+  >
+    <div class="menu-item" @click="startAnnotation">
+      <el-icon><EditPen /></el-icon>
+      <span>添加文字批注</span>
+    </div>
+  </div>
+
+  <!-- 批注输入对话框 -->
+  <el-dialog
+    v-model="showAnnotationDialog"
+    title="添加批注"
+    width="400px"
+    :close-on-click-modal="false"
+    @closed="cancelAnnotation"
+  >
+    <el-input
+      v-model="annotationText"
+      type="textarea"
+      :rows="4"
+      placeholder="请输入批注内容..."
+      maxlength="500"
+      show-word-limit
+    />
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="cancelAnnotation">取消</el-button>
+        <el-button
+          type="primary"
+          @click="confirmAnnotation"
+          :disabled="!annotationText.trim()"
+        >
+          确定
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
+</template>
+
 <script setup lang="ts">
 import {
   AcApDocManager,
   AcApOpenDatabaseOptions,
   AcEdOpenMode,
-  eventBus
+  eventBus,
+  AcApAnnotationCmd
 } from '@mlightcad/cad-simple-viewer'
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { AcGeBox2d, AcGePoint3dLike } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { EditPen } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
 import { useLocale, useNotificationCenter, useSettings } from '../composable'
@@ -431,6 +577,9 @@ onMounted(async () => {
       autoResize: true,
       useMainThreadDraw: props.useMainThreadDraw
     })
+
+    // 添加点击事件监听（用于关闭菜单）
+    document.addEventListener('click', handleClickOutside)
     // Set the editor reference after initialization
     editorRef.value = AcApDocManager.instance
   }
@@ -462,6 +611,8 @@ onMounted(async () => {
 
 // Destroy the CAD viewer when the component is unmounted
 onUnmounted(() => {
+  // 清理事件监听
+  document.removeEventListener('click', handleClickOutside)
   // ==================== 旧版本新增功能：清理高亮 ====================
   highlightText.value = ''
   currentLocateInfo.value = {}
@@ -556,102 +707,106 @@ const toggleNotificationCenter = () => {
 const closeNotificationCenter = () => {
   showNotificationCenter.value = false
 }
+
+// ==================== 批注功能相关 ====================
+const showAnnotationMenu = ref(false)
+const annotationMenuPosition = ref({ x: 0, y: 0 })
+const showAnnotationDialog = ref(false)
+const annotationText = ref('')
+const pendingAnnotationPoint = ref<AcGePoint3dLike | null>(null)
+
+/**
+ * 处理CAD容器的右键点击事件
+ */
+const handleContextMenu = (event: MouseEvent) => {
+  // 获取容器位置
+  const rect = containerRef.value?.getBoundingClientRect()
+  if (!rect) return
+
+  // 计算相对于容器的位置
+  annotationMenuPosition.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  }
+
+  // 显示自定义右键菜单
+  showAnnotationMenu.value = true
+
+  // 转换屏幕坐标为CAD世界坐标
+  const screenX = event.clientX - rect.left
+  const screenY = event.clientY - rect.top
+
+  // 使用CAD视图将屏幕坐标转换为世界坐标
+  try {
+    const view = AcApDocManager.instance.curView
+    if (view && typeof view.screenToWorld === 'function') {
+      const worldPoint = view.screenToWorld({ x: screenX, y: screenY })
+      pendingAnnotationPoint.value = { ...worldPoint, z: 0 }
+    } else {
+      // 如果 view 没有 screenToWorld 方法，尝试使用 editor 的转换方法
+      // 或者暂时存储屏幕坐标，在命令执行时再转换
+      pendingAnnotationPoint.value = { x: screenX, y: screenY, z: 0 }
+    }
+  } catch (error) {
+    console.warn('Failed to convert screen to world coordinates:', error)
+    pendingAnnotationPoint.value = { x: screenX, y: screenY, z: 0 }
+  }
+}
+
+/**
+ * 开始添加批注
+ */
+const startAnnotation = () => {
+  showAnnotationMenu.value = false
+  showAnnotationDialog.value = true
+  annotationText.value = ''
+}
+
+/**
+ * 取消批注
+ */
+const cancelAnnotation = () => {
+  showAnnotationDialog.value = false
+  annotationText.value = ''
+  pendingAnnotationPoint.value = null
+}
+/**
+ * 确认添加批注
+ */
+const confirmAnnotation = async () => {
+  if (!annotationText.value.trim()) {
+    ElMessage.warning('请输入批注内容')
+    return
+  }
+
+  if (!pendingAnnotationPoint.value) {
+    ElMessage.error('无法获取插入点坐标')
+    return
+  }
+
+  try {
+    const cmd = new AcApAnnotationCmd(annotationText.value.trim())
+    cmd.setInsertionPoint(pendingAnnotationPoint.value)
+    await cmd.execute(AcApDocManager.instance.context)
+
+    ElMessage.success('批注添加成功')
+    showAnnotationDialog.value = false
+    annotationText.value = ''
+    pendingAnnotationPoint.value = null
+  } catch (error) {
+    console.error('Failed to add annotation:', error)
+    ElMessage.error('批注添加失败: ' + (error as Error).message)
+  }
+}
+
+// 点击其他地方关闭右键菜单
+const handleClickOutside = (event: MouseEvent) => {
+  const menu = document.querySelector('.annotation-context-menu')
+  if (menu && !menu.contains(event.target as Node)) {
+    showAnnotationMenu.value = false
+  }
+}
 </script>
-
-<template>
-  <div ref="viewerRoot" class="ml-cad-viewer-wrapper">
-    <div class="content-container">
-      <!-- CAD 查看器 -->
-      <div class="cad-container" v-show="fileType === 'cad'">
-        <!-- Canvas element for CAD rendering - positioned as background -->
-        <div ref="containerRef" class="ml-cad-container"></div>
-
-        <!-- Main CAD viewer container with complete UI layout -->
-        <div v-if="editorRef" class="ml-cad-viewer-container ui-overlay">
-          <!-- Element Plus configuration provider for internationalization -->
-          <el-config-provider :locale="elementPlusLocale">
-            <!-- Header section with main menu and language selector -->
-            <header>
-              <ml-main-menu />
-              <ml-language-selector :current-locale="effectiveLocale" />
-            </header>
-
-            <!-- Main content area with CAD viewing tools and controls -->
-            <main>
-              <!-- Display current filename at the top center -->
-              <div v-if="features.isShowFileName" class="ml-file-name">
-                {{ decodeFileName(store.fileName) }}
-              </div>
-
-              <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
-              <ml-tool-bars />
-
-              <!-- Layer manager palette and entity properties palette for controlling entity visibility and properties -->
-              <ml-palette-manager :editor="editor" />
-
-              <!-- Dialog manager for modal dialogs and settings -->
-              <ml-dialog-manager />
-            </main>
-
-            <!-- Footer section with command line and status information -->
-            <footer>
-              <!-- Status bar with progress, settings, and theme controls -->
-              <ml-status-bar
-                :is-dark="isDark"
-                :toggle-dark="toggleDark"
-                @toggle-notification-center="toggleNotificationCenter"
-              />
-            </footer>
-
-            <!-- Hidden components for file handling and entity information -->
-            <!-- File reader for local file uploads -->
-            <ml-file-reader @file-read="handleFileRead" />
-
-            <!-- Entity info panel for displaying object properties -->
-            <ml-entity-info />
-
-            <!-- Notification center -->
-            <ml-notification-center
-              v-if="showNotificationCenter"
-              @close="closeNotificationCenter"
-            />
-          </el-config-provider>
-        </div>
-      </div>
-
-      <!-- 其他文件预览 -->
-      <PreviewArea
-        v-if="fileType && fileType !== 'cad'"
-        :preview-url="previewUrl || ''"
-        :file-name="fileName || ''"
-        :highlight-text="highlightText"
-      />
-
-      <!-- 审查报告面板 -->
-      <ReviewReportPanel
-        v-if="showRegulationPanel"
-        :report-data="reportData"
-        :project-name="projectName"
-        :current-file-id="currentFileId"
-        @row-click="handleRowClick"
-        @locate="handleLocate"
-        @switch-drawing="handleSwitchDrawing"
-      />
-    </div>
-
-    <!-- 详情弹窗 -->
-    <ViolationDetailDialog
-      v-model="showViolationDetail"
-      :data="selectedViolation"
-      @locate="handleLocate"
-    />
-    <PassedDetailDialog
-      v-model="showPassedDetail"
-      :data="selectedViolation"
-      @locate="locateInCad"
-    />
-  </div>
-</template>
 
 <!-- Component-specific styles -->
 <style>
@@ -733,5 +888,53 @@ const closeNotificationCenter = () => {
 }
 .violation-detail-dialog-wrapper {
   margin-top: 5vh;
+}
+
+/* 批注右键菜单样式 */
+.annotation-context-menu {
+  position: absolute;
+  background: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  z-index: 3000;
+  padding: 4px 0;
+  min-width: 160px;
+  user-select: none;
+}
+
+.annotation-context-menu .menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #606266;
+  transition: background-color 0.2s;
+}
+
+.annotation-context-menu .menu-item:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
+.annotation-context-menu .menu-item .el-icon {
+  font-size: 16px;
+}
+
+/* 深色主题适配 */
+.ml-theme-dark .annotation-context-menu {
+  background: #2b2b2b;
+  border-color: #444;
+}
+
+.ml-theme-dark .annotation-context-menu .menu-item {
+  color: #d0d0d0;
+}
+
+.ml-theme-dark .annotation-context-menu .menu-item:hover {
+  background-color: #3a3a3a;
+  color: #409eff;
 }
 </style>
