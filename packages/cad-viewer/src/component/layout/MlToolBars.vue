@@ -5,7 +5,14 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useSettings } from '../../composable'
-import { layer, move, select, zoomToBox, zoomToExtent } from '../../svg'
+import {
+  layer,
+  move,
+  select,
+  zoomToBox,
+  zoomToExtent,
+  mlightcad
+} from '../../svg'
 
 const { t } = useI18n()
 const features = useSettings()
@@ -40,6 +47,13 @@ const verticalToolbarData = computed(() => [
     text: t('main.verticalToolbar.layer.text'),
     command: 'la',
     description: t('main.verticalToolbar.layer.description')
+  },
+  {
+    icon: mlightcad, // 或其他表示批注的图标
+    text: t('main.verticalToolbar.annotationwithcloud.text') || '批注',
+    command: 'annotationwithcloud',
+    description:
+      t('main.verticalToolbar.annotationwithcloud.description') || '添加云线批注'
   }
 ])
 

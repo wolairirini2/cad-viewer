@@ -24,6 +24,10 @@ export default {
     layer: {
       text: '图层',
       description: '管理图层'
+    },
+    annotationwithcloud: {
+      text: '注记（云）',
+      description: '添加带有云线框的注记'
     }
   },
   statusBar: {

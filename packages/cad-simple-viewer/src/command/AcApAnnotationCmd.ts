@@ -69,7 +69,7 @@ export class AcApAnnotationCmd extends AcEdCommand {
     // 动态计算文字高度：基于当前视图的高度
     let textHeight = 2.5 // 默认高度
     // 基础文字高度（在 zoom=1 时的大小）
-    const baseTextHeight = 100
+    const baseTextHeight = 30
     try {
       const view = AcApDocManager.instance.curView as any
       const layoutView = view?.activeLayoutView
