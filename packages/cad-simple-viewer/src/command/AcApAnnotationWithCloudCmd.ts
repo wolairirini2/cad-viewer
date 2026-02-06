@@ -19,6 +19,15 @@ import {
 } from '../editor'
 import { AcApI18n } from '../i18n'
 
+export interface AnnotationData {
+  id: string
+  cloudBounds: { minX: number; maxX: number; minY: number; maxY: number }
+  text: string
+  textPosition: { x: number; y: number; z: number }
+  textHeight: number
+  createdAt: string
+}
+
 // Cloud line diameter in pixels
 const CLOUD_DIAMETER_PIXELS = 8
 
@@ -42,7 +51,7 @@ function pixelToWorldDistance(
 /**
  * Creates a cloud line (revision cloud) along a rectangular path
  */
-function updateCloud(
+export function updateCloud(
   cloud: AcDbPolyline,
   firstPoint: AcGePoint2dLike,
   secondPoint: AcGePoint2dLike,
@@ -191,7 +200,12 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
     super()
     this.mode = AcEdOpenMode.Write
   }
-
+  // 新增：存储最后一次执行的数据
+  private static _lastAnnotationData?: AnnotationData
+  // 静态方法获取数据
+  static getLastAnnotationData(): AnnotationData | undefined {
+    return this._lastAnnotationData
+  }
   async execute(context: AcApContext) {
     // Step 1: Select first corner of cloud
     const firstPointPrompt = new AcEdPromptPointOptions(
@@ -223,6 +237,7 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
     // Calculate cloud bounds
     const minX = Math.min(firstPoint.x, secondPoint.x)
     const maxX = Math.max(firstPoint.x, secondPoint.x)
+    const minY = Math.min(firstPoint.y, secondPoint.y)
     const maxY = Math.max(firstPoint.y, secondPoint.y)
 
     // Create cloud polyline (in red)
@@ -279,6 +294,18 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
       'Text:',
       text
     )
+
+    // 执行成功后保存数据
+    AcApAnnotationWithCloudCmd._lastAnnotationData = {
+      id: `ann_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      cloudBounds: { minX, maxX, minY, maxY },
+      text: text.trim(),
+      textPosition: { x: maxX + offset, y: maxY + offset, z: 0 },
+      textHeight,
+      createdAt: new Date().toISOString()
+    }
+
+    return AcApAnnotationWithCloudCmd._lastAnnotationData
   }
 
   /**

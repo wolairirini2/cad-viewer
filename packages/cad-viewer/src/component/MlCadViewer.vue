@@ -148,7 +148,11 @@ import {
   AcApOpenDatabaseOptions,
   AcEdOpenMode,
   eventBus,
-  AcApAnnotationCmd
+  AcApAnnotationCmd,
+  AcApAnnotationWithCloudCmd,
+  type AnnotationData,
+  updateCloud,
+  AcEdBaseView
 } from '@mlightcad/cad-simple-viewer'
 import { AcGeBox2d, AcGePoint3dLike } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
@@ -178,20 +182,10 @@ import ViolationDetailDialog from './ViolationDetailDialog.vue'
 import PassedDetailDialog from './PassedDetailDialog.vue'
 
 const emit = defineEmits<{
-  /**
-   * Fired after CAD viewer is fully created and ready to use
-   */
   (e: 'create'): void
-
-  /**
-   * Fired right before CAD viewer is destroyed
-   */
   (e: 'destroy'): void
-
-  /**
-   * Fired when need to switch drawing file
-   */
   (e: 'switchDrawing', fileId: string): void
+  (e: 'annotation-added', data: AnnotationData): void
 }>()
 
 // Define component props with their purposes
@@ -806,6 +800,121 @@ const handleClickOutside = (event: MouseEvent) => {
     showAnnotationMenu.value = false
   }
 }
+
+// ==================== 批注功能 ====================
+const annotations = ref<AnnotationData[]>([])
+
+/**
+ * 添加批注 - 调用命令并获取数据
+ */
+const addAnnotation = async (): Promise<AnnotationData | undefined> => {
+  try {
+    const cmd = new AcApAnnotationWithCloudCmd()
+    await cmd.execute(AcApDocManager.instance.context)
+
+    // 从命令获取数据
+    const data = AcApAnnotationWithCloudCmd.getLastAnnotationData()
+    if (data) {
+      annotations.value.push(data)
+      emit('annotation-added', data)
+      ElMessage.success('批注添加成功')
+      return data
+    }
+  } catch (error) {
+    console.error('添加批注失败:', error)
+    ElMessage.error('批注添加失败')
+  }
+  return undefined
+}
+
+/**
+ * 获取所有批注数据
+ */
+const getAnnotations = (): AnnotationData[] => {
+  return annotations.value
+}
+
+/**
+ * 加载批注数据并渲染
+ */
+const loadAnnotations = (data: AnnotationData[]): void => {
+  annotations.value = data
+  renderAnnotations()
+}
+
+/**
+ * 清除所有批注显示
+ */
+const clearAnnotations = (): void => {
+  annotations.value = []
+  // 这里可以选择是否清除图纸上的实体
+  // 如果需要清除，需要遍历删除对应的云线和文字
+}
+import {
+  AcDbMText,
+  AcDbPolyline,
+  AcGiMTextAttachmentPoint,
+  AcCmColor,
+  AcGePoint2dLike
+} from '@mlightcad/data-model'
+/**
+ * 渲染所有批注到图纸 - 使用 updateCloud 精确还原云线
+ */
+const renderAnnotations = (): void => {
+  const view = AcApDocManager.instance.curView as AcEdBaseView
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db || !view) return
+
+  annotations.value.forEach(ann => {
+    // 从 bounds 重建两个对角点
+    const firstPoint: AcGePoint2dLike = {
+      x: ann.cloudBounds.minX,
+      y: ann.cloudBounds.minY
+    }
+    const secondPoint: AcGePoint2dLike = {
+      x: ann.cloudBounds.maxX,
+      y: ann.cloudBounds.maxY
+    }
+
+    // 使用 updateCloud 精确重建云线形状
+    const cloud = new AcDbPolyline()
+    updateCloud(cloud, firstPoint, secondPoint, view)
+
+    // 设置红色
+    try {
+      const color = new AcCmColor()
+      color.setRGB(255, 0, 0)
+      cloud.color = color
+    } catch (e) {}
+
+    db.tables.blockTable.modelSpace.appendEntity(cloud)
+
+    // 创建文字
+    const mtext = new AcDbMText()
+    mtext.location = ann.textPosition
+    mtext.contents = ann.text
+    mtext.height = ann.textHeight
+    mtext.width = ann.textHeight * 25
+    mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
+    mtext.styleName = 'Standard'
+
+    try {
+      const color = new AcCmColor()
+      color.setRGB(255, 0, 0)
+      mtext.color = color
+    } catch (e) {}
+
+    db.tables.blockTable.modelSpace.appendEntity(mtext)
+  })
+}
+
+// 暴露方法给父组件
+defineExpose({
+  addAnnotation,
+  getAnnotations,
+  loadAnnotations,
+  clearAnnotations
+})
 </script>
 
 <!-- Component-specific styles -->

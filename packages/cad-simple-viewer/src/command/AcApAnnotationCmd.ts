@@ -118,8 +118,5 @@ export class AcApAnnotationCmd extends AcEdCommand {
 
     // Add to model space (appendEntity 而不是 addEntity)
     db.tables.blockTable.modelSpace.appendEntity(mtext)
-
-    // Regen to show the new entity
-    // context.doc.database.regen()
   }
 }
