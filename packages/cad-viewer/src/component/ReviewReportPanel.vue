@@ -405,31 +405,38 @@ const exportReport = async () => {
     },
     {} as Record<string, any>
   )
+  const riskOrder = { high: 3, medium: 2, low: 1, 0: 0 }
 
-  const dataToExport = Object.values(groupedData).map((group: any) => {
-    const descriptions = group.allViolations
-      .filter((v: any) => v.description)
-      .map((v: any, index: number) => `${index + 1}. ${v.description}`)
+  const dataToExport = Object.values(groupedData)
+    .map((group: any) => {
+      const descriptions = group.allViolations
+        .filter((v: any) => v.description)
+        .map((v: any, index: number) => `${index + 1}. ${v.description}`)
 
-    const suggestions: string[] = []
-    group.allViolations.forEach((v: any, vIndex: number) => {
-      if (v.suggestion?.length) {
-        suggestions.push(`${vIndex + 1}. ${v.suggestion.join(' ')}`)
+      const suggestions: string[] = []
+      group.allViolations.forEach((v: any, vIndex: number) => {
+        if (v.suggestion?.length) {
+          suggestions.push(`${vIndex + 1}. ${v.suggestion.join(' ')}`)
+        }
+      })
+
+      return {
+        risk_level: group.risk_level,
+        category: group.category,
+        articleTitle: group.articleTitle,
+        description: descriptions.join('\n') || '审查已通过',
+        suggestion: suggestions.join('\n') || '无',
+        ruleName: group.ruleName,
+        ruleCode: group.ruleCode,
+        articleId: group.articleId,
+        origin: group.origin
       }
     })
-
-    return {
-      risk_level: group.risk_level,
-      category: group.category,
-      articleTitle: group.articleTitle,
-      description: descriptions.join('\n') || '审查已通过',
-      suggestion: suggestions.join('\n') || '无',
-      ruleName: group.ruleName,
-      ruleCode: group.ruleCode,
-      articleId: group.articleId,
-      origin: group.origin
-    }
-  })
+    .sort(
+      (a, b) =>
+        riskOrder[b.risk_level as keyof typeof riskOrder] -
+        riskOrder[a.risk_level as keyof typeof riskOrder]
+    )
 
   try {
     const loading = ElMessage({
@@ -552,7 +559,8 @@ const exportReport = async () => {
     const riskLevels = [
       { level: 'high', name: '重大问题', color: 'FFDC3545' },
       { level: 'medium', name: '一般问题', color: 'FFD17706' },
-      { level: 'low', name: '轻微问题', color: 'FF28A745' }
+      { level: 'low', name: '轻微问题', color: 'FF28A745' },
+      { level: 0, name: '审查完成', color: 'FF17A2B8' }
     ]
 
     for (const { level, name, color } of riskLevels) {
