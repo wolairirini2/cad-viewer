@@ -843,12 +843,69 @@ const loadAnnotations = (data: AnnotationData[]): void => {
 }
 
 /**
- * 清除所有批注显示
+ * 清除所有批注显示（从图纸中删除实体）
  */
 const clearAnnotations = (): void => {
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db) {
+    console.warn('[clearAnnotations] 数据库未初始化')
+    return
+  }
+
+  console.log(
+    '[clearAnnotations] 开始清除，批注数量:',
+    annotations.value.length
+  )
+
+  // 删除所有批注实体
+  annotations.value.forEach((ann, index) => {
+    console.log(`[clearAnnotations] 删除第 ${index + 1} 个批注:`, ann.id)
+    deleteAnnotationEntities(ann, db)
+  })
+
+  // 清空数据数组
   annotations.value = []
-  // 这里可以选择是否清除图纸上的实体
-  // 如果需要清除，需要遍历删除对应的云线和文字
+
+  ElMessage.success('已清除所有批注')
+}
+
+/**
+ * 删除指定批注的实体（云线+文字）
+ */
+const deleteAnnotationEntities = (ann: AnnotationData, db: any): void => {
+  try {
+    // 删除云线实体
+    if (ann.cloudObjectId) {
+      try {
+        db.tables.blockTable.modelSpace.removeEntity(ann.cloudObjectId)
+        console.log('[deleteAnnotationEntities] 删除云线:', ann.cloudObjectId)
+      } catch (e) {
+        console.warn(
+          '[deleteAnnotationEntities] 删除云线失败:',
+          ann.cloudObjectId,
+          e
+        )
+      }
+    }
+
+    // 删除文字实体
+    if (ann.textObjectId) {
+      try {
+        db.tables.blockTable.modelSpace.removeEntity(ann.textObjectId)
+        console.log('[deleteAnnotationEntities] 删除文字:', ann.textObjectId)
+      } catch (e) {
+        console.warn(
+          '[deleteAnnotationEntities] 删除文字失败:',
+          ann.textObjectId,
+          e
+        )
+      }
+    }
+    // 刷新显示
+    db.regen()
+  } catch (e) {
+    console.error('[deleteAnnotationEntities] 删除实体失败:', e)
+  }
 }
 import {
   AcDbMText,

@@ -19,13 +19,22 @@ import {
 } from '../editor'
 import { AcApI18n } from '../i18n'
 
+// 与 api/annotation.ts 一致的接口定义
 export interface AnnotationData {
   id: string
-  cloudBounds: { minX: number; maxX: number; minY: number; maxY: number }
+  type: 'annotation'
+  cloudBounds: {
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  }
   text: string
   textPosition: { x: number; y: number; z: number }
   textHeight: number
   createdAt: string
+  cloudObjectId?: string // 云线实体ID
+  textObjectId?: string // 文字实体ID
 }
 
 // Cloud line diameter in pixels
@@ -196,16 +205,21 @@ export class AcApAnnotationCloudJig extends AcEdPreviewJig<AcGePoint2dLike> {
  * Process: 1) Draw cloud rectangle -> 2) Input text -> 3) Place text beside cloud
  */
 export class AcApAnnotationWithCloudCmd extends AcEdCommand {
+  // 存储最后一次执行的数据
+  private static _lastAnnotationData?: AnnotationData
+
+  // 静态方法获取数据（读取后清空，防止重复读取）
+  static getLastAnnotationData(): AnnotationData | undefined {
+    const data = this._lastAnnotationData
+    this._lastAnnotationData = undefined
+    return data
+  }
+
   constructor() {
     super()
     this.mode = AcEdOpenMode.Write
   }
-  // 新增：存储最后一次执行的数据
-  private static _lastAnnotationData?: AnnotationData
-  // 静态方法获取数据
-  static getLastAnnotationData(): AnnotationData | undefined {
-    return this._lastAnnotationData
-  }
+
   async execute(context: AcApContext) {
     // Step 1: Select first corner of cloud
     const firstPointPrompt = new AcEdPromptPointOptions(
@@ -256,6 +270,7 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
     }
 
     db.tables.blockTable.modelSpace.appendEntity(cloud)
+    const cloudObjectId = cloud.objectId
 
     // Create annotation text beside the cloud (top-right corner)
     const mtext = new AcDbMText()
@@ -263,11 +278,12 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
     // Place text at top-right corner of cloud box, slightly offset
     const textHeight = this.calculateTextHeight()
     const offset = textHeight * 0.5 // Small offset from cloud corner
-    mtext.location = {
+    const textPosition = {
       x: maxX + offset,
       y: maxY + offset,
       z: 0
     }
+    mtext.location = textPosition
 
     mtext.contents = text.trim()
     mtext.height = textHeight
@@ -287,6 +303,7 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
     }
 
     db.tables.blockTable.modelSpace.appendEntity(mtext)
+    const textObjectId = mtext.objectId
 
     console.log(
       '[AnnotationWithCloud] Cloud bounds:',
@@ -295,14 +312,17 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
       text
     )
 
-    // 执行成功后保存数据
+    // 执行成功后保存数据（包含实体ID）
     AcApAnnotationWithCloudCmd._lastAnnotationData = {
       id: `ann_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: 'annotation',
       cloudBounds: { minX, maxX, minY, maxY },
       text: text.trim(),
-      textPosition: { x: maxX + offset, y: maxY + offset, z: 0 },
+      textPosition: textPosition,
       textHeight,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      cloudObjectId, // 保存云线实体ID
+      textObjectId // 保存文字实体ID
     }
 
     return AcApAnnotationWithCloudCmd._lastAnnotationData
