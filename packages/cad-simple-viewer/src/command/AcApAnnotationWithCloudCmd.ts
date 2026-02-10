@@ -215,6 +215,60 @@ export class AcApAnnotationWithCloudCmd extends AcEdCommand {
     return data
   }
 
+  /**
+   * 静态方法：渲染批注到图纸
+   * 用于从已有数据恢复批注显示
+   */
+  static renderAnnotationToDb(
+    ann: AnnotationData,
+    view: AcEdBaseView,
+    db: any
+  ): { cloudObjectId?: string; textObjectId?: string } {
+    // 从 bounds 重建对角点
+    const firstPoint: AcGePoint2dLike = {
+      x: ann.cloudBounds.minX,
+      y: ann.cloudBounds.minY
+    }
+    const secondPoint: AcGePoint2dLike = {
+      x: ann.cloudBounds.maxX,
+      y: ann.cloudBounds.maxY
+    }
+
+    // 重建云线
+    const cloud = new AcDbPolyline()
+    updateCloud(cloud, firstPoint, secondPoint, view)
+
+    // 设置红色
+    try {
+      const color = new AcCmColor()
+      color.setRGB(255, 0, 0)
+      cloud.color = color
+    } catch (e) {}
+
+    db.tables.blockTable.modelSpace.appendEntity(cloud)
+    const cloudObjectId = cloud.objectId
+
+    // 重建文字
+    const mtext = new AcDbMText()
+    mtext.location = ann.textPosition
+    mtext.contents = ann.text
+    mtext.height = ann.textHeight
+    mtext.width = ann.textHeight * 25
+    mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
+    mtext.styleName = 'Standard'
+
+    try {
+      const color = new AcCmColor()
+      color.setRGB(255, 0, 0)
+      mtext.color = color
+    } catch (e) {}
+
+    db.tables.blockTable.modelSpace.appendEntity(mtext)
+    const textObjectId = mtext.objectId
+
+    return { cloudObjectId, textObjectId }
+  }
+
   constructor() {
     super()
     this.mode = AcEdOpenMode.Write

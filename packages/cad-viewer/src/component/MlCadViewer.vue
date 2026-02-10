@@ -151,7 +151,6 @@ import {
   AcApAnnotationCmd,
   AcApAnnotationWithCloudCmd,
   type AnnotationData,
-  updateCloud,
   AcEdBaseView
 } from '@mlightcad/cad-simple-viewer'
 import { AcGeBox2d, AcGePoint3dLike } from '@mlightcad/data-model'
@@ -901,70 +900,33 @@ const deleteAnnotationEntities = (ann: AnnotationData, db: any): void => {
         )
       }
     }
-    // 刷新显示
-    db.regen()
+    // // 刷新显示
+    // db.regen()
   } catch (e) {
     console.error('[deleteAnnotationEntities] 删除实体失败:', e)
   }
 }
-import {
-  AcDbMText,
-  AcDbPolyline,
-  AcGiMTextAttachmentPoint,
-  AcCmColor,
-  AcGePoint2dLike
-} from '@mlightcad/data-model'
 /**
- * 渲染所有批注到图纸 - 使用 updateCloud 精确还原云线
+ * 渲染所有批注到图纸
  */
+
 const renderAnnotations = (): void => {
   const view = AcApDocManager.instance.curView as AcEdBaseView
   const db = AcApDocManager.instance.curDocument?.database
   if (!db || !view) return
 
   annotations.value.forEach(ann => {
-    // 从 bounds 重建两个对角点
-    const firstPoint: AcGePoint2dLike = {
-      x: ann.cloudBounds.minX,
-      y: ann.cloudBounds.minY
-    }
-    const secondPoint: AcGePoint2dLike = {
-      x: ann.cloudBounds.maxX,
-      y: ann.cloudBounds.maxY
-    }
+    // 调用指令的静态方法渲染
+    const { cloudObjectId, textObjectId } =
+      AcApAnnotationWithCloudCmd.renderAnnotationToDb(ann, view, db)
 
-    // 使用 updateCloud 精确重建云线形状
-    const cloud = new AcDbPolyline()
-    updateCloud(cloud, firstPoint, secondPoint, view)
-
-    // 设置红色
-    try {
-      const color = new AcCmColor()
-      color.setRGB(255, 0, 0)
-      cloud.color = color
-    } catch (e) {}
-
-    db.tables.blockTable.modelSpace.appendEntity(cloud)
-
-    // 创建文字
-    const mtext = new AcDbMText()
-    mtext.location = ann.textPosition
-    mtext.contents = ann.text
-    mtext.height = ann.textHeight
-    mtext.width = ann.textHeight * 25
-    mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
-    mtext.styleName = 'Standard'
-
-    try {
-      const color = new AcCmColor()
-      color.setRGB(255, 0, 0)
-      mtext.color = color
-    } catch (e) {}
-
-    db.tables.blockTable.modelSpace.appendEntity(mtext)
+    // 更新实体ID
+    ann.cloudObjectId = cloudObjectId
+    ann.textObjectId = textObjectId
   })
-}
 
+  // db.regen()
+}
 // 暴露方法给父组件
 defineExpose({
   addAnnotation,
