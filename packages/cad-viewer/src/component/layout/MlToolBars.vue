@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useSettings } from '../../composable'
-import { layer, move, select, zoomToExtent, mlightcad } from '../../svg'
+import { layer, move, select, zoomToExtent } from '../../svg'
 
 const { t } = useI18n()
 const features = useSettings()

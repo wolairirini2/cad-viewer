@@ -105,41 +105,22 @@
       top: annotationMenuPosition.y + 'px'
     }"
   >
-    <div class="menu-item" @click="startAnnotation">
+    <div class="menu-item" @click="addAnnotation">
       <el-icon><EditPen /></el-icon>
-      <span>添加文字批注</span>
+      <span>添加批注</span>
+    </div>
+    <div class="menu-item" @click="emitSaveAnnotations">
+      <el-icon><DocumentChecked /></el-icon>
+      <span>保存批注</span>
+    </div>
+    <div class="menu-item" @click="emitClearAnnotations">
+      <el-icon><Delete /></el-icon>
+      <span>清除批注</span>
+    </div>
+    <div class="menu-item annotation-count" v-if="annotations.length > 0">
+      <span>当前: {{ annotations.length }} 个</span>
     </div>
   </div>
-
-  <!-- 批注输入对话框 -->
-  <el-dialog
-    v-model="showAnnotationDialog"
-    title="添加批注"
-    width="400px"
-    :close-on-click-modal="false"
-    @closed="cancelAnnotation"
-  >
-    <el-input
-      v-model="annotationText"
-      type="textarea"
-      :rows="4"
-      placeholder="请输入批注内容..."
-      maxlength="500"
-      show-word-limit
-    />
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="cancelAnnotation">取消</el-button>
-        <el-button
-          type="primary"
-          @click="confirmAnnotation"
-          :disabled="!annotationText.trim()"
-        >
-          确定
-        </el-button>
-      </span>
-    </template>
-  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -148,7 +129,6 @@ import {
   AcApOpenDatabaseOptions,
   AcEdOpenMode,
   eventBus,
-  AcApAnnotationCmd,
   AcApAnnotationWithCloudCmd,
   type AnnotationData,
   AcEdBaseView
@@ -185,6 +165,8 @@ const emit = defineEmits<{
   (e: 'destroy'): void
   (e: 'switchDrawing', fileId: string): void
   (e: 'annotation-added', data: AnnotationData): void
+  (e: 'annotation-save-requested', data: AnnotationData[]): void // 请求保存
+  (e: 'annotation-clear-requested'): void // 请求清除
 }>()
 
 // Define component props with their purposes
@@ -402,7 +384,6 @@ const openLocalFile = async (file: File) => {
   }
 }
 
-// ==================== 旧版本新增功能：工具方法 ====================
 /**
  * 解码文件名（处理 HTML 实体和 URL 编码）
  */
@@ -421,7 +402,6 @@ const decodeFileName = (fileName: string): string => {
   }
 }
 
-// ==================== 旧版本新增功能：事件处理 ====================
 /**
  * 处理行点击事件
  */
@@ -701,12 +681,148 @@ const closeNotificationCenter = () => {
   showNotificationCenter.value = false
 }
 
-// ==================== 批注功能相关 ====================
+// ==================== 批注功能 ====================
+const annotations = ref<AnnotationData[]>([])
 const showAnnotationMenu = ref(false)
 const annotationMenuPosition = ref({ x: 0, y: 0 })
-const showAnnotationDialog = ref(false)
-const annotationText = ref('')
 const pendingAnnotationPoint = ref<AcGePoint3dLike | null>(null)
+
+/**
+ * 触发保存批注事件 - 通知父组件调用 API
+ */
+const emitSaveAnnotations = () => {
+  showAnnotationMenu.value = false
+
+  if (annotations.value.length === 0) {
+    ElMessage.warning('没有需要保存的批注')
+    return
+  }
+
+  // 去重并清除实体ID
+  const uniqueMap = new Map<string, AnnotationData>()
+  annotations.value.forEach(ann => {
+    if (!uniqueMap.has(ann.id)) {
+      // 清除会话相关的实体ID
+      const cleanAnn = {
+        ...ann,
+        cloudObjectId: undefined,
+        textObjectId: undefined
+      }
+      uniqueMap.set(ann.id, cleanAnn)
+    }
+  })
+
+  const data = Array.from(uniqueMap.values())
+  emit('annotation-save-requested', data)
+}
+
+/**
+ * 触发清除批注事件 - 通知父组件调用 API
+ */
+const emitClearAnnotations = async () => {
+  showAnnotationMenu.value = false
+
+  // 先清除图纸上的实体
+  const db = AcApDocManager.instance.curDocument?.database
+  if (db) {
+    annotations.value.forEach(ann => {
+      deleteAnnotationEntities(ann, db)
+    })
+  }
+
+  // 清空本地数据
+  annotations.value = []
+
+  // 通知父组件清除后端数据
+  emit('annotation-clear-requested')
+
+  ElMessage.success('已清除所有批注')
+}
+
+/**
+ * 添加批注
+ */
+const addAnnotation = async (): Promise<AnnotationData | undefined> => {
+  showAnnotationMenu.value = false
+  try {
+    const cmd = new AcApAnnotationWithCloudCmd()
+    await cmd.execute(AcApDocManager.instance.context)
+
+    const data = AcApAnnotationWithCloudCmd.getLastAnnotationData()
+    if (data) {
+      annotations.value.push(data)
+      emit('annotation-added', data)
+      ElMessage.success('批注添加成功')
+      return data
+    }
+  } catch (error) {
+    console.error('添加批注失败:', error)
+    ElMessage.error('批注添加失败')
+  }
+  return undefined
+}
+
+/**
+ * 加载批注数据并渲染（由父组件调用）
+ */
+const loadAnnotations = (data: AnnotationData[]): void => {
+  // 清除旧显示
+  clearAnnotationDisplay()
+
+  // 深拷贝并清除无效ID
+  annotations.value = data.map(ann => ({
+    ...ann,
+    cloudObjectId: undefined,
+    textObjectId: undefined
+  }))
+
+  renderAnnotations()
+}
+/**
+ * 仅清除显示，不通知父组件（用于重新渲染前）
+ */
+const clearAnnotationDisplay = (): void => {
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db) return
+
+  annotations.value.forEach(ann => {
+    deleteAnnotationEntities(ann, db)
+  })
+}
+
+/**
+ * 渲染所有批注到图纸
+ */
+const renderAnnotations = (): void => {
+  const view = AcApDocManager.instance.curView as AcEdBaseView
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db || !view) return
+
+  annotations.value.forEach(ann => {
+    const result = AcApAnnotationWithCloudCmd.renderAnnotationToDb(
+      ann,
+      view,
+      db
+    )
+    ann.cloudObjectId = result.cloudObjectId
+    ann.textObjectId = result.textObjectId
+  })
+}
+/**
+ * 删除指定批注的实体
+ */
+const deleteAnnotationEntities = (ann: AnnotationData, db: any): void => {
+  try {
+    if (ann.cloudObjectId) {
+      db.tables.blockTable.modelSpace.removeEntity(ann.cloudObjectId)
+    }
+    if (ann.textObjectId) {
+      db.tables.blockTable.modelSpace.removeEntity(ann.textObjectId)
+    }
+  } catch (e) {
+    // 实体可能已不存在，忽略错误
+  }
+}
 
 /**
  * 处理CAD容器的右键点击事件
@@ -746,52 +862,6 @@ const handleContextMenu = (event: MouseEvent) => {
   }
 }
 
-/**
- * 开始添加批注
- */
-const startAnnotation = () => {
-  showAnnotationMenu.value = false
-  showAnnotationDialog.value = true
-  annotationText.value = ''
-}
-
-/**
- * 取消批注
- */
-const cancelAnnotation = () => {
-  showAnnotationDialog.value = false
-  annotationText.value = ''
-  pendingAnnotationPoint.value = null
-}
-/**
- * 确认添加批注
- */
-const confirmAnnotation = async () => {
-  if (!annotationText.value.trim()) {
-    ElMessage.warning('请输入批注内容')
-    return
-  }
-
-  if (!pendingAnnotationPoint.value) {
-    ElMessage.error('无法获取插入点坐标')
-    return
-  }
-
-  try {
-    const cmd = new AcApAnnotationCmd(annotationText.value.trim())
-    cmd.setInsertionPoint(pendingAnnotationPoint.value)
-    await cmd.execute(AcApDocManager.instance.context)
-
-    ElMessage.success('批注添加成功')
-    showAnnotationDialog.value = false
-    annotationText.value = ''
-    pendingAnnotationPoint.value = null
-  } catch (error) {
-    console.error('Failed to add annotation:', error)
-    ElMessage.error('批注添加失败: ' + (error as Error).message)
-  }
-}
-
 // 点击其他地方关闭右键菜单
 const handleClickOutside = (event: MouseEvent) => {
   const menu = document.querySelector('.annotation-context-menu')
@@ -800,137 +870,10 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-// ==================== 批注功能 ====================
-const annotations = ref<AnnotationData[]>([])
-
-/**
- * 添加批注 - 调用命令并获取数据
- */
-const addAnnotation = async (): Promise<AnnotationData | undefined> => {
-  try {
-    const cmd = new AcApAnnotationWithCloudCmd()
-    await cmd.execute(AcApDocManager.instance.context)
-
-    // 从命令获取数据
-    const data = AcApAnnotationWithCloudCmd.getLastAnnotationData()
-    if (data) {
-      annotations.value.push(data)
-      emit('annotation-added', data)
-      ElMessage.success('批注添加成功')
-      return data
-    }
-  } catch (error) {
-    console.error('添加批注失败:', error)
-    ElMessage.error('批注添加失败')
-  }
-  return undefined
-}
-
-/**
- * 获取所有批注数据
- */
-const getAnnotations = (): AnnotationData[] => {
-  return annotations.value
-}
-
-/**
- * 加载批注数据并渲染
- */
-const loadAnnotations = (data: AnnotationData[]): void => {
-  annotations.value = data
-  renderAnnotations()
-}
-
-/**
- * 清除所有批注显示（从图纸中删除实体）
- */
-const clearAnnotations = (): void => {
-  const db = AcApDocManager.instance.curDocument?.database
-  if (!db) {
-    console.warn('[clearAnnotations] 数据库未初始化')
-    return
-  }
-
-  console.log(
-    '[clearAnnotations] 开始清除，批注数量:',
-    annotations.value.length
-  )
-
-  // 删除所有批注实体
-  annotations.value.forEach((ann, index) => {
-    console.log(`[clearAnnotations] 删除第 ${index + 1} 个批注:`, ann.id)
-    deleteAnnotationEntities(ann, db)
-  })
-
-  // 清空数据数组
-  annotations.value = []
-
-  ElMessage.success('已清除所有批注')
-}
-
-/**
- * 删除指定批注的实体（云线+文字）
- */
-const deleteAnnotationEntities = (ann: AnnotationData, db: any): void => {
-  try {
-    // 删除云线实体
-    if (ann.cloudObjectId) {
-      try {
-        db.tables.blockTable.modelSpace.removeEntity(ann.cloudObjectId)
-        console.log('[deleteAnnotationEntities] 删除云线:', ann.cloudObjectId)
-      } catch (e) {
-        console.warn(
-          '[deleteAnnotationEntities] 删除云线失败:',
-          ann.cloudObjectId,
-          e
-        )
-      }
-    }
-
-    // 删除文字实体
-    if (ann.textObjectId) {
-      try {
-        db.tables.blockTable.modelSpace.removeEntity(ann.textObjectId)
-        console.log('[deleteAnnotationEntities] 删除文字:', ann.textObjectId)
-      } catch (e) {
-        console.warn(
-          '[deleteAnnotationEntities] 删除文字失败:',
-          ann.textObjectId,
-          e
-        )
-      }
-    }
-  } catch (e) {
-    console.error('[deleteAnnotationEntities] 删除实体失败:', e)
-  }
-}
-/**
- * 渲染所有批注到图纸
- */
-
-const renderAnnotations = (): void => {
-  const view = AcApDocManager.instance.curView as AcEdBaseView
-  const db = AcApDocManager.instance.curDocument?.database
-  if (!db || !view) return
-
-  annotations.value.forEach(ann => {
-    // 调用指令的静态方法渲染
-    const { cloudObjectId, textObjectId } =
-      AcApAnnotationWithCloudCmd.renderAnnotationToDb(ann, view, db)
-
-    // 更新实体ID
-    ann.cloudObjectId = cloudObjectId
-    ann.textObjectId = textObjectId
-  })
-
-  // db.regen()
-}
 // 暴露方法给父组件
 defineExpose({
   addAnnotation,
-  getAnnotations,
-  loadAnnotations,
-  clearAnnotations
+  loadAnnotations
 })
 </script>
 
