@@ -30,8 +30,7 @@ import {
   AcApZoomCmd,
   AcApZoomToBoxCmd,
   AcEdCommandStack,
-  AcApAnnotationCmd,
-  AcApAnnotationWithCloudCmd
+  AcApAnnotationCmd
 } from '../command'
 import { AcEdCalculateSizeCallback, AcEdOpenMode, eventBus } from '../editor'
 import { AcApI18n } from '../i18n'
@@ -729,14 +728,6 @@ export class AcApDocManager {
       'annotation',
       new AcApAnnotationCmd()
     )
-    // 注册带云线的批注命令
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'annotationwithcloud',
-      'annotationwithcloud',
-      new AcApAnnotationWithCloudCmd()
-    )
-
     // Register system variables as commands
     const sysVars = AcDbSysVarManager.instance().getAllDescriptors()
     sysVars.forEach(sysVar => {

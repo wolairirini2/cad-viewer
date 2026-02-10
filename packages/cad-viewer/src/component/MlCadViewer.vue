@@ -105,10 +105,34 @@
       top: annotationMenuPosition.y + 'px'
     }"
   >
-    <div class="menu-item" @click="addAnnotation">
-      <el-icon><EditPen /></el-icon>
+    <!-- 添加批注 - 子菜单 -->
+    <div
+      class="menu-item has-submenu"
+      @mouseenter="showAddSubmenu = true"
+      @mouseleave="showAddSubmenu = false"
+    >
+      <el-icon><Plus /></el-icon>
       <span>添加批注</span>
+      <el-icon class="submenu-arrow"><ArrowRight /></el-icon>
+
+      <!-- 子菜单 -->
+      <div v-if="showAddSubmenu" class="submenu">
+        <div class="menu-item" @click="startTextAnnotation">
+          <el-icon><Document /></el-icon>
+          <span>文本</span>
+        </div>
+        <div class="menu-item" @click="startCloudAnnotation">
+          <el-icon><CircleCheck /></el-icon>
+          <span>云线</span>
+        </div>
+        <div class="menu-item" @click="startArrowAnnotation">
+          <el-icon><TopRight /></el-icon>
+          <span>箭头</span>
+        </div>
+      </div>
     </div>
+
+    <div class="menu-divider"></div>
     <div class="menu-item" @click="emitSaveAnnotations">
       <el-icon><DocumentChecked /></el-icon>
       <span>保存批注</span>
@@ -129,16 +153,16 @@ import {
   AcApOpenDatabaseOptions,
   AcEdOpenMode,
   eventBus,
-  AcApAnnotationWithCloudCmd,
+  AcEdBaseView,
   type AnnotationData,
-  AcEdBaseView
+  type AnnotationType,
+  AcApAnnotationCmd
 } from '@mlightcad/cad-simple-viewer'
-import { AcGeBox2d, AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGeBox2d } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { EditPen } from '@element-plus/icons-vue'
 
 import { initializeCadViewer, store } from '../app'
 import { useLocale, useNotificationCenter, useSettings } from '../composable'
@@ -684,8 +708,62 @@ const closeNotificationCenter = () => {
 // ==================== 批注功能 ====================
 const annotations = ref<AnnotationData[]>([])
 const showAnnotationMenu = ref(false)
+const showAddSubmenu = ref(false) // 控制子菜单显示
 const annotationMenuPosition = ref({ x: 0, y: 0 })
-const pendingAnnotationPoint = ref<AcGePoint3dLike | null>(null)
+
+/**
+ * 开始文本批注
+ */
+const startTextAnnotation = () => {
+  showAddSubmenu.value = false
+  showAnnotationMenu.value = false
+  addAnnotation('text')
+}
+
+/**
+ * 开始云线批注
+ */
+const startCloudAnnotation = () => {
+  showAddSubmenu.value = false
+  showAnnotationMenu.value = false
+  addAnnotation('cloud')
+}
+
+/**
+ * 开始箭头批注
+ */
+const startArrowAnnotation = () => {
+  showAddSubmenu.value = false
+  showAnnotationMenu.value = false
+  addAnnotation('arrow')
+}
+
+/**
+ * 添加批注
+ */
+const addAnnotation = async (
+  type: AnnotationType
+): Promise<AnnotationData | undefined> => {
+  try {
+    const cmd = new AcApAnnotationCmd()
+    cmd.setAnnotationType(type)
+    await cmd.execute(AcApDocManager.instance.context)
+
+    const data = AcApAnnotationCmd.getLastAnnotationData()
+    if (data) {
+      annotations.value.push(data)
+      emit('annotation-added', data)
+
+      const typeNames = { text: '文本', cloud: '云线', arrow: '箭头' }
+      ElMessage.success(`${typeNames[type]}批注添加成功`)
+      return data
+    }
+  } catch (error) {
+    console.error('添加批注失败:', error)
+    ElMessage.error('批注添加失败')
+  }
+  return undefined
+}
 
 /**
  * 触发保存批注事件 - 通知父组件调用 API
@@ -705,8 +783,7 @@ const emitSaveAnnotations = () => {
       // 清除会话相关的实体ID
       const cleanAnn = {
         ...ann,
-        cloudObjectId: undefined,
-        textObjectId: undefined
+        objectId: undefined
       }
       uniqueMap.set(ann.id, cleanAnn)
     }
@@ -740,29 +817,6 @@ const emitClearAnnotations = async () => {
 }
 
 /**
- * 添加批注
- */
-const addAnnotation = async (): Promise<AnnotationData | undefined> => {
-  showAnnotationMenu.value = false
-  try {
-    const cmd = new AcApAnnotationWithCloudCmd()
-    await cmd.execute(AcApDocManager.instance.context)
-
-    const data = AcApAnnotationWithCloudCmd.getLastAnnotationData()
-    if (data) {
-      annotations.value.push(data)
-      emit('annotation-added', data)
-      ElMessage.success('批注添加成功')
-      return data
-    }
-  } catch (error) {
-    console.error('添加批注失败:', error)
-    ElMessage.error('批注添加失败')
-  }
-  return undefined
-}
-
-/**
  * 加载批注数据并渲染（由父组件调用）
  */
 const loadAnnotations = (data: AnnotationData[]): void => {
@@ -772,8 +826,7 @@ const loadAnnotations = (data: AnnotationData[]): void => {
   // 深拷贝并清除无效ID
   annotations.value = data.map(ann => ({
     ...ann,
-    cloudObjectId: undefined,
-    textObjectId: undefined
+    objectId: undefined
   }))
 
   renderAnnotations()
@@ -799,13 +852,10 @@ const renderAnnotations = (): void => {
   if (!db || !view) return
 
   annotations.value.forEach(ann => {
-    const result = AcApAnnotationWithCloudCmd.renderAnnotationToDb(
-      ann,
-      view,
-      db
-    )
-    ann.cloudObjectId = result.cloudObjectId
-    ann.textObjectId = result.textObjectId
+    const result = AcApAnnotationCmd.renderAnnotationToDb(ann, view, db)
+    if (result.success) {
+      ann.objectId = result.objectId // 统一使用 objectId
+    }
   })
 }
 /**
@@ -813,11 +863,9 @@ const renderAnnotations = (): void => {
  */
 const deleteAnnotationEntities = (ann: AnnotationData, db: any): void => {
   try {
-    if (ann.cloudObjectId) {
-      db.tables.blockTable.modelSpace.removeEntity(ann.cloudObjectId)
-    }
-    if (ann.textObjectId) {
-      db.tables.blockTable.modelSpace.removeEntity(ann.textObjectId)
+    // 统一使用 objectId 删除
+    if (ann.objectId) {
+      db.tables.blockTable.modelSpace.removeEntity(ann.objectId)
     }
   } catch (e) {
     // 实体可能已不存在，忽略错误
@@ -840,26 +888,6 @@ const handleContextMenu = (event: MouseEvent) => {
 
   // 显示自定义右键菜单
   showAnnotationMenu.value = true
-
-  // 转换屏幕坐标为CAD世界坐标
-  const screenX = event.clientX - rect.left
-  const screenY = event.clientY - rect.top
-
-  // 使用CAD视图将屏幕坐标转换为世界坐标
-  try {
-    const view = AcApDocManager.instance.curView
-    if (view && typeof view.screenToWorld === 'function') {
-      const worldPoint = view.screenToWorld({ x: screenX, y: screenY })
-      pendingAnnotationPoint.value = { ...worldPoint, z: 0 }
-    } else {
-      // 如果 view 没有 screenToWorld 方法，尝试使用 editor 的转换方法
-      // 或者暂时存储屏幕坐标，在命令执行时再转换
-      pendingAnnotationPoint.value = { x: screenX, y: screenY, z: 0 }
-    }
-  } catch (error) {
-    console.warn('Failed to convert screen to world coordinates:', error)
-    pendingAnnotationPoint.value = { x: screenX, y: screenY, z: 0 }
-  }
 }
 
 // 点击其他地方关闭右键菜单
@@ -1005,5 +1033,44 @@ defineExpose({
 .ml-theme-dark .annotation-context-menu .menu-item:hover {
   background-color: #3a3a3a;
   color: #409eff;
+}
+
+/* 子菜单样式 */
+.annotation-context-menu .menu-item.has-submenu {
+  position: relative;
+}
+
+.annotation-context-menu .submenu-arrow {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.annotation-context-menu .submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  min-width: 120px;
+  z-index: 3001;
+}
+
+.annotation-context-menu .menu-divider {
+  height: 1px;
+  background-color: #e4e7ed;
+  margin: 4px 0;
+}
+
+/* 深色主题 */
+.ml-theme-dark .annotation-context-menu .submenu {
+  background: #2b2b2b;
+  border-color: #444;
+}
+
+.ml-theme-dark .annotation-context-menu .menu-divider {
+  background-color: #444;
 }
 </style>
