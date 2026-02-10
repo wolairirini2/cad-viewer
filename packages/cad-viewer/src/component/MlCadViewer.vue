@@ -900,8 +900,6 @@ const deleteAnnotationEntities = (ann: AnnotationData, db: any): void => {
         )
       }
     }
-    // // 刷新显示
-    // db.regen()
   } catch (e) {
     console.error('[deleteAnnotationEntities] 删除实体失败:', e)
   }

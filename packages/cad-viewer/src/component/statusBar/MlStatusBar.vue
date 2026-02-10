@@ -26,12 +26,12 @@
         >
         <ml-warning-button />
         <ml-notification-button @click="toggleNotificationCenter" />
-        <ml-theme-button
+        <!-- <ml-theme-button  
           :is-dark="props.isDark"
           :toggle-dark="props.toggleDark"
-        />
+        /> -->
         <ml-full-screen-button />
-        <ml-point-style-button />
+        <!-- <ml-point-style-button /> -->
         <ml-osnap-button />
         <ml-setting-button />
       </el-button-group>
@@ -54,10 +54,10 @@ import {
 import MlFullScreenButton from './MlFullScreenButton.vue'
 import MlNotificationButton from './MlNotificationButton.vue'
 import MlOsnapButton from './MlOsnapButton.vue'
-import MlPointStyleButton from './MlPointStyleButton.vue'
+// import MlPointStyleButton from './MlPointStyleButton.vue'
 import MlProgress from './MlProgress.vue'
 import MlSettingButton from './MlSettingButton.vue'
-import MlThemeButton from './MlThemeButton.vue'
+// import MlThemeButton from './MlThemeButton.vue'
 import MlWarningButton from './MlWarningButton.vue'
 
 const props = defineProps<{
