@@ -303,7 +303,6 @@ export class AcApAnnotationCmd extends AcEdCommand {
         const color = new AcCmColor()
         color.setRGB(255, 0, 0)
         mtext.color = color
-
         db.tables.blockTable.modelSpace.appendEntity(mtext)
         entity = mtext
       } else if (ann.annotationType === 'arrow') {

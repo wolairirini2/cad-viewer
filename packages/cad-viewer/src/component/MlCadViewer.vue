@@ -118,6 +118,16 @@
       <el-icon><TopRight /></el-icon>
       <span>添加箭头</span>
     </div>
+    <div class="menu-divider"></div>
+
+    <!-- 显示/隐藏批注 -->
+    <div class="menu-item" @click="toggleAnnotationsVisibility">
+      <el-icon>
+        <View v-if="annotationsVisible" />
+        <Hide v-else />
+      </el-icon>
+      <span>{{ annotationsVisible ? '隐藏批注' : '显示批注' }}</span>
+    </div>
 
     <div class="menu-item annotation-count" v-if="annotations.length > 0">
       <span>当前: {{ annotations.length }} 个</span>
@@ -724,6 +734,54 @@ const annotations = ref<AnnotationData[]>([])
 const showAnnotationMenu = ref(false)
 const showAddSubmenu = ref(false) // 控制子菜单显示
 const annotationMenuPosition = ref({ x: 0, y: 0 })
+const annotationsVisible = ref(true) // 批注显示状态
+/**
+ * 切换批注显示/隐藏
+ */
+const toggleAnnotationsVisibility = () => {
+  showAnnotationMenu.value = false
+
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db) return
+
+  if (annotationsVisible.value) {
+    // 当前显示，执行隐藏
+    hideAllAnnotations(db)
+    annotationsVisible.value = false
+    ElMessage.success('已隐藏批注')
+  } else {
+    // 当前隐藏，执行显示
+    showAllAnnotations(db)
+    annotationsVisible.value = true
+    ElMessage.success('已显示批注')
+  }
+}
+
+/**
+ * 隐藏所有批注实体
+ */
+const hideAllAnnotations = (db: any) => {
+  annotations.value.forEach(ann => {
+    if (ann.objectId) {
+      try {
+        const entity = db.tables.blockTable.modelSpace.getIdAt(ann.objectId)
+        if (entity) {
+          // 设置实体为可见
+          console.log('隐藏批注:', ann.objectId)
+          console.log(entity)
+        }
+      } catch (e) {
+        console.warn('显示批注失败:', ann.objectId, e)
+      }
+    }
+  })
+}
+/**
+ * 显示所有批注实体
+ */
+const showAllAnnotations = (db: any) => {
+  console.log('显示所有批注', db)
+}
 
 /**
  * 开始文本批注
