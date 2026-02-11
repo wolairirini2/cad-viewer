@@ -191,6 +191,7 @@ const emit = defineEmits<{
   (e: 'annotation-added', data: AnnotationData): void
   (e: 'annotation-save-requested', data: AnnotationData[]): void // 请求保存
   (e: 'annotation-clear-requested'): void // 请求清除
+  (e: 'annotation-deleted', id: string): void // 删除批注
 }>()
 
 // Define component props with their purposes
@@ -564,6 +565,33 @@ watch(
   }
 )
 
+/**
+ * 处理实体被删除事件
+ * 检查是否是批注实体，如果是则从数据中移除
+ */
+const handleEntityErased = (entity: any) => {
+  console.log(`[handleEntityErased] 实体被删除: ${entity}`)
+  console.log(entity)
+  console.log(entity[0].objectId)
+  const erasedId = entity[0].objectId
+  if (!erasedId) return
+
+  // 查找对应的批注
+  const index = annotations.value.findIndex(ann => ann.objectId === erasedId)
+
+  if (index !== -1) {
+    const ann = annotations.value[index]
+    console.log(
+      `[handleEntityErased] 批注被删除: ${ann.id}, 类型: ${ann.annotationType}`
+    )
+
+    // 从数组中移除
+    annotations.value.splice(index, 1)
+
+    // 触发删除事件通知父组件
+    emit('annotation-deleted', ann.id)
+  }
+}
 // Component lifecycle: Initialize and load initial file if URL or localFile is provided
 onMounted(async () => {
   // Initialize the CAD viewer with the internal canvas
@@ -604,6 +632,14 @@ onMounted(async () => {
 
   // FINAL STEP: viewer is now ready
   emit('create')
+
+  // 监听实体删除事件，处理批注删除
+  const db = AcApDocManager.instance.curDocument?.database
+  if (db) {
+    db.events.entityErased.addEventListener((args: { entity: any }) => {
+      handleEntityErased(args.entity)
+    })
+  }
 })
 
 // Destroy the CAD viewer when the component is unmounted

@@ -112,6 +112,8 @@ export class AcEdSelectionSet {
    * ```
    */
   add(value: AcDbObjectId | AcDbObjectId[]) {
+    this.clear()
+    console.log('add', value)
     if (Array.isArray(value)) {
       value.forEach(item => this._ids.add(item))
       this.events.selectionAdded.dispatch({ ids: value })
@@ -139,6 +141,7 @@ export class AcEdSelectionSet {
    * ```
    */
   delete(value: AcDbObjectId | AcDbObjectId[]) {
+    console.log('delete', value)
     if (Array.isArray(value)) {
       value.forEach(item => this._ids.delete(item))
       this.events.selectionRemoved.dispatch({ ids: value })
