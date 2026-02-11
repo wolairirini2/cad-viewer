@@ -106,41 +106,19 @@
     }"
   >
     <!-- 添加批注 - 子菜单 -->
-    <div
-      class="menu-item has-submenu"
-      @mouseenter="showAddSubmenu = true"
-      @mouseleave="showAddSubmenu = false"
-    >
-      <el-icon><Plus /></el-icon>
-      <span>添加批注</span>
-      <el-icon class="submenu-arrow"><ArrowRight /></el-icon>
-
-      <!-- 子菜单 -->
-      <div v-if="showAddSubmenu" class="submenu">
-        <div class="menu-item" @click="startTextAnnotation">
-          <el-icon><Document /></el-icon>
-          <span>文本</span>
-        </div>
-        <div class="menu-item" @click="startCloudAnnotation">
-          <el-icon><CircleCheck /></el-icon>
-          <span>云线</span>
-        </div>
-        <div class="menu-item" @click="startArrowAnnotation">
-          <el-icon><TopRight /></el-icon>
-          <span>箭头</span>
-        </div>
-      </div>
+    <div class="menu-item" @click="startTextAnnotation">
+      <el-icon><Document /></el-icon>
+      <span>添加文本</span>
+    </div>
+    <div class="menu-item" @click="startCloudAnnotation">
+      <el-icon><CircleCheck /></el-icon>
+      <span>添加云线</span>
+    </div>
+    <div class="menu-item" @click="startArrowAnnotation">
+      <el-icon><TopRight /></el-icon>
+      <span>添加箭头</span>
     </div>
 
-    <div class="menu-divider"></div>
-    <div class="menu-item" @click="emitSaveAnnotations">
-      <el-icon><DocumentChecked /></el-icon>
-      <span>保存批注</span>
-    </div>
-    <div class="menu-item" @click="emitClearAnnotations">
-      <el-icon><Delete /></el-icon>
-      <span>清除批注</span>
-    </div>
     <div class="menu-item annotation-count" v-if="annotations.length > 0">
       <span>当前: {{ annotations.length }} 个</span>
     </div>
@@ -570,9 +548,7 @@ watch(
  * 检查是否是批注实体，如果是则从数据中移除
  */
 const handleEntityErased = (entity: any) => {
-  console.log(`[handleEntityErased] 实体被删除: ${entity}`)
-  console.log(entity)
-  console.log(entity[0].objectId)
+  console.log('[handleEntityErased] 实体被删除: ', entity[0].objectId)
   const erasedId = entity[0].objectId
   if (!erasedId) return
 
@@ -590,6 +566,8 @@ const handleEntityErased = (entity: any) => {
 
     // 触发删除事件通知父组件
     emit('annotation-deleted', ann.id)
+
+    emitSaveAnnotations()
   }
 }
 // Component lifecycle: Initialize and load initial file if URL or localFile is provided
@@ -750,28 +728,31 @@ const annotationMenuPosition = ref({ x: 0, y: 0 })
 /**
  * 开始文本批注
  */
-const startTextAnnotation = () => {
+const startTextAnnotation = async () => {
   showAddSubmenu.value = false
   showAnnotationMenu.value = false
-  addAnnotation('text')
+  await addAnnotation('text')
+  emitSaveAnnotations()
 }
 
 /**
  * 开始云线批注
  */
-const startCloudAnnotation = () => {
+const startCloudAnnotation = async () => {
   showAddSubmenu.value = false
   showAnnotationMenu.value = false
-  addAnnotation('cloud')
+  await addAnnotation('cloud')
+  emitSaveAnnotations()
 }
 
 /**
  * 开始箭头批注
  */
-const startArrowAnnotation = () => {
+const startArrowAnnotation = async () => {
   showAddSubmenu.value = false
   showAnnotationMenu.value = false
-  addAnnotation('arrow')
+  await addAnnotation('arrow')
+  emitSaveAnnotations()
 }
 
 /**
@@ -805,12 +786,11 @@ const addAnnotation = async (
  * 触发保存批注事件 - 通知父组件调用 API
  */
 const emitSaveAnnotations = () => {
-  showAnnotationMenu.value = false
-
-  if (annotations.value.length === 0) {
-    ElMessage.warning('没有需要保存的批注')
-    return
-  }
+  console.log('触发保存批注事件')
+  // if (annotations.value.length === 0) {
+  //   ElMessage.warning('没有需要保存的批注')
+  //   return
+  // }
 
   // 去重并清除实体ID
   const uniqueMap = new Map<string, AnnotationData>()
@@ -827,29 +807,6 @@ const emitSaveAnnotations = () => {
 
   const data = Array.from(uniqueMap.values())
   emit('annotation-save-requested', data)
-}
-
-/**
- * 触发清除批注事件 - 通知父组件调用 API
- */
-const emitClearAnnotations = async () => {
-  showAnnotationMenu.value = false
-
-  // 先清除图纸上的实体
-  const db = AcApDocManager.instance.curDocument?.database
-  if (db) {
-    annotations.value.forEach(ann => {
-      deleteAnnotationEntities(ann, db)
-    })
-  }
-
-  // 清空本地数据
-  annotations.value = []
-
-  // 通知父组件清除后端数据
-  emit('annotation-clear-requested')
-
-  ElMessage.success('已清除所有批注')
 }
 
 /**

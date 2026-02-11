@@ -55,12 +55,12 @@ export interface AcApSettings {
 /** Default values for all application settings */
 const DEFAULT_VALUES: AcApSettings = {
   isDebug: false,
-  isShowCommandLine: true,
+  isShowCommandLine: false,
   isShowCoordinate: true,
   isShowEntityInfo: false,
-  isShowFileName: true,
-  isShowLanguageSelector: true,
-  isShowMainMenu: true,
+  isShowFileName: false,
+  isShowLanguageSelector: false,
+  isShowMainMenu: false,
   isShowToolbar: true,
   isShowStats: false,
   fontMapping: {},
