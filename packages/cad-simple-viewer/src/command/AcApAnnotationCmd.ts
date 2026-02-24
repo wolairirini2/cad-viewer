@@ -5,7 +5,8 @@ import {
   AcGePoint2d,
   AcGePoint2dLike,
   AcGiMTextAttachmentPoint,
-  AcCmColor
+  AcCmColor,
+  AcDbLayerTableRecord // 新增
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
@@ -51,6 +52,75 @@ export interface AnnotationData {
 // 常量
 const CLOUD_DIAMETER_PIXELS = 8
 const ARROW_HEAD_SIZE = 10
+
+// 批注图层名称常量
+export const ANNOTATION_LAYER_NAME = '批注图层' // 或 'Annotations'
+/**
+ * 确保批注图层存在，如果不存在则创建
+ */
+export function ensureAnnotationLayer(): AcDbLayerTableRecord {
+  const view = AcApDocManager.instance.curView
+  const db = AcApDocManager.instance.curDocument.database
+
+  // 首先检查图层表中是否已存在
+  const layerTable = db.tables.layerTable
+  const existingLayer = layerTable.getAt(ANNOTATION_LAYER_NAME)
+  console.log('existingLayer', existingLayer)
+  if (existingLayer) {
+    // 确保图层在视图中也被添加（可能被冻结或关闭）
+    view.addLayer(existingLayer)
+    return existingLayer
+  }
+
+  // 创建新图层
+  const newLayer = new AcDbLayerTableRecord()
+  newLayer.name = ANNOTATION_LAYER_NAME
+  newLayer.isFrozen = false
+  newLayer.isOff = false
+  newLayer.color = new AcCmColor() // 红色，突出显示
+  newLayer.color.setRGB(255, 0, 0)
+  // 添加到数据库的图层表（持久化）
+  layerTable.add(newLayer)
+
+  // 添加到视图（立即显示）
+  view.addLayer(newLayer)
+  console.log('newLayer', newLayer)
+  return newLayer
+}
+/**
+ * 切换批注图层显示/隐藏
+ */
+export function toggleAnnotationLayer(): boolean {
+  const view = AcApDocManager.instance.curView
+  const db = AcApDocManager.instance.curDocument.database
+  const layerTable = db.tables.layerTable
+
+  const layer = layerTable.getAt(ANNOTATION_LAYER_NAME)
+  if (!layer) {
+    return false // 图层不存在
+  }
+
+  // 切换开关状态
+  const newState = !layer.isOff
+  layer.isOff = newState
+
+  // 更新视图中的图层状态
+  view.updateLayer(layer, { isOff: newState })
+
+  return newState // 返回新的状态：true=隐藏, false=显示
+}
+/**
+ * 获取批注图层当前可见性
+ */
+export function isAnnotationLayerVisible(): boolean {
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db) return false
+
+  const layer = db.tables.layerTable.getAt(ANNOTATION_LAYER_NAME)
+  if (!layer) return false
+
+  return !layer.isOff
+}
 
 /**
  * 像素距离转世界距离
@@ -288,6 +358,9 @@ export class AcApAnnotationCmd extends AcEdCommand {
     error?: string
   } {
     try {
+      // 确保批注图层存在
+      const annotationLayer = ensureAnnotationLayer()
+
       let entity: any
 
       if (ann.annotationType === 'text') {
@@ -299,6 +372,7 @@ export class AcApAnnotationCmd extends AcEdCommand {
         mtext.width = ann.textHeight! * 25
         mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
         mtext.styleName = 'Standard'
+        mtext.layer = ANNOTATION_LAYER_NAME // 关键：设置图层
 
         const color = new AcCmColor()
         color.setRGB(255, 0, 0)
@@ -318,6 +392,7 @@ export class AcApAnnotationCmd extends AcEdCommand {
         const color = new AcCmColor()
         color.setRGB(255, 0, 0)
         arrow.color = color
+        arrow.layer = ANNOTATION_LAYER_NAME // 关键：设置图层
 
         db.tables.blockTable.modelSpace.appendEntity(arrow)
         entity = arrow
@@ -338,11 +413,20 @@ export class AcApAnnotationCmd extends AcEdCommand {
         const color = new AcCmColor()
         color.setRGB(255, 0, 0)
         cloud.color = color
+        cloud.layer = ANNOTATION_LAYER_NAME // 关键：设置图层
 
         db.tables.blockTable.modelSpace.appendEntity(cloud)
         entity = cloud
       } else {
         return { success: false, error: 'Unknown annotation type' }
+      }
+
+      // 如果图层当前是关闭的，自动打开它（添加新批注时应该可见）
+      if (annotationLayer.isOff) {
+        annotationLayer.isOff = false
+        AcApDocManager.instance.curView.updateLayer(annotationLayer, {
+          isOff: false
+        })
       }
 
       return {
@@ -392,6 +476,8 @@ export class AcApAnnotationCmd extends AcEdCommand {
     const textHeight = this.calculateTextHeight()
     const db = context.doc.database
 
+    ensureAnnotationLayer() // 确保批注图层存在
+
     const mtext = new AcDbMText()
     mtext.location = { x: position.x, y: position.y, z: 0 }
     mtext.contents = text.trim()
@@ -399,6 +485,7 @@ export class AcApAnnotationCmd extends AcEdCommand {
     mtext.width = textHeight * 25
     mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
     mtext.styleName = 'Standard'
+    mtext.layer = ANNOTATION_LAYER_NAME // 关键：设置图层
 
     const color = new AcCmColor()
     color.setRGB(255, 0, 0)
@@ -445,12 +532,16 @@ export class AcApAnnotationCmd extends AcEdCommand {
     const maxY = Math.max(firstPoint.y, secondPoint.y)
 
     const db = context.doc.database
+
+    ensureAnnotationLayer() // 确保批注图层存在
+
     const cloud = new AcDbPolyline()
     updateCloud(cloud, firstPoint, secondPoint, context.view)
 
     const color = new AcCmColor()
     color.setRGB(255, 0, 0)
     cloud.color = color
+    cloud.layer = ANNOTATION_LAYER_NAME // 关键：设置图层
 
     db.tables.blockTable.modelSpace.appendEntity(cloud)
 
@@ -486,12 +577,16 @@ export class AcApAnnotationCmd extends AcEdCommand {
       await AcApDocManager.instance.editor.getPoint(endPointPrompt)
 
     const db = context.doc.database
+
+    ensureAnnotationLayer() // 确保批注图层存在
+
     const arrow = new AcDbPolyline()
     createArrowPolyline(arrow, startPoint, endPoint, context.view)
 
     const color = new AcCmColor()
     color.setRGB(255, 0, 0)
     arrow.color = color
+    arrow.layer = ANNOTATION_LAYER_NAME // 关键：设置图层
 
     db.tables.blockTable.modelSpace.appendEntity(arrow)
 

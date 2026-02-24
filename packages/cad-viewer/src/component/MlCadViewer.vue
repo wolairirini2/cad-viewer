@@ -118,20 +118,22 @@
       <el-icon><TopRight /></el-icon>
       <span>添加箭头</span>
     </div>
-    <div class="menu-divider"></div>
+    <template v-if="annotations.length > 0">
+      <div class="menu-divider"></div>
 
-    <!-- 显示/隐藏批注 -->
-    <div class="menu-item" @click="toggleAnnotationsVisibility">
-      <el-icon>
-        <View v-if="annotationsVisible" />
-        <Hide v-else />
-      </el-icon>
-      <span>{{ annotationsVisible ? '隐藏批注' : '显示批注' }}</span>
-    </div>
+      <!-- 显示/隐藏批注 -->
+      <div class="menu-item" @click="toggleAnnotationsVisibility">
+        <el-icon>
+          <View v-if="annotationsVisible" />
+          <Hide v-else />
+        </el-icon>
+        <span>{{ annotationsVisible ? '隐藏批注' : '显示批注' }}</span>
+      </div>
 
-    <div class="menu-item annotation-count" v-if="annotations.length > 0">
-      <span>当前: {{ annotations.length }} 个</span>
-    </div>
+      <div class="menu-item annotation-count">
+        <span>当前: {{ annotations.length }} 个</span>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -144,9 +146,16 @@ import {
   AcEdBaseView,
   type AnnotationData,
   type AnnotationType,
-  AcApAnnotationCmd
+  AcApAnnotationCmd,
+  toggleAnnotationLayer,
+  isAnnotationLayerVisible,
+  ANNOTATION_LAYER_NAME
 } from '@mlightcad/cad-simple-viewer'
-import { AcGeBox2d } from '@mlightcad/data-model'
+import {
+  AcGeBox2d,
+  AcDbLayerTableRecord,
+  AcCmColor
+} from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
@@ -628,6 +637,8 @@ onMounted(async () => {
       handleEntityErased(args.entity)
     })
   }
+
+  annotationsVisible.value = true
 })
 
 // Destroy the CAD viewer when the component is unmounted
@@ -734,53 +745,26 @@ const annotations = ref<AnnotationData[]>([])
 const showAnnotationMenu = ref(false)
 const showAddSubmenu = ref(false) // 控制子菜单显示
 const annotationMenuPosition = ref({ x: 0, y: 0 })
-const annotationsVisible = ref(true) // 批注显示状态
+
+// 关键修改：使用 ref 存储可见性状态，而不是 computed
+const annotationsVisible = ref(true)
+
 /**
- * 切换批注显示/隐藏
+ * 切换批注显示/隐藏 - 通过控制图层实现
  */
 const toggleAnnotationsVisibility = () => {
   showAnnotationMenu.value = false
 
-  const db = AcApDocManager.instance.curDocument?.database
-  if (!db) return
+  const newState = toggleAnnotationLayer()
+  // newState: true=隐藏, false=显示
+  // 关键：手动更新 Vue 的响应式状态
+  annotationsVisible.value = !newState // toggleAnnotationLayer 返回的是 isOff 状态
 
-  if (annotationsVisible.value) {
-    // 当前显示，执行隐藏
-    hideAllAnnotations(db)
-    annotationsVisible.value = false
-    ElMessage.success('已隐藏批注')
+  if (newState) {
+    ElMessage.success('已隐藏批注图层')
   } else {
-    // 当前隐藏，执行显示
-    showAllAnnotations(db)
-    annotationsVisible.value = true
-    ElMessage.success('已显示批注')
+    ElMessage.success('已显示批注图层')
   }
-}
-
-/**
- * 隐藏所有批注实体
- */
-const hideAllAnnotations = (db: any) => {
-  annotations.value.forEach(ann => {
-    if (ann.objectId) {
-      try {
-        const entity = db.tables.blockTable.modelSpace.getIdAt(ann.objectId)
-        if (entity) {
-          // 设置实体为可见
-          console.log('隐藏批注:', ann.objectId)
-          console.log(entity)
-        }
-      } catch (e) {
-        console.warn('显示批注失败:', ann.objectId, e)
-      }
-    }
-  })
-}
-/**
- * 显示所有批注实体
- */
-const showAllAnnotations = (db: any) => {
-  console.log('显示所有批注', db)
 }
 
 /**
@@ -814,7 +798,7 @@ const startArrowAnnotation = async () => {
 }
 
 /**
- * 添加批注
+ * 添加批注 - 自动创建/使用批注图层
  */
 const addAnnotation = async (
   type: AnnotationType
@@ -868,7 +852,7 @@ const emitSaveAnnotations = () => {
 }
 
 /**
- * 加载批注数据并渲染（由父组件调用）
+ * 加载批注数据并渲染 - 使用批注图层
  */
 const loadAnnotations = (data: AnnotationData[]): void => {
   // 清除旧显示
@@ -880,8 +864,28 @@ const loadAnnotations = (data: AnnotationData[]): void => {
     objectId: undefined
   }))
 
+  // 确保批注图层存在（但不强制打开，保持用户设置的可见性）
+  const view = AcApDocManager.instance.curView
+  const db = AcApDocManager.instance.curDocument?.database
+  if (!db) return
+
+  // 检查图层是否存在，不存在则创建（保持关闭状态，如果之前是关闭的）
+  const layerTable = db.tables.layerTable
+  let layer = layerTable.getAt(ANNOTATION_LAYER_NAME)
+  if (!layer) {
+    layer = new AcDbLayerTableRecord()
+    layer.name = ANNOTATION_LAYER_NAME
+    layer.isFrozen = false
+    layer.isOff = false // 默认创建时打开
+    layer.color = new AcCmColor()
+    layer.color.setRGB(255, 0, 0)
+    layerTable.add(layer)
+    view.addLayer(layer)
+  }
+
   renderAnnotations()
 }
+
 /**
  * 仅清除显示，不通知父组件（用于重新渲染前）
  */
@@ -952,7 +956,10 @@ const handleClickOutside = (event: MouseEvent) => {
 // 暴露方法给父组件
 defineExpose({
   addAnnotation,
-  loadAnnotations
+  loadAnnotations,
+  // 可以暴露图层控制方法给父组件
+  toggleAnnotationLayer,
+  isAnnotationLayerVisible
 })
 </script>
 
