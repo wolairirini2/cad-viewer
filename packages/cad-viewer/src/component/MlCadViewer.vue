@@ -135,6 +135,69 @@
       </div>
     </template>
   </div>
+
+  <!-- 简化的字体大小选择弹窗 -->
+  <el-dialog
+    v-model="showTextSizeDialog"
+    title="选择批注文字大小"
+    width="360px"
+    :close-on-click-modal="false"
+    :show-close="false"
+    align-center
+  >
+    <div class="text-size-grid">
+      <div
+        v-for="option in TEXT_SIZE_OPTIONS"
+        :key="option.value"
+        class="size-card"
+        :class="{ active: selectedTextSize === option.value }"
+        @click="selectTextSize(option.value)"
+      >
+        <div
+          class="size-icon"
+          :style="{ transform: `scale(${getScale(option.value)})` }"
+        >
+          A
+        </div>
+        <div class="size-name">{{ option.label }}</div>
+        <div class="size-value">{{ option.value }}px</div>
+      </div>
+    </div>
+
+    <template #footer>
+      <el-button @click="cancelTextAnnotation">取消</el-button>
+      <el-button
+        type="primary"
+        @click="confirmTextSize"
+        :disabled="!selectedTextSize"
+      >
+        下一步
+      </el-button>
+    </template>
+  </el-dialog>
+  <!-- 文本输入弹窗 -->
+  <el-dialog
+    v-model="showTextInputDialog"
+    title="输入批注文字"
+    width="400px"
+    :close-on-click-modal="false"
+    class="text-input-dialog"
+  >
+    <el-input
+      v-model="annotationText"
+      type="textarea"
+      :rows="3"
+      placeholder="请输入批注内容..."
+      maxlength="200"
+      show-word-limit
+      autofocus
+      @keyup.enter.ctrl="confirmTextInput"
+    />
+    <template #footer>
+      <el-button @click="showTextInputDialog = false">取消</el-button>
+      <el-button type="primary" @click="confirmTextInput">确定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -149,12 +212,19 @@ import {
   AcApAnnotationCmd,
   toggleAnnotationLayer,
   isAnnotationLayerVisible,
-  ANNOTATION_LAYER_NAME
+  ANNOTATION_LAYER_NAME,
+  TEXT_SIZE_OPTIONS,
+  DEFAULT_TEXT_SIZE,
+  ensureAnnotationLayer,
+  AcEdPromptPointOptions,
+  screenPixelToWorldHeight
 } from '@mlightcad/cad-simple-viewer'
 import {
   AcGeBox2d,
   AcDbLayerTableRecord,
-  AcCmColor
+  AcCmColor,
+  AcDbMText,
+  AcGiMTextAttachmentPoint
 } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
@@ -749,6 +819,20 @@ const annotationMenuPosition = ref({ x: 0, y: 0 })
 // 关键修改：使用 ref 存储可见性状态，而不是 computed
 const annotationsVisible = ref(true)
 
+// 文本批注优化
+const showTextSizeDialog = ref(false)
+const showTextInputDialog = ref(false)
+const selectedTextSize = ref(DEFAULT_TEXT_SIZE)
+const annotationText = ref('')
+const pendingAnnotationPosition = ref<{ x: number; y: number } | null>(null)
+
+/**
+ * 选择字体大小
+ */
+const selectTextSize = (size: number) => {
+  selectedTextSize.value = size
+}
+
 /**
  * 切换批注显示/隐藏 - 通过控制图层实现
  */
@@ -771,9 +855,136 @@ const toggleAnnotationsVisibility = () => {
  * 开始文本批注
  */
 const startTextAnnotation = async () => {
-  showAddSubmenu.value = false
   showAnnotationMenu.value = false
-  await addAnnotation('text')
+
+  // 获取位置
+  const position = await getAnnotationPosition()
+  if (!position) return
+
+  pendingAnnotationPosition.value = position
+
+  // 显示字体大小选择（默认选中"中"）
+  selectedTextSize.value = DEFAULT_TEXT_SIZE
+  showTextSizeDialog.value = true
+}
+/**
+ * 获取批注位置
+ */
+const getAnnotationPosition = (): Promise<{ x: number; y: number } | null> => {
+  return new Promise(resolve => {
+    const pointPrompt = new AcEdPromptPointOptions('指定文本位置:')
+
+    AcApDocManager.instance.editor
+      .getPoint(pointPrompt)
+      .then((position: any) => {
+        resolve({ x: position.x, y: position.y })
+      })
+      .catch(() => {
+        resolve(null)
+      })
+  })
+}
+
+/**
+ * 确认字体大小，进入文本输入
+ */
+const confirmTextSize = () => {
+  if (!selectedTextSize.value) return
+
+  showTextSizeDialog.value = false
+  annotationText.value = ''
+
+  // 延迟显示下一个弹窗，避免动画冲突
+  setTimeout(() => {
+    showTextInputDialog.value = true
+  }, 100)
+}
+
+/**
+ * 取消文本批注
+ */
+const cancelTextAnnotation = () => {
+  showTextSizeDialog.value = false
+  pendingAnnotationPosition.value = null
+}
+
+/**
+ * 确认文本输入并创建批注
+ */
+const confirmTextInput = () => {
+  if (!annotationText.value.trim()) {
+    ElMessage.warning('请输入批注内容')
+    return
+  }
+
+  if (!pendingAnnotationPosition.value) {
+    return
+  }
+
+  const view = AcApDocManager.instance.curView
+
+  // 关键：将屏幕像素转换为图纸单位
+  const worldHeight = screenPixelToWorldHeight(
+    view,
+    selectedTextSize.value,
+    pendingAnnotationPosition.value
+  )
+
+  // 创建批注实体
+  createTextAnnotation(
+    pendingAnnotationPosition.value,
+    annotationText.value.trim(),
+    worldHeight
+  )
+
+  showTextInputDialog.value = false
+  pendingAnnotationPosition.value = null
+}
+/**
+ * 创建文本批注实体
+ */
+const createTextAnnotation = (
+  position: { x: number; y: number },
+  text: string,
+  height: number
+) => {
+  const db = AcApDocManager.instance.curDocument.database
+
+  ensureAnnotationLayer()
+
+  const mtext = new AcDbMText()
+  mtext.location = { x: position.x, y: position.y, z: 0 }
+  mtext.contents = text
+  mtext.height = height
+  mtext.width = height * 25
+  mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
+  mtext.styleName = 'Standard'
+  mtext.layer = ANNOTATION_LAYER_NAME
+
+  const color = new AcCmColor()
+  color.setRGB(255, 0, 0)
+  mtext.color = color
+
+  db.tables.blockTable.modelSpace.appendEntity(mtext)
+
+  // 添加到批注列表
+  const annotationData: AnnotationData = {
+    id: `ann_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    type: 'annotation',
+    annotationType: 'text',
+    text: text,
+    textPosition: { x: position.x, y: position.y, z: 0 },
+    textHeight: height,
+    createdAt: new Date().toISOString(),
+    objectId: mtext.objectId
+  }
+
+  annotations.value.push(annotationData)
+  emit('annotation-added', annotationData)
+
+  ElMessage.success('文本批注添加成功')
+
+  // 触发保存
   emitSaveAnnotations()
 }
 
@@ -943,6 +1154,11 @@ const handleContextMenu = (event: MouseEvent) => {
 
   // 显示自定义右键菜单
   showAnnotationMenu.value = true
+}
+// 计算缩放比例用于预览
+const getScale = (size: number) => {
+  // 基础大小 16 对应 scale 1，越大显示越大
+  return Math.max(0.8, Math.min(size / 16, 16))
 }
 
 // 点击其他地方关闭右键菜单
@@ -1130,5 +1346,86 @@ defineExpose({
 
 .ml-theme-dark .annotation-context-menu .menu-divider {
   background-color: #444;
+}
+
+/* 简化的字体大小选择网格 */
+.text-size-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 8px;
+}
+
+.size-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  border: 2px solid #e4e7ed;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.size-card:hover {
+  border-color: #409eff;
+  background-color: #f5f7fa;
+  transform: translateY(-2px);
+}
+
+.size-card.active {
+  border-color: #409eff;
+  background-color: #ecf5ff;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.size-icon {
+  font-size: 32px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 8px;
+  transition: transform 0.2s;
+}
+
+.size-card.active .size-icon {
+  color: #409eff;
+}
+
+.size-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.size-value {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 深色主题 */
+.ml-theme-dark .size-card {
+  background: #2b2b2b;
+  border-color: #444;
+}
+
+.ml-theme-dark .size-card:hover {
+  background-color: #3a3a3a;
+  border-color: #409eff;
+}
+
+.ml-theme-dark .size-card.active {
+  background-color: #1a3a5c;
+}
+
+.ml-theme-dark .size-icon,
+.ml-theme-dark .size-name {
+  color: #d0d0d0;
+}
+
+.ml-theme-dark .size-card.active .size-icon,
+.ml-theme-dark .size-card.active .size-name {
+  color: #409eff;
 }
 </style>

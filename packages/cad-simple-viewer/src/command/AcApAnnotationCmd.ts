@@ -20,6 +20,17 @@ import {
 } from '../editor'
 import { AcApI18n } from '../i18n'
 
+// 预定义的字体大小选项（单位：毫米/图纸单位）
+export const TEXT_SIZE_OPTIONS = [
+  { label: '小', value: 12, desc: '12px' }, // 屏幕像素
+  { label: '中', value: 16, desc: '16px' }, // 屏幕像素
+  { label: '大', value: 24, desc: '24px' }, // 屏幕像素
+  { label: '特大', value: 32, desc: '32px' } // 屏幕像素
+]
+
+// 默认字体大小
+export const DEFAULT_TEXT_SIZE = 16
+
 // 批注类型：文本、云线、箭头
 export type AnnotationType = 'text' | 'cloud' | 'arrow'
 
@@ -52,6 +63,31 @@ export interface AnnotationData {
 // 常量
 const CLOUD_DIAMETER_PIXELS = 8
 const ARROW_HEAD_SIZE = 10
+
+/**
+ * 将屏幕像素高度转换为图纸单位高度
+ * 这是关键函数：确保文字在任何缩放级别下都保持固定的屏幕像素大小
+ */
+export function screenPixelToWorldHeight(
+  view: AcEdBaseView,
+  pixelHeight: number,
+  referencePoint: AcGePoint2dLike
+): number {
+  // 获取参考点的屏幕坐标
+  const screenPoint = view.worldToScreen(referencePoint)
+
+  // 计算下方 pixelHeight 像素对应的的世界坐标
+  const screenPointBelow = new AcGePoint2d(
+    screenPoint.x,
+    screenPoint.y + pixelHeight
+  )
+
+  // 转换回世界坐标
+  const worldPointBelow = view.screenToWorld(screenPointBelow)
+
+  // 返回高度差（世界单位）
+  return Math.abs(worldPointBelow.y - referencePoint.y)
+}
 
 // 批注图层名称常量
 export const ANNOTATION_LAYER_NAME = '批注图层' // 或 'Annotations'
@@ -613,7 +649,7 @@ export class AcApAnnotationCmd extends AcEdCommand {
         const zoom = layoutView._camera.zoom || 1
         const baseTextHeight = 30
         const textHeight = baseTextHeight / zoom
-        return Math.max(Math.min(textHeight, 1000), 0.1)
+        return textHeight
       }
     } catch (e) {
       console.warn('[AnnotationCmd] Failed to calculate text height:', e)
