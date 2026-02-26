@@ -110,6 +110,13 @@
       <el-icon><Document /></el-icon>
       <span>添加文本</span>
     </div>
+    <div
+      class="menu-item"
+      @click="(showTextSizeDialog = true) && (showAnnotationMenu = false)"
+    >
+      <el-icon><Document /></el-icon>
+      <span>设置文本字号</span>
+    </div>
     <div class="menu-item" @click="startCloudAnnotation">
       <el-icon><CircleCheck /></el-icon>
       <span>添加云线</span>
@@ -141,8 +148,8 @@
     v-model="showTextSizeDialog"
     title="选择批注文字大小"
     width="360px"
-    :close-on-click-modal="false"
-    :show-close="false"
+    :close-on-click-modal="true"
+    :show-close="true"
     align-center
   >
     <div class="text-size-grid">
@@ -163,17 +170,6 @@
         <div class="size-value">{{ option.value }}px</div>
       </div>
     </div>
-
-    <template #footer>
-      <el-button @click="cancelTextAnnotation">取消</el-button>
-      <el-button
-        type="primary"
-        @click="confirmTextSize"
-        :disabled="!selectedTextSize"
-      >
-        下一步
-      </el-button>
-    </template>
   </el-dialog>
   <!-- 文本输入弹窗 -->
   <el-dialog
@@ -831,6 +827,9 @@ const pendingAnnotationPosition = ref<{ x: number; y: number } | null>(null)
  */
 const selectTextSize = (size: number) => {
   selectedTextSize.value = size
+
+  showTextSizeDialog.value = false
+  annotationText.value = ''
 }
 
 /**
@@ -864,8 +863,9 @@ const startTextAnnotation = async () => {
   pendingAnnotationPosition.value = position
 
   // 显示字体大小选择（默认选中"中"）
-  selectedTextSize.value = DEFAULT_TEXT_SIZE
-  showTextSizeDialog.value = true
+  // selectedTextSize.value = DEFAULT_TEXT_SIZE
+  // showTextSizeDialog.value = true
+  showTextInputDialog.value = true
 }
 /**
  * 获取批注位置
@@ -883,29 +883,6 @@ const getAnnotationPosition = (): Promise<{ x: number; y: number } | null> => {
         resolve(null)
       })
   })
-}
-
-/**
- * 确认字体大小，进入文本输入
- */
-const confirmTextSize = () => {
-  if (!selectedTextSize.value) return
-
-  showTextSizeDialog.value = false
-  annotationText.value = ''
-
-  // 延迟显示下一个弹窗，避免动画冲突
-  setTimeout(() => {
-    showTextInputDialog.value = true
-  }, 100)
-}
-
-/**
- * 取消文本批注
- */
-const cancelTextAnnotation = () => {
-  showTextSizeDialog.value = false
-  pendingAnnotationPosition.value = null
 }
 
 /**
@@ -939,6 +916,7 @@ const confirmTextInput = () => {
 
   showTextInputDialog.value = false
   pendingAnnotationPosition.value = null
+  annotationText.value = ''
 }
 /**
  * 创建文本批注实体
