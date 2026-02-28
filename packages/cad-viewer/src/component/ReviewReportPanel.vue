@@ -733,6 +733,7 @@ const handleExport = () => {
       font-weight: 700;
       font-size: 13px;
       border-bottom: 1px solid var(--color-gray-200);
+      background-color: #eceef2 !important;
     }
     /* 缩小操作栏内边距，保持按钮在一行 */
     :deep(td:last-child .cell) {
