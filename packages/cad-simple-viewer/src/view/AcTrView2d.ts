@@ -211,7 +211,7 @@ export class AcTrView2d extends AcEdBaseView {
   initialize() {
     // This method is called after camera and render are created.
     // Children class can override this method to add its own logic
-    this.setCursor(AcEdCorsorType.Crosshair)
+    this.setCursor(AcEdCorsorType.NoSpecialCursor)
   }
 
   /**

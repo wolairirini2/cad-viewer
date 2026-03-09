@@ -85,7 +85,7 @@ export class AcEdCursorManager {
     const totalLength = 20
     const rectSize = 10
     this._cursorMap.set(
-      AcEdCorsorType.Crosshair,
+      AcEdCorsorType.NoSpecialCursor,
       this.createRectCrossIcon(rectSize, totalLength - rectSize)
     )
     AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(args => {

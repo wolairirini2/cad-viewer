@@ -31,6 +31,6 @@ export class AcApSelectCmd extends AcEdCommand {
    */
   execute(context: AcApContext) {
     context.view.mode = AcEdViewMode.SELECTION
-    context.view.setCursor(AcEdCorsorType.Crosshair)
+    context.view.setCursor(AcEdCorsorType.NoSpecialCursor)
   }
 }
