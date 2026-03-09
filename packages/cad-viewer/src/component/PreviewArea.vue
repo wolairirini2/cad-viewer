@@ -107,11 +107,12 @@ watch(
 
 <style scoped>
 .preview-area {
-  width: 100%;
-  height: 100%;
+  flex: 1;
+  display: flex;
   position: relative;
+  min-width: 0;
+  height: 100%;
   overflow: hidden;
-  background: white;
 }
 
 .preview-content {

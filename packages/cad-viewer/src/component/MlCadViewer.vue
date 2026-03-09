@@ -65,12 +65,11 @@
 
       <!-- 其他文件预览 -->
       <PreviewArea
-        v-if="fileType && fileType !== 'cad'"
+        v-show="fileType !== 'cad'"
         :preview-url="previewUrl || ''"
         :file-name="fileName || ''"
         :highlight-text="highlightText"
       />
-
       <!-- 审查报告面板 -->
       <ReviewReportPanel
         v-if="showRegulationPanel"
