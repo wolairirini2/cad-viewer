@@ -1,5 +1,8 @@
 <template>
-  <div class="regulation-panel" :class="{ collapsed: isCollapsed }">
+  <div
+    class="regulation-panel"
+    :class="{ collapsed: isCollapsed, fullscreen: isFullscreen }"
+  >
     <el-button
       class="panel-toggle-btn"
       :class="{ collapsed: isCollapsed }"
@@ -15,6 +18,19 @@
       <div class="panel-header">
         <h3>{{ projectName }}审查报告</h3>
         <div class="panel-actions">
+          <!-- 全屏切换按钮 -->
+          <el-icon
+            @click="toggleFullscreen"
+            style="
+              font-size: 20px;
+              color: var(--color-gray-500);
+              cursor: pointer;
+              margin-right: 12px;
+            "
+            :title="isFullscreen ? '退出全屏' : '全屏显示'"
+          >
+            <component :is="isFullscreen ? Crop : FullScreen" />
+          </el-icon>
           <el-icon
             @click="goBack"
             style="
@@ -22,6 +38,7 @@
               color: var(--color-gray-500);
               cursor: pointer;
             "
+            title="返回"
             ><Back
           /></el-icon>
         </div>
@@ -226,7 +243,9 @@ import {
   WarningFilled,
   InfoFilled,
   List,
-  Back
+  Back,
+  FullScreen,
+  Crop
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ExcelJS from 'exceljs'
@@ -243,6 +262,7 @@ const emit = defineEmits<{
   rowClick: [row: any]
   locate: [row: any]
   switchDrawing: [fileId: string]
+  fullscreenChange: [isFullscreen: boolean] // 新增：全屏状态变化事件
 }>()
 
 const isCollapsed = ref(false)
@@ -251,6 +271,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const selection = ref<any[]>([])
 const locating = ref<Record<string, boolean>>({})
+const isFullscreen = ref(false) // 新增：全屏状态
 
 const riskCounts = computed(() => {
   const counts = { high: 0, medium: 0, low: 0 }
@@ -320,6 +341,11 @@ const togglePanel = () => {
   isCollapsed.value = !isCollapsed.value
 }
 
+// 新增：全屏切换方法
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+  emit('fullscreenChange', isFullscreen.value)
+}
 const goBack = () => {
   window.history.back()
 }
@@ -688,6 +714,9 @@ const handleExport = () => {
   width: 0;
   border-left: none;
   overflow: visible; /* 确保按钮可见 */
+}
+.regulation-panel.fullscreen {
+  width: 100%;
 }
 
 /* 折叠按钮 - 改为小图标按钮 */
