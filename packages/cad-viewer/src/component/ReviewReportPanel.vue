@@ -194,7 +194,7 @@
             </el-table-column>
             <el-table-column
               label="操作"
-              width="100"
+              width="180"
               fixed="right"
               align="center"
             >
@@ -218,6 +218,37 @@
                   @click.stop=""
                   >发送</el-button
                 >
+
+                <!-- 新增：点赞按钮 -->
+                <el-button
+                  size="small"
+                  style="margin-left: 4px; padding: 0 11px"
+                  type="info"
+                  :icon="
+                    row.userFeedback === 'like'
+                      ? CircleCheckFilled
+                      : CircleCheck
+                  "
+                  plain
+                  :disabled="row.risk_level === 0"
+                  @click.stop="handleFeedback(row, 'like')"
+                  title="审查结果正确"
+                />
+                <!-- 新增：点踩按钮 -->
+                <el-button
+                  size="small"
+                  style="margin-left: 4px; padding: 0 11px"
+                  type="info"
+                  :icon="
+                    row.userFeedback === 'dislike'
+                      ? CircleCloseFilled
+                      : CircleClose
+                  "
+                  plain
+                  :disabled="row.risk_level === 0"
+                  @click.stop="openFeedbackDialog(row)"
+                  title="反馈问题"
+                />
               </template>
             </el-table-column>
           </el-table>
@@ -232,6 +263,64 @@
       </div>
     </div>
   </div>
+
+  <!-- 在文件末尾，</template> 标签之前，添加反馈弹窗 -->
+  <el-dialog
+    v-model="feedbackDialogVisible"
+    title="AI审查结果反馈"
+    width="600px"
+    :close-on-click-modal="false"
+    draggable
+  >
+    <div style="margin-bottom: 20px">
+      请帮助我们改进审查结果。您认为此条“<span
+        style="color: var(--color-primary); font-weight: bold"
+        >{{ currentFeedbackRow?.articleTitle }}</span
+      >”的审查存在什么问题？
+    </div>
+    <el-radio-group
+      v-model="feedbackOption"
+      size="large"
+      style="display: flex; gap: 16px"
+    >
+      <el-radio-button label="误报" size="large" />
+      <el-radio-button label="描述不准确" size="large" />
+      <el-radio-button label="规则理解错误" size="large" />
+      <el-radio-button label="漏报其他问题" size="large" />
+      <el-radio-button label="其他" size="large" />
+    </el-radio-group>
+    <div style="margin-top: 24px">
+      <div
+        style="
+          margin-bottom: 8px;
+          font-size: 14px;
+          color: var(--color-gray-700);
+        "
+      >
+        补充说明 (可选)：
+      </div>
+      <el-input
+        v-model="feedbackComment"
+        type="textarea"
+        :rows="7"
+        placeholder="请详细描述您遇到的问题或建议..."
+        maxlength="500"
+        show-word-limit
+      />
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="feedbackDialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          @click="submitFeedback"
+          :loading="isSubmittingFeedback"
+        >
+          提交反馈
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -245,7 +334,13 @@ import {
   List,
   Back,
   FullScreen,
-  Crop
+  Crop,
+  CircleCheck, // 新增：点赞图标
+  CircleCloseFilled, // 新增：点踩图标
+  CircleClose,
+  CircleCheckFilled,
+  Goods,
+  GoodsFilled
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ExcelJS from 'exceljs'
@@ -691,6 +786,91 @@ const handleExport = () => {
       })
   } else {
     exportReport()
+  }
+}
+
+// 反馈相关状态
+const feedbackDialogVisible = ref(false)
+const currentFeedbackRow = ref<any>(null)
+const feedbackOption = ref('')
+const feedbackComment = ref('')
+const isSubmittingFeedback = ref(false)
+// 打开反馈弹窗
+const openFeedbackDialog = (row: any) => {
+  currentFeedbackRow.value = row
+  feedbackOption.value = ''
+  feedbackComment.value = ''
+  feedbackDialogVisible.value = true
+}
+
+// 处理点赞/点踩反馈
+const handleFeedback = async (row: any, type: 'like' | 'dislike') => {
+  // 如果点击已激活的反馈，则取消反馈
+  if (row.userFeedback === type) {
+    row.userFeedback = ''
+    ElMessage.success(`已取消${type === 'like' ? '点赞' : '点踩'}`)
+  } else {
+    // 设置新反馈
+    row.userFeedback = type
+    if (type === 'like') {
+      ElMessage.success('感谢您的认可！')
+    }
+    // 注意：点踩（'dislike'）会由 openFeedbackDialog 方法处理，此处不重复触发弹窗
+  }
+
+  // 在实际应用中，此处应调用API将反馈提交到后端
+  // try {
+  //   await apiSubmitFeedback({
+  //     violationId: row.violation_id,
+  //     feedbackType: type,
+  //     // 对于点赞，可能没有详细选项和评论
+  //     option: type === 'dislike' ? feedbackOption.value : null,
+  //     comment: type === 'dislike' ? feedbackComment.value : null
+  //   })
+  // } catch (error) {
+  //   console.error('提交反馈失败:', error)
+  //   // 失败时恢复状态
+  //   row.userFeedback = ''
+  //   ElMessage.error('反馈提交失败，请重试')
+  // }
+}
+
+// 提交点踩的详细反馈
+const submitFeedback = async () => {
+  if (!feedbackOption.value) {
+    ElMessage.warning('请选择一个反馈选项')
+    return
+  }
+
+  isSubmittingFeedback.value = true
+  try {
+    // 更新当前行的反馈状态
+    if (currentFeedbackRow.value) {
+      currentFeedbackRow.value.userFeedback = 'dislike'
+    }
+
+    // 模拟API调用
+    console.log('提交详细反馈:', {
+      row: currentFeedbackRow.value,
+      option: feedbackOption.value,
+      comment: feedbackComment.value
+    })
+
+    // 在实际应用中，替换为真实的API调用
+    // await apiSubmitFeedback({
+    //   violationId: currentFeedbackRow.value.violation_id,
+    //   feedbackType: 'dislike',
+    //   option: feedbackOption.value,
+    //   comment: feedbackComment.value
+    // })
+
+    ElMessage.success('反馈提交成功，感谢您的意见！')
+    feedbackDialogVisible.value = false
+  } catch (error) {
+    console.error('提交反馈失败:', error)
+    ElMessage.error('反馈提交失败，请重试')
+  } finally {
+    isSubmittingFeedback.value = false
   }
 }
 </script>
