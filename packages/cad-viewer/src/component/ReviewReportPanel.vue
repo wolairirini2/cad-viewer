@@ -6,7 +6,7 @@
     <el-button
       class="panel-toggle-btn"
       :class="{ collapsed: isCollapsed }"
-      :icon="isCollapsed ? ArrowRight : ArrowLeft"
+      :icon="isCollapsed ? ArrowLeft : ArrowRight"
       circle
       size="small"
       @click="togglePanel"
@@ -263,6 +263,7 @@ const emit = defineEmits<{
   locate: [row: any]
   switchDrawing: [fileId: string]
   fullscreenChange: [isFullscreen: boolean] // 新增：全屏状态变化事件
+  goBack: []
 }>()
 
 const isCollapsed = ref(false)
@@ -347,7 +348,7 @@ const toggleFullscreen = () => {
   emit('fullscreenChange', isFullscreen.value)
 }
 const goBack = () => {
-  window.history.back()
+  emit('goBack')
 }
 
 const getRiskIcon = (level: string) => {
@@ -741,7 +742,7 @@ const handleExport = () => {
 .panel-toggle-btn.collapsed {
   left: -12px; /* 当侧边栏收起时，按钮显示在CAD区域右侧 */
   top: 50%;
-  transform: translateY(-50%) rotate(180deg); /* 旋转图标方向 */
+  transform: translateY(-50%); /* 旋转图标方向 */
 }
 
 /* 侧边栏内容 */

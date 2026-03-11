@@ -79,6 +79,7 @@
         @row-click="handleRowClick"
         @locate="handleLocate"
         @switch-drawing="handleSwitchDrawing"
+        @goBack="goBack"
       />
     </div>
 
@@ -254,6 +255,7 @@ const emit = defineEmits<{
   (e: 'annotation-save-requested', data: AnnotationData[]): void // 请求保存
   (e: 'annotation-clear-requested'): void // 请求清除
   (e: 'annotation-deleted', id: string): void // 删除批注
+  (e: 'back'): void
 }>()
 
 // Define component props with their purposes
@@ -1144,6 +1146,10 @@ const handleClickOutside = (event: MouseEvent) => {
   if (menu && !menu.contains(event.target as Node)) {
     showAnnotationMenu.value = false
   }
+}
+
+const goBack = () => {
+  emit('back')
 }
 
 // 暴露方法给父组件
