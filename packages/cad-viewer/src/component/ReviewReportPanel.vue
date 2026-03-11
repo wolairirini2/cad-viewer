@@ -218,37 +218,47 @@
                   @click.stop=""
                   >发送</el-button
                 >
-
-                <!-- 新增：点赞按钮 -->
+                <!-- 点赞按钮 -->
                 <el-button
                   size="small"
-                  style="margin-left: 4px; padding: 0 11px"
+                  style="margin-left: 4px; padding: 0 10px"
                   type="info"
-                  :icon="
-                    row.userFeedback === 'like'
-                      ? CircleCheckFilled
-                      : CircleCheck
-                  "
                   plain
                   :disabled="row.risk_level === 0"
                   @click.stop="handleFeedback(row, 'like')"
                   title="审查结果正确"
-                />
-                <!-- 新增：点踩按钮 -->
+                >
+                  <Icon
+                    :icon="
+                      row.userFeedback === 'like'
+                        ? 'mdi:thumb-up'
+                        : 'mdi:thumb-up-outline'
+                    "
+                    width="16"
+                    height="16"
+                  />
+                </el-button>
+
+                <!-- 点踩按钮 -->
                 <el-button
                   size="small"
-                  style="margin-left: 4px; padding: 0 11px"
+                  style="margin-left: 4px; padding: 0 10px"
                   type="info"
-                  :icon="
-                    row.userFeedback === 'dislike'
-                      ? CircleCloseFilled
-                      : CircleClose
-                  "
                   plain
                   :disabled="row.risk_level === 0"
                   @click.stop="openFeedbackDialog(row)"
                   title="反馈问题"
-                />
+                >
+                  <Icon
+                    :icon="
+                      row.userFeedback === 'dislike'
+                        ? 'mdi:thumb-down'
+                        : 'mdi:thumb-down-outline'
+                    "
+                    width="16"
+                    height="16"
+                  />
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -324,6 +334,7 @@
 </template>
 
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 import { ref, computed, watch } from 'vue'
 import {
   ArrowRight,
@@ -334,13 +345,7 @@ import {
   List,
   Back,
   FullScreen,
-  Crop,
-  CircleCheck, // 新增：点赞图标
-  CircleCloseFilled, // 新增：点踩图标
-  CircleClose,
-  CircleCheckFilled,
-  Goods,
-  GoodsFilled
+  Crop
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ExcelJS from 'exceljs'
