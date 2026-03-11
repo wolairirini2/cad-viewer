@@ -218,26 +218,6 @@
                   @click.stop=""
                   >发送</el-button
                 >
-                <!-- 点赞按钮 -->
-                <el-button
-                  size="small"
-                  style="margin-left: 4px; padding: 0 10px"
-                  type="info"
-                  plain
-                  :disabled="row.risk_level === 0"
-                  @click.stop="handleFeedback(row, 'like')"
-                  title="审查结果正确"
-                >
-                  <Icon
-                    :icon="
-                      row.userFeedback === 'like'
-                        ? 'mdi:thumb-up'
-                        : 'mdi:thumb-up-outline'
-                    "
-                    width="16"
-                    height="16"
-                  />
-                </el-button>
 
                 <!-- 点踩按钮 -->
                 <el-button
@@ -249,15 +229,7 @@
                   @click.stop="openFeedbackDialog(row)"
                   title="反馈问题"
                 >
-                  <Icon
-                    :icon="
-                      row.userFeedback === 'dislike'
-                        ? 'mdi:thumb-down'
-                        : 'mdi:thumb-down-outline'
-                    "
-                    width="16"
-                    height="16"
-                  />
+                  反馈
                 </el-button>
               </template>
             </el-table-column>
@@ -334,7 +306,6 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { ref, computed, watch } from 'vue'
 import {
   ArrowRight,
@@ -806,38 +777,6 @@ const openFeedbackDialog = (row: any) => {
   feedbackOption.value = ''
   feedbackComment.value = ''
   feedbackDialogVisible.value = true
-}
-
-// 处理点赞/点踩反馈
-const handleFeedback = async (row: any, type: 'like' | 'dislike') => {
-  // 如果点击已激活的反馈，则取消反馈
-  if (row.userFeedback === type) {
-    row.userFeedback = ''
-    ElMessage.success(`已取消${type === 'like' ? '点赞' : '点踩'}`)
-  } else {
-    // 设置新反馈
-    row.userFeedback = type
-    if (type === 'like') {
-      ElMessage.success('感谢您的认可！')
-    }
-    // 注意：点踩（'dislike'）会由 openFeedbackDialog 方法处理，此处不重复触发弹窗
-  }
-
-  // 在实际应用中，此处应调用API将反馈提交到后端
-  // try {
-  //   await apiSubmitFeedback({
-  //     violationId: row.violation_id,
-  //     feedbackType: type,
-  //     // 对于点赞，可能没有详细选项和评论
-  //     option: type === 'dislike' ? feedbackOption.value : null,
-  //     comment: type === 'dislike' ? feedbackComment.value : null
-  //   })
-  // } catch (error) {
-  //   console.error('提交反馈失败:', error)
-  //   // 失败时恢复状态
-  //   row.userFeedback = ''
-  //   ElMessage.error('反馈提交失败，请重试')
-  // }
 }
 
 // 提交点踩的详细反馈
