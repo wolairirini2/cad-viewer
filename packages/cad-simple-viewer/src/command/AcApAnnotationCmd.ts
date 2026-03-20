@@ -101,7 +101,6 @@ export function ensureAnnotationLayer(): AcDbLayerTableRecord {
   // 首先检查图层表中是否已存在
   const layerTable = db.tables.layerTable
   const existingLayer = layerTable.getAt(ANNOTATION_LAYER_NAME)
-  console.log('existingLayer', existingLayer)
   if (existingLayer) {
     // 确保图层在视图中也被添加（可能被冻结或关闭）
     view.addLayer(existingLayer)

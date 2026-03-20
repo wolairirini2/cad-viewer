@@ -204,7 +204,7 @@
                   size="small"
                   @click.stop="handleLocate(row)"
                   :loading="locating[row.violation_id]"
-                  :disabled="!row.geometry_ref?.extents && row.risk_level === 0"
+                  :disabled="!row.geometry_ref?.extents || row.risk_level === 0"
                   plain
                 >
                   定位

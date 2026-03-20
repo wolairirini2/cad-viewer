@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     title="审查内容详情"
-    width="900px"
+    width="1100px"
     class="violation-detail-dialog-wrapper"
     :style="{ maxHeight: '85vh' }"
     draggable
@@ -151,9 +151,9 @@
         </div>
       </div>
 
-      <!-- 数据材料清册和设备对比表 -->
+      <!-- 设备材料清册和电气主接线图对比 -->
       <div class="detail-section" v-if="reviewTrace?.comparison_groups">
-        <h4>数据材料清册和设备对比表</h4>
+        <h4>设备材料清册和电气主接线图对比</h4>
         <el-table
           :data="flattenedData"
           :span-method="objectSpanMethod"
@@ -214,7 +214,7 @@
           <el-table-column
             prop="equipment_list_count"
             label="清册数量"
-            width="100"
+            width="80"
             align="center"
           />
 
@@ -222,7 +222,7 @@
           <el-table-column
             prop="diagram_count"
             label="图纸数量"
-            width="100"
+            width="80"
             align="center"
           >
             <template #default="{ row }">
@@ -272,15 +272,6 @@
             </template>
           </el-table-column>
         </el-table>
-      </div>
-      <!-- 相关规范条文 -->
-      <div class="detail-section">
-        <h4>相关规范条文</h4>
-        <div class="related-article">
-          <div class="article-content">
-            {{ data.origin || '未找到条文信息' }}
-          </div>
-        </div>
       </div>
     </div>
 

@@ -542,6 +542,8 @@ const handleWordLocate = async (row: any) => {
  */
 const handleCadLocate = async (row: any) => {
   const geometry = row.geometry_ref
+  console.log('handleCadLocate', geometry)
+
   if (!geometry?.file_id) {
     ElMessage.warning('无法获取图纸信息')
     return
@@ -563,6 +565,7 @@ const handleCadLocate = async (row: any) => {
  * 在 CAD 中执行定位
  */
 const locateInCad = (geometry: any) => {
+  console.log('locateInCad', geometry)
   if (!geometry?.extents) return
 
   const { min_point, max_point } = geometry.extents
