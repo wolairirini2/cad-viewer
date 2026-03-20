@@ -151,38 +151,128 @@
         </div>
       </div>
 
-      <!-- 问题描述 -->
-      <div class="detail-section" v-if="descriptions.length">
-        <h4>问题描述</h4>
-        <div class="detail-content description-content">
-          <div
-            v-for="(desc, index) in descriptions"
-            :key="index"
-            class="description-item"
+      <!-- 数据材料清册和设备对比表 -->
+      <div class="detail-section" v-if="reviewTrace?.comparison_groups">
+        <h4>数据材料清册和设备对比表</h4>
+        <el-table
+          :data="flattenedData"
+          :span-method="objectSpanMethod"
+          border
+          stripe
+          style="width: 100%"
+        >
+          <!-- 设备名称列 -->
+          <el-table-column
+            prop="equipment_name"
+            label="设备名称"
+            min-width="140"
+            align="center"
+          />
+
+          <!-- 清册型号列 -->
+          <el-table-column
+            prop="equipment_list_model"
+            label="清册型号"
+            min-width="200"
+            show-overflow-tooltip
           >
-            <span class="item-number">{{ +index + 1 }}.</span>
-            <span class="item-content" v-html="desc.text"></span>
-            <el-button
-              v-if="data.category == '设备材料'"
-              type="text"
-              @click="handleLocate(desc.violation)"
-              icon="Location"
-            >
-            </el-button>
-          </div>
-        </div>
-      </div>
+            <template #default="{ row }">
+              <div class="multiline-text">{{ row.equipment_list_model }}</div>
+            </template>
+          </el-table-column>
 
-      <!-- 修改建议 -->
-      <div class="detail-section" v-if="suggestions.length">
-        <h4>修改建议</h4>
-        <div class="detail-content suggestion">
-          <ol class="suggestion-ol">
-            <li v-for="(sug, index) in suggestions" :key="index">{{ sug }}</li>
-          </ol>
-        </div>
-      </div>
+          <!-- 图纸型号列 -->
+          <el-table-column
+            prop="diagram_model"
+            label="图纸型号"
+            min-width="200"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">
+              <div class="multiline-text">{{ row.diagram_model || '-' }}</div>
+            </template>
+          </el-table-column>
 
+          <!-- 型号匹配列 -->
+          <el-table-column
+            prop="model_matched"
+            label="型号匹配"
+            width="100"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-tag
+                :type="row.model_matched ? 'success' : 'danger'"
+                size="small"
+              >
+                {{ row.model_matched ? '匹配' : '不匹配' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <!-- 清册数量列 -->
+          <el-table-column
+            prop="equipment_list_count"
+            label="清册数量"
+            width="100"
+            align="center"
+          />
+
+          <!-- 图纸数量列 -->
+          <el-table-column
+            prop="diagram_count"
+            label="图纸数量"
+            width="100"
+            align="center"
+          >
+            <template #default="{ row }">
+              {{ row.diagram_count || 0 }}
+            </template>
+          </el-table-column>
+
+          <!-- 结果列 -->
+          <el-table-column
+            prop="result"
+            label="结果"
+            width="120"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-tag
+                :type="getResultType(row.result)"
+                size="small"
+                effect="light"
+              >
+                {{ row.result }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <!-- 操作列 -->
+          <el-table-column
+            label="操作"
+            width="100"
+            align="center"
+            fixed="right"
+          >
+            <template #default="{ row }">
+              <el-button
+                v-if="
+                  row.diagram_world_bboxes &&
+                  row.diagram_world_bboxes.length > 0
+                "
+                type="info"
+                plain
+                size="small"
+                @click="handleLocate(row)"
+              >
+                定位
+              </el-button>
+              <span v-else class="no-action">-</span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
       <!-- 相关规范条文 -->
       <div class="detail-section">
         <h4>相关规范条文</h4>
@@ -344,34 +434,12 @@ const formatCalcDetail = (value: number | undefined): string => {
   return value.toFixed(4).replace(/\.?0+$/, '')
 }
 
-// 修改 descriptions 计算属性，保留完整的 violation 数据
-const descriptions = computed(() => {
-  if (!props.data?.allViolations) return []
-  return props.data.allViolations
-    .filter((v: any) => v.description)
-    .map((v: any) => ({
-      text: v.description,
-      violation: v
-    }))
-})
-
 // 处理定位点击
 const handleLocate = (violation: any) => {
   emit('locate', violation)
   // 可选：定位后关闭弹窗，根据需要取消注释
   // visible.value = false
 }
-
-const suggestions = computed(() => {
-  if (!props.data?.allViolations) return []
-  const result: string[] = []
-  props.data.allViolations.forEach((v: any) => {
-    if (v.suggestion?.length) {
-      result.push(...v.suggestion)
-    }
-  })
-  return result
-})
 
 const getRiskTagType = (level: string) => {
   const map: Record<string, any> = {
@@ -395,9 +463,101 @@ const getCategoryType = (category: string) => {
   const map: Record<string, any> = { 设计说明: 'primary', 设计图纸: 'danger' }
   return map[category] || 'info'
 }
+
+// 类型定义
+interface ComparisonItem {
+  result: string
+  diagram_count: number
+  diagram_model: string
+  model_matched: boolean
+  equipment_name: string
+  diagram_world_bboxes: number[][]
+  equipment_list_count: number
+  equipment_list_model: string
+}
+
+interface ComparisonGroup {
+  items: ComparisonItem[]
+  equipment_name: string
+}
+
+interface FlattenedRow extends ComparisonItem {
+  _groupIndex: number
+  _rowIndex: number
+}
+
+const comparisonGroups = computed<ComparisonGroup[]>(() => {
+  if (!props.data?.allViolations?.length) return null
+  return props.data.allViolations[0]?.review_trace.comparison_groups || null
+})
+
+// 将嵌套数据扁平化
+const flattenedData = computed<FlattenedRow[]>(() => {
+  const result: FlattenedRow[] = []
+  comparisonGroups.value.forEach((group, groupIndex) => {
+    group.items.forEach((item, itemIndex) => {
+      result.push({
+        ...item,
+        equipment_name: group.equipment_name, // 使用分组的equipment_name
+        _groupIndex: groupIndex,
+        _rowIndex: itemIndex
+      })
+    })
+  })
+
+  return result
+})
+
+// 计算合并单元格
+const spanMap = computed(() => {
+  const map = new Map<number, { rowspan: number; colspan: number }>()
+
+  let currentRow = 0
+  comparisonGroups.value.forEach(group => {
+    const rowCount = group.items.length
+    // 该组的设备名称列需要合并
+    map.set(currentRow, { rowspan: rowCount, colspan: 1 })
+    // 该组的其他行需要隐藏设备名称列
+    for (let i = 1; i < rowCount; i++) {
+      map.set(currentRow + i, { rowspan: 0, colspan: 0 })
+    }
+    currentRow += rowCount
+  })
+
+  return map
+})
+
+// 合并单元格方法
+const objectSpanMethod = ({
+  rowIndex,
+  columnIndex
+}: {
+  row: FlattenedRow
+  column: any
+  rowIndex: number
+  columnIndex: number
+}) => {
+  // 只有第一列（设备名称）需要合并
+  if (columnIndex === 0) {
+    return spanMap.value.get(rowIndex) || { rowspan: 1, colspan: 1 }
+  }
+  return { rowspan: 1, colspan: 1 }
+}
+
+// 根据结果获取标签类型
+const getResultType = (result: string): string => {
+  const typeMap: Record<string, string> = {
+    数量不一致: 'warning',
+    图纸缺失: 'danger',
+    型号不匹配: 'danger',
+    匹配成功: 'success',
+    一致: 'success'
+  }
+  return typeMap[result] || 'info'
+}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .violation-detail-dialog {
   max-height: calc(85vh - 120px);
   overflow-y: auto;
@@ -669,5 +829,45 @@ const getCategoryType = (category: string) => {
 
 .expand-btn:hover {
   color: #66b1ff;
+}
+
+.el-table {
+  --el-table-header-bg-color: #eceef2;
+  :deep(.el-table__cell) {
+    padding: 6px 0;
+  }
+  :deep(th.el-table__cell) {
+    color: rgb(52, 73, 94);
+    font-weight: 700;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-gray-200);
+    background-color: #eceef2 !important;
+  }
+  /* 缩小操作栏内边距，保持按钮在一行 */
+  :deep(td:last-child .cell) {
+    padding: 0 4px !important; /* 减小单元格内边距 */
+    display: flex;
+    justify-content: center;
+    gap: 0px; /* 按钮间距 */
+  }
+}
+/* ---------- 表格内边框 ---------- */
+:deep(.el-table) {
+  border-right: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 13px;
+}
+
+/* 表头、表体、表尾统一加右边框与下边框 */
+:deep(.el-table th.el-table__cell),
+:deep(.el-table td.el-table__cell) {
+  border-right: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+/* 去掉最右侧一列的右边框，防止重复 */
+:deep(.el-table th:last-child),
+:deep(.el-table td:last-child) {
+  border-right: none;
 }
 </style>

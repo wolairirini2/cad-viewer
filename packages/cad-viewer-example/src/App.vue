@@ -147,7 +147,87 @@ reviewReportData.value = {
                   upstream_main_transformer_capacity_mva: null,
                   overhead_line_unit_reactance_ohm_per_km: 0.4,
                   upstream_main_transformer_impedance_percent: null
-                }
+                },
+                comparison_groups: [
+                  {
+                    items: [
+                      {
+                        result: '数量不一致',
+                        diagram_count: 2,
+                        diagram_model:
+                          'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n口口口口口口',
+                        model_matched: true,
+                        equipment_name: '电力变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -191798.22062829687, -148258.29517052922,
+                            -191756.51480293984, -148163.64864823624
+                          ],
+                          [
+                            -191563.66991816933, -148258.29517052922,
+                            -191521.9640928123, -148163.64864823624
+                          ]
+                        ],
+                        equipment_list_count: 3,
+                        equipment_list_model:
+                          'SZ11-20000/110  110±8×1.25%/10.5kV  20000kVA  \nYN,d11  容量比100/100  Uk%=10.5\n附：高压中性点LRB-60 100/5A  一只\n高压及中性点套管泄漏比距≥2.5cm/kV(按系统最高电压，下同)\n低压套管泄漏比距≥3.1cm/kV\n中性点绝缘水平   BIL 325kV \nSIL 140kV\n有载调压开关选用MR系列，额定电流 300A，档数 9档  配电动操作机构，另附发信号用温度计和测温元件PT100；远方监测装置及全套附件，变压器本体油枕装设油位发送器一只，瓦斯继电器一只，压力释放阀一只；,有载调压开关油枕装设油位发送器一只，瓦斯继电器一只。\n不带滚轮小车'
+                      },
+                      {
+                        result: '数量不一致',
+                        diagram_count: 2,
+                        diagram_model:
+                          'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n口口口口口口',
+                        model_matched: true,
+                        equipment_name: '电力变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -191798.22062829687, -148258.29517052922,
+                            -191756.51480293984, -148163.64864823624
+                          ],
+                          [
+                            -191563.66991816933, -148258.29517052922,
+                            -191521.9640928123, -148163.64864823624
+                          ]
+                        ],
+                        equipment_list_count: 3,
+                        equipment_list_model:
+                          'SZ11-20000/110  110±8×1.25%/10.5kV  20000kVA  \nYN,d11  容量比100/100  Uk%=10.5\n附：高压中性点LRB-60 100/5A  一只\n高压及中性点套管泄漏比距≥2.5cm/kV(按系统最高电压，下同)\n低压套管泄漏比距≥3.1cm/kV\n中性点绝缘水平   BIL 325kV \nSIL 140kV\n有载调压开关选用MR系列，额定电流 300A，档数 9档  配电动操作机构，另附发信号用温度计和测温元件PT100；远方监测装置及全套附件，变压器本体油枕装设油位发送器一只，瓦斯继电器一只，压力释放阀一只；,有载调压开关油枕装设油位发送器一只，瓦斯继电器一只。\n不带滚轮小车'
+                      }
+                    ],
+                    equipment_name: '电力变压器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '图纸缺失',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        model_matched: false,
+                        equipment_name: '中性点隔离开关',
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 2,
+                        equipment_list_model:
+                          'GW13-72.5(W)/630A  630A/31.5kA\n附：电动操作机构  电机电源AC380V  控制电源AC220V\n绝缘爬电比距≥3.1cm/kV'
+                      }
+                    ],
+                    equipment_name: '中性点隔离开关'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '图纸缺失',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        model_matched: false,
+                        equipment_name: '断路器',
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 7,
+                        equipment_list_model: '1250A，31.5kA/4s'
+                      }
+                    ],
+                    equipment_name: '断路器'
+                  }
+                ]
               }
             }
           ]
