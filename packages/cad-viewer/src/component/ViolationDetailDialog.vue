@@ -273,6 +273,52 @@
           </el-table-column>
         </el-table>
       </div>
+      <!-- 文档专有详情 -->
+      <template v-else>
+        <!-- 问题描述 -->
+        <div class="detail-section" v-if="descriptions.length">
+          <h4>问题描述</h4>
+          <div class="detail-content description-content">
+            <div
+              v-for="(desc, index) in descriptions"
+              :key="index"
+              class="description-item"
+            >
+              <span class="item-number">{{ +index + 1 }}.</span>
+              <span class="item-content" v-html="desc.text"></span>
+              <el-button
+                v-if="data.category == '设备材料'"
+                type="text"
+                @click="handleLocate(desc.violation)"
+                icon="Location"
+              >
+              </el-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 修改建议 -->
+        <div class="detail-section" v-if="suggestions.length">
+          <h4>修改建议</h4>
+          <div class="detail-content suggestion">
+            <ol class="suggestion-ol">
+              <li v-for="(sug, index) in suggestions" :key="index">
+                {{ sug }}
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 相关规范条文 -->
+        <div class="detail-section" v-if="data.origin">
+          <h4>相关规范条文</h4>
+          <div class="related-article">
+            <div class="article-content">
+              {{ data.origin || '未找到条文信息' }}
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
 
     <template #footer>
@@ -546,6 +592,28 @@ const getResultType = (result: string): string => {
   }
   return typeMap[result] || 'info'
 }
+
+const suggestions = computed(() => {
+  if (!props.data?.allViolations) return []
+  const result: string[] = []
+  props.data.allViolations.forEach((v: any) => {
+    if (v.suggestion?.length) {
+      result.push(...v.suggestion)
+    }
+  })
+  return result
+})
+
+// 修改 descriptions 计算属性，保留完整的 violation 数据
+const descriptions = computed(() => {
+  if (!props.data?.allViolations) return []
+  return props.data.allViolations
+    .filter((v: any) => v.description)
+    .map((v: any) => ({
+      text: v.description,
+      violation: v
+    }))
+})
 </script>
 
 <style scoped lang="scss">

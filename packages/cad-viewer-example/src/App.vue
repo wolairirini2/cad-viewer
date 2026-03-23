@@ -4,7 +4,7 @@
       locale="zh"
       :project-name="projectName"
       :url="cadUrl"
-      :currentFileId="'123'"
+      :currentFileId="'52abc84b-eb98-44c3-b751-7b73dc77a245'"
       :reviewReportData="reviewReportData"
     />
   </div>
@@ -237,6 +237,258 @@ reviewReportData.value = {
                   }
                 ]
               }
+            }
+          ]
+        }
+      ],
+      category: '设备材料清册'
+    },
+    {
+      code: 'EQUIP-COMP-001',
+      name: '设备清册与主接线图一致性规范',
+      type: '企业标准',
+      articles: [
+        {
+          id: 'equipment_consistency',
+          title: '设备一致性检查',
+          origin: '设备材料清册应与电气主接线图保持一致',
+          content: '设备清册与主接线图应在设备数量、规格参数、设备存在性上一致',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查中性点零序CT 12kV 100/1A 5P30/5P30级 15/15VA的数量!'
+              ],
+              description:
+                "设备清册中'中性点零序CT'（12kV 100/1A 5P30/5P30级 15/15VA）数量为2，CAD图中找到0处。",
+              geometry_ref: {
+                chapter: null,
+                extents: {
+                  max_point: {
+                    x: -191521.9640928123,
+                    y: -148263.64864823624
+                  },
+                  min_point: {
+                    x: -191798.22062829687,
+                    y: -148358.29517052922
+                  }
+                },
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: null
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查间隙电流互感器 12kV 100-300/1A 5P30/5P30级 15/15VA的数量!'
+              ],
+              description:
+                "设备清册中'间隙电流互感器'（12kV 100-300/1A 5P30/5P30级 15/15VA）数量为2，CAD图中找到0处（三相标注×3=0）。",
+              geometry_ref: {
+                chapter: null,
+                extents: null,
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: null
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查隔离开关 126kV，3150A，40kA/3s，配置2只微动开关的数量!'
+              ],
+              description:
+                "设备清册中'隔离开关'（126kV，3150A，40kA/3s，配置2只微动开关）数量为3，CAD图中找到18处。",
+              geometry_ref: {
+                chapter: null,
+                extents: {
+                  max_point: {
+                    x: 473564.95751572,
+                    y: -166197.8866421183
+                  },
+                  min_point: {
+                    x: 464889.6430528725,
+                    y: -175409.0086098614
+                  }
+                },
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: [
+                  '38EB13',
+                  '38EB15',
+                  '38EB1A',
+                  '38EB1C',
+                  '38EB1E',
+                  '3919BD',
+                  '3919C1',
+                  '3919C3',
+                  '3919C5',
+                  '3919C7',
+                  '3919D0',
+                  '391D50',
+                  '391D55',
+                  '391D57',
+                  '391D5E',
+                  '391D60',
+                  '391D62',
+                  '392263'
+                ]
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查110kV电容式电压互感器 20000pF,110/√3/0.1/√3/0.1/√3/0.1/√3/0.1kV  0.2/0.5（3P）/0.5（3P）/3P  10/10/10/10VA,外绝缘爬电距离不小于1812.5mm的数量!'
+              ],
+              description:
+                "设备清册中'110kV电容式电压互感器'（20000pF,110/√3/0.1/√3/0.1/√3/0.1/√3/0.1kV  0.2/0.5（3P）/0.5（3P）/3P  10/10/10/10VA,外绝缘爬电距离不小于1812.5mm）数量为15，CAD图中找到0处（三相标注×3=0）。",
+              geometry_ref: {
+                chapter: null,
+                extents: null,
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: null
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查110kV双柱水平旋转隔离开关 126kV，3150A，40kA/3s，双接地,配置6只微动开关,外绝缘爬电距离不小于25mm/kV的数量!'
+              ],
+              description:
+                "设备清册中'110kV双柱水平旋转隔离开关'（126kV，3150A，40kA/3s，双接地,配置6只微动开关,外绝缘爬电距离不小于25mm/kV）数量为2，CAD图中找到18处。",
+              geometry_ref: {
+                chapter: null,
+                extents: {
+                  max_point: {
+                    x: 473564.95751572,
+                    y: -166197.8866421183
+                  },
+                  min_point: {
+                    x: 464889.6430528725,
+                    y: -175409.0086098614
+                  }
+                },
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: [
+                  '38EB13',
+                  '38EB15',
+                  '38EB1A',
+                  '38EB1C',
+                  '38EB1E',
+                  '3919BD',
+                  '3919C1',
+                  '3919C3',
+                  '3919C5',
+                  '3919C7',
+                  '3919D0',
+                  '391D50',
+                  '391D55',
+                  '391D57',
+                  '391D5E',
+                  '391D60',
+                  '391D62',
+                  '392263'
+                ]
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查隔离开关 40.5kV 1250A 31.5kA，配置2只微动开关，满足一键顺控功能的数量!'
+              ],
+              description:
+                "设备清册中'隔离开关'（40.5kV 1250A 31.5kA，配置2只微动开关，满足一键顺控功能）数量为3，CAD图中找到6处。",
+              geometry_ref: {
+                chapter: null,
+                extents: {
+                  max_point: {
+                    x: 445516.3814443483,
+                    y: -169195.8130595214
+                  },
+                  min_point: {
+                    x: 434351.6590295973,
+                    y: -174577.8368036391
+                  }
+                },
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: [
+                  '38F730',
+                  '3918C3',
+                  '3918D6',
+                  '3918DC',
+                  '3918F0',
+                  '391FE7'
+                ]
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: ['请核查电流互感器 4000/1A,5P30,15VA的数量!'],
+              description:
+                "设备清册中'电流互感器'（4000/1A,5P30,15VA）数量为1，CAD图中找到3处（三相标注×3=9）。",
+              geometry_ref: {
+                chapter: null,
+                extents: {
+                  max_point: {
+                    x: 480667.6127904095,
+                    y: -183764.7289309421
+                  },
+                  min_point: {
+                    x: 455903.5321677676,
+                    y: -191155.982043519
+                  }
+                },
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: ['38EFE4', '38FBA3', '3FAE43']
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查接地开关 2kV,31.5kA，配置电动接地刀，配置2只微动开关，满足一键顺控功能的数量!'
+              ],
+              description:
+                "设备清册中'接地开关'（2kV,31.5kA，配置电动接地刀，配置2只微动开关，满足一键顺控功能）数量为1，CAD图中找到0处。",
+              geometry_ref: {
+                chapter: null,
+                extents: null,
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: null
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '请核查隔离开关 GW4-40.5DW/1250A-4，附钢支架的数量!'
+              ],
+              description:
+                "设备清册中'隔离开关'（GW4-40.5DW/1250A-4，附钢支架）数量为1，CAD图中找到0处。",
+              geometry_ref: {
+                chapter: null,
+                extents: null,
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: null
+              },
+              review_trace: null
+            },
+            {
+              risk_level: 'high',
+              suggestion: ['请核查隔离开关(单接地) GN19-12/630A的数量!'],
+              description:
+                "设备清册中'隔离开关(单接地)'（GN19-12/630A）数量为1，CAD图中找到0处。",
+              geometry_ref: {
+                chapter: null,
+                extents: null,
+                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                handles: null
+              },
+              review_trace: null
             }
           ]
         }

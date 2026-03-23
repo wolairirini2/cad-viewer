@@ -213,10 +213,10 @@ import {
   DEFAULT_TEXT_SIZE,
   ensureAnnotationLayer,
   AcEdPromptPointOptions,
-  screenPixelToWorldHeight
+  screenPixelToWorldHeight,
+  AcApLocateCmd // 新增导入
 } from '@mlightcad/cad-simple-viewer'
 import {
-  AcGeBox2d,
   AcDbLayerTableRecord,
   AcCmColor,
   AcDbMText,
@@ -548,13 +548,15 @@ const handleCadLocate = async (row: any) => {
     ElMessage.warning('无法获取图纸信息')
     return
   }
-
+  // 如果切换图纸，先清除旧方框
   if (props.currentFileId !== geometry.file_id) {
+    AcApLocateCmd.clearLocateBox() // 使用 AcApLocateCmd 的方法
+
     emit('switchDrawing', geometry.file_id)
     await new Promise(r => setTimeout(r, 3000))
   }
 
-  locateInCad(geometry)
+  await locateInCad(geometry)
   currentLocateInfo.value = {
     fileId: geometry.file_id,
     rowId: row.violation_id
@@ -562,27 +564,20 @@ const handleCadLocate = async (row: any) => {
 }
 
 /**
- * 在 CAD 中执行定位
+ * 在 CAD 中执行定位 - 使用 AcApLocateCmd 指令
  */
-const locateInCad = (geometry: any) => {
+const locateInCad = async (geometry: any) => {
   console.log('locateInCad', geometry)
   if (!geometry?.extents) return
 
-  const { min_point, max_point } = geometry.extents
-  const box = new AcGeBox2d(
-    { x: min_point.x, y: min_point.y },
-    { x: max_point.x, y: max_point.y }
-  )
+  // 使用 AcApLocateCmd 执行定位和绘制临时方框
+  const success = await AcApLocateCmd.locate(geometry.extents, 2)
 
-  if (geometry.handles?.length) {
-    const ids = geometry.handles.map((h: string) =>
-      parseInt(h, 16).toString(10)
-    )
-    AcApDocManager.instance.curView.highlight(ids)
+  if (success) {
+    ElMessage.success(`已定位到违规区域`)
+  } else {
+    ElMessage.error('定位失败')
   }
-
-  AcApDocManager.instance.curView.zoomTo(box, 0.5)
-  ElMessage.success(`已定位到违规区域`)
 }
 
 /**
@@ -718,12 +713,8 @@ onUnmounted(() => {
   // ==================== 旧版本新增功能：清理高亮 ====================
   highlightText.value = ''
   currentLocateInfo.value = {}
-  // 清除高亮
-  try {
-    const view = AcApDocManager.instance.curView
-    const ids = view.selectionSet?.ids || []
-    if (ids.length) view.unhighlight(ids)
-  } catch {}
+  // 清除临时定位方框
+  AcApLocateCmd.clearLocateBox() // 使用 AcApLocateCmd 的方法
 
   // Notify consumers first
   emit('destroy')
