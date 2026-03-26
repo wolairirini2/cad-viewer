@@ -4,7 +4,6 @@
     title="审查内容详情"
     width="1100px"
     class="violation-detail-dialog-wrapper"
-    :style="{ maxHeight: '85vh' }"
     draggable
   >
     <div v-if="data" class="violation-detail-dialog">
@@ -169,27 +168,33 @@
             align="center"
           />
 
-          <!-- 清册型号列 -->
-          <el-table-column
-            prop="equipment_list_model"
-            label="清册型号"
-            min-width="200"
-            show-overflow-tooltip
-          >
+          <!-- 清册型号列 - 使用自定义 tooltip -->
+          <el-table-column label="清册型号" min-width="200">
             <template #default="{ row }">
-              <div class="multiline-text">{{ row.equipment_list_model }}</div>
+              <el-tooltip
+                :content="row.equipment_list_model"
+                placement="top"
+                :disabled="!isOverflow(row.equipment_list_model, 200)"
+              >
+                <div class="multiline-text ellipsis-text">
+                  {{ row.equipment_list_model }}
+                </div>
+              </el-tooltip>
             </template>
           </el-table-column>
 
-          <!-- 图纸型号列 -->
-          <el-table-column
-            prop="diagram_model"
-            label="图纸型号"
-            min-width="200"
-            show-overflow-tooltip
-          >
+          <!-- 图纸型号列 - 使用自定义 tooltip -->
+          <el-table-column label="图纸型号" min-width="200">
             <template #default="{ row }">
-              <div class="multiline-text">{{ row.diagram_model || '-' }}</div>
+              <el-tooltip
+                :content="row.diagram_model || '-'"
+                placement="top"
+                :disabled="!isOverflow(row.diagram_model, 200)"
+              >
+                <div class="multiline-text ellipsis-text">
+                  {{ row.diagram_model || '-' }}
+                </div>
+              </el-tooltip>
             </template>
           </el-table-column>
 
@@ -472,10 +477,27 @@ const formatCalcDetail = (value: number | undefined): string => {
 }
 
 // 处理定位点击
-const handleLocate = (violation: any) => {
-  emit('locate', violation)
-  // 可选：定位后关闭弹窗，根据需要取消注释
-  // visible.value = false
+const handleLocate = (rowOrViolation: any) => {
+  const diagramWorldBboxes = rowOrViolation.diagram_world_bboxes
+
+  if (!diagramWorldBboxes || diagramWorldBboxes.length === 0) return
+
+  // 将多组 bbox 转换为 extents 数组
+  const extentsArray = diagramWorldBboxes.map((bbox: number[]) => ({
+    min_point: { x: bbox[0], y: bbox[1] },
+    max_point: { x: bbox[2], y: bbox[3] }
+  }))
+
+  // 构建定位数据对象
+  const locateData = {
+    geometry_ref: {
+      file_id: props.data?.allViolations?.[0]?.geometry_ref?.file_id,
+      extents: extentsArray[0], // 第一个用于缩放定位
+      all_extents: extentsArray // 所有区域用于绘制多个方框
+    }
+  }
+
+  emit('locate', locateData)
 }
 
 const getRiskTagType = (level: string) => {
@@ -614,6 +636,25 @@ const descriptions = computed(() => {
       violation: v
     }))
 })
+
+// 判断文本是否溢出
+const isOverflow = (text: string, maxWidth: number): boolean => {
+  if (!text) return false
+  // 创建一个临时元素来测量文本宽度
+  const span = document.createElement('span')
+  span.style.cssText = `
+    position: absolute;
+    visibility: hidden;
+    white-space: nowrap;
+    font-size: 13px;
+    font-family: inherit;
+  `
+  span.textContent = text
+  document.body.appendChild(span)
+  const width = span.offsetWidth
+  document.body.removeChild(span)
+  return width > maxWidth
+}
 </script>
 
 <style scoped lang="scss">
@@ -928,5 +969,12 @@ const descriptions = computed(() => {
 :deep(.el-table th:last-child),
 :deep(.el-table td:last-child) {
   border-right: none;
+}
+
+.ellipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 </style>

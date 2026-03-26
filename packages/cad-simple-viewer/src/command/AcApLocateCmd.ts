@@ -1,14 +1,13 @@
 // AcApLocateCmd.ts
-import {
-  AcDbPolyline,
-  AcGePoint2d,
-  AcGeBox2d,
-  AcCmColor
-} from '@mlightcad/data-model'
+import { AcDbPolyline, AcGePoint2d, AcCmColor } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
 import { AcEdCommand, AcEdOpenMode } from '../editor'
 
+export interface SingleExtent {
+  min_point: { x: number; y: number }
+  max_point: { x: number; y: number }
+}
 /**
  * 定位命令 - 在CAD中创建临时高亮方框标记区域
  */
@@ -17,26 +16,18 @@ export class AcApLocateCmd extends AcEdCommand {
   private static _currentLocateBoxId: string | null = null
 
   // 实例属性存储定位参数
-  private extents: {
-    min_point: { x: number; y: number }
-    max_point: { x: number; y: number }
-  }
+  private extents: SingleExtent | SingleExtent[]
   private padding: number
 
   /**
    * 构造函数接收定位参数
    */
-  constructor(
-    extents: {
-      min_point: { x: number; y: number }
-      max_point: { x: number; y: number }
-    },
-    padding: number = 0.5
-  ) {
+  constructor(extents: SingleExtent | SingleExtent[], padding: number = 0.5) {
     super()
     this.mode = AcEdOpenMode.Write
     this.extents = extents
     this.padding = padding
+    console.log(this.padding)
   }
 
   /**
@@ -54,7 +45,17 @@ export class AcApLocateCmd extends AcEdCommand {
       try {
         const db = AcApDocManager.instance.curDocument?.database
         if (db) {
-          db.tables.blockTable.modelSpace.removeEntity(this._currentLocateBoxId)
+          // 支持清除多个方框（逗号分隔的 objectId）
+          const objectIds = this._currentLocateBoxId.split(',')
+          for (const objectId of objectIds) {
+            if (objectId) {
+              try {
+                db.tables.blockTable.modelSpace.removeEntity(objectId)
+              } catch (e) {
+                // 单个实体可能已不存在，忽略错误继续清除其他
+              }
+            }
+          }
         }
       } catch (e) {
         // 实体可能已不存在，忽略错误
@@ -86,43 +87,47 @@ export class AcApLocateCmd extends AcEdCommand {
       // 先清除上次的临时方框
       AcApLocateCmd.clearLocateBox()
 
-      const { min_point, max_point } = this.extents
+      // 统一转换为数组处理
+      const extentsArray = Array.isArray(this.extents)
+        ? this.extents
+        : [this.extents]
 
-      // 创建临时高亮方框
-      const polyline = new AcDbPolyline()
+      // 创建所有临时高亮方框
+      const objectIds: string[] = []
+      // 创建所有临时高亮方框
+      for (const extent of extentsArray) {
+        // 绘制红色方框...
+        const { min_point, max_point } = extent
 
-      // 创建矩形框的四个顶点（逆时针）
-      const p1 = new AcGePoint2d(min_point.x, min_point.y)
-      const p2 = new AcGePoint2d(max_point.x, min_point.y)
-      const p3 = new AcGePoint2d(max_point.x, max_point.y)
-      const p4 = new AcGePoint2d(min_point.x, max_point.y)
+        // 创建临时高亮方框
+        const polyline = new AcDbPolyline()
 
-      polyline.addVertexAt(0, p1)
-      polyline.addVertexAt(1, p2)
-      polyline.addVertexAt(2, p3)
-      polyline.addVertexAt(3, p4)
-      polyline.closed = true
+        // 创建矩形框的四个顶点（逆时针）
+        const p1 = new AcGePoint2d(min_point.x, min_point.y)
+        const p2 = new AcGePoint2d(max_point.x, min_point.y)
+        const p3 = new AcGePoint2d(max_point.x, max_point.y)
+        const p4 = new AcGePoint2d(min_point.x, max_point.y)
 
-      // 设置样式：红色、线宽
-      const color = new AcCmColor()
-      color.setRGB(255, 0, 0)
-      polyline.color = color
-      polyline.lineWeight = 40 // 设置较粗的线宽以便可见
+        polyline.addVertexAt(0, p1)
+        polyline.addVertexAt(1, p2)
+        polyline.addVertexAt(2, p3)
+        polyline.addVertexAt(3, p4)
+        polyline.closed = true
 
-      // 添加到模型空间
-      db.tables.blockTable.modelSpace.appendEntity(polyline)
+        // 设置样式：红色、线宽
+        const color = new AcCmColor()
+        color.setRGB(255, 0, 0)
+        polyline.color = color
+        polyline.lineWeight = 40 // 设置较粗的线宽以便可见
 
-      // 保存 objectId 以便后续清除
-      AcApLocateCmd._currentLocateBoxId = polyline.objectId
+        // 添加到模型空间
+        db.tables.blockTable.modelSpace.appendEntity(polyline)
+        objectIds.push(polyline.objectId)
+      }
 
-      console.log('[AcApLocateCmd] 临时定位方框已创建:', polyline.objectId)
-
-      // 缩放到区域
-      const box = new AcGeBox2d(
-        { x: min_point.x, y: min_point.y },
-        { x: max_point.x, y: max_point.y }
-      )
-      view.zoomTo(box, this.padding)
+      // 保存所有 objectId 以便后续清除（逗号分隔）
+      AcApLocateCmd._currentLocateBoxId = objectIds.join(',')
+      console.log('[AcApLocateCmd] 临时定位方框已创建:', objectIds.length, '个')
     } catch (error) {
       console.error('[AcApLocateCmd] 定位失败:', error)
     }
@@ -132,10 +137,7 @@ export class AcApLocateCmd extends AcEdCommand {
    * 静态便捷方法：快速定位到指定区域
    */
   static async locate(
-    extents: {
-      min_point: { x: number; y: number }
-      max_point: { x: number; y: number }
-    },
+    extents: SingleExtent | SingleExtent[],
     padding: number = 0.5
   ): Promise<boolean> {
     const context = AcApDocManager.instance.context
@@ -165,10 +167,7 @@ export function clearLocateBox(): void {
  * 便捷函数：执行定位
  */
 export async function locateInCad(
-  extents: {
-    min_point: { x: number; y: number }
-    max_point: { x: number; y: number }
-  },
+  extents: SingleExtent | SingleExtent[],
   padding: number = 0.5
 ): Promise<boolean> {
   return await AcApLocateCmd.locate(extents, padding)

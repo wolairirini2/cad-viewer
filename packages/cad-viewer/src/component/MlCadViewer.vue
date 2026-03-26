@@ -220,7 +220,8 @@ import {
   AcDbLayerTableRecord,
   AcCmColor,
   AcDbMText,
-  AcGiMTextAttachmentPoint
+  AcGiMTextAttachmentPoint,
+  AcGeBox2d
 } from '@mlightcad/data-model'
 import { useDark, useToggle } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
@@ -542,7 +543,7 @@ const handleWordLocate = async (row: any) => {
  */
 const handleCadLocate = async (row: any) => {
   const geometry = row.geometry_ref
-  console.log('handleCadLocate', geometry)
+  console.log('handleCadLocate', row)
 
   if (!geometry?.file_id) {
     ElMessage.warning('无法获取图纸信息')
@@ -555,8 +556,7 @@ const handleCadLocate = async (row: any) => {
     emit('switchDrawing', geometry.file_id)
     await new Promise(r => setTimeout(r, 3000))
   }
-
-  await locateInCad(geometry)
+  await locateInCad(geometry, row.noWriteRect)
   currentLocateInfo.value = {
     fileId: geometry.file_id,
     rowId: row.violation_id
@@ -566,20 +566,30 @@ const handleCadLocate = async (row: any) => {
 /**
  * 在 CAD 中执行定位 - 使用 AcApLocateCmd 指令
  */
-const locateInCad = async (geometry: any) => {
-  console.log('locateInCad', geometry)
+const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
   if (!geometry?.extents) return
 
-  // 使用 AcApLocateCmd 执行定位和绘制临时方框
-  const success = await AcApLocateCmd.locate(geometry.extents, 2)
+  if (noWriteRect) {
+    const view = AcApDocManager.instance.curView
+
+    const box = new AcGeBox2d(
+      { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
+      { x: geometry.extents.max_point.x, y: geometry.extents.max_point.y }
+    )
+    view.zoomTo(box, 2)
+    return
+  }
+
+  // 如果有 all_extents（多区域），则使用它
+  const extentsToUse = geometry.all_extents || [geometry.extents]
+
+  // 支持多区域定位
+  const success = await AcApLocateCmd.locate(extentsToUse, 0.5)
 
   if (success) {
-    ElMessage.success(`已定位到违规区域`)
-  } else {
-    ElMessage.error('定位失败')
+    ElMessage.success(`已定位到 ${extentsToUse.length} 个区域`)
   }
 }
-
 /**
  * 处理切换图纸
  */
@@ -654,6 +664,10 @@ const handleEntityErased = (entity: any) => {
     emitSaveAnnotations()
   }
 }
+
+const handleClearLocateBox = () => {
+  AcApLocateCmd.clearLocateBox()
+}
 // Component lifecycle: Initialize and load initial file if URL or localFile is provided
 onMounted(async () => {
   // Initialize the CAD viewer with the internal canvas
@@ -667,6 +681,7 @@ onMounted(async () => {
 
     // 添加点击事件监听（用于关闭菜单）
     document.addEventListener('click', handleClickOutside)
+    containerRef.value.addEventListener('click', handleClearLocateBox)
     // Set the editor reference after initialization
     editorRef.value = AcApDocManager.instance
   }
@@ -710,6 +725,7 @@ onMounted(async () => {
 onUnmounted(() => {
   // 清理事件监听
   document.removeEventListener('click', handleClickOutside)
+  containerRef.value?.removeEventListener('click', handleClearLocateBox)
   // ==================== 旧版本新增功能：清理高亮 ====================
   highlightText.value = ''
   currentLocateInfo.value = {}
@@ -1136,6 +1152,7 @@ const getScale = (size: number) => {
 
 // 点击其他地方关闭右键菜单
 const handleClickOutside = (event: MouseEvent) => {
+  // 关闭右键菜单
   const menu = document.querySelector('.annotation-context-menu')
   if (menu && !menu.contains(event.target as Node)) {
     showAnnotationMenu.value = false

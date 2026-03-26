@@ -475,7 +475,7 @@ const handleSelectionChange = (val: any[]) => {
 }
 
 const handleLocate = (row: any) => {
-  emit('locate', row)
+  emit('locate', { ...row, noWriteRect: true })
 }
 
 const handleBatchSend = () => {
