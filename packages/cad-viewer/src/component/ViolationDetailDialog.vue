@@ -273,7 +273,7 @@
               >
                 定位
               </el-button>
-              <span v-else class="no-action">-</span>
+              <span v-else class="no-action"></span>
             </template>
           </el-table-column>
         </el-table>
