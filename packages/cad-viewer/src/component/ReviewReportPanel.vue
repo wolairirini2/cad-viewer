@@ -252,7 +252,7 @@
       <!-- 详情视图 -->
       <div v-else class="detail-view">
         <div class="detail-view-header">
-          <el-button icon="ArrowLeft" @click="handleBackToList" text
+          <el-button icon="ArrowLeft" @click="handleBackToList"
             >返回列表</el-button
           >
           <span class="detail-title">{{
@@ -927,7 +927,6 @@ const handleBackToList = () => {
   height: 100%;
   overflow: hidden;
   width: 100%;
-  flex: 1;
   .list-view,
   .detail-view {
     flex: 1;

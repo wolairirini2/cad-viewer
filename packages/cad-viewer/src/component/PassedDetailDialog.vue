@@ -68,13 +68,11 @@ const getCategoryType = (category: string) => {
 
 const handleLocate = () => {
   emit('locate', props.data?.geometry_ref)
-  visible.value = false
 }
 </script>
 
 <style scoped>
 .violation-detail-dialog {
-  max-height: calc(85vh - 120px);
   overflow-y: auto;
 }
 

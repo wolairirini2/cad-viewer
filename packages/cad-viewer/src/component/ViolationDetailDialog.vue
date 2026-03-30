@@ -626,7 +626,6 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 
 <style scoped lang="scss">
 .violation-detail-dialog {
-  max-height: calc(85vh - 120px);
   overflow-y: auto;
 }
 
