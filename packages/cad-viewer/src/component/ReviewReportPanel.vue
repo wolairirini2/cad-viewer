@@ -13,233 +13,263 @@
       :title="isCollapsed ? '展开报告' : '收起报告'"
     />
 
-    <div class="panel-content" v-if="!isCollapsed">
-      <!-- 标题 -->
-      <div class="panel-header">
-        <h3>{{ projectName }}审查报告</h3>
+    <div class="panel-main-content" v-if="!isCollapsed">
+      <!-- 列表视图 -->
+      <div v-if="currentView === 'list'" class="list-view">
+        <!-- 标题 -->
+        <div class="panel-header">
+          <h3>{{ projectName }}审查报告</h3>
+          <div class="panel-actions">
+            <!-- 全屏切换按钮 -->
+            <el-icon
+              @click="toggleFullscreen"
+              style="
+                font-size: 20px;
+                color: var(--color-gray-500);
+                cursor: pointer;
+                margin-right: 12px;
+              "
+              :title="isFullscreen ? '退出全屏' : '全屏显示'"
+            >
+              <component :is="isFullscreen ? Crop : FullScreen" />
+            </el-icon>
+            <el-icon
+              @click="goBack"
+              style="
+                font-size: 20px;
+                color: var(--color-gray-500);
+                cursor: pointer;
+              "
+              title="返回"
+              ><Back
+            /></el-icon>
+          </div>
+        </div>
+
         <div class="panel-actions">
-          <!-- 全屏切换按钮 -->
-          <el-icon
-            @click="toggleFullscreen"
-            style="
-              font-size: 20px;
-              color: var(--color-gray-500);
-              cursor: pointer;
-              margin-right: 12px;
-            "
-            :title="isFullscreen ? '退出全屏' : '全屏显示'"
-          >
-            <component :is="isFullscreen ? Crop : FullScreen" />
-          </el-icon>
-          <el-icon
-            @click="goBack"
-            style="
-              font-size: 20px;
-              color: var(--color-gray-500);
-              cursor: pointer;
-            "
-            title="返回"
-            ><Back
-          /></el-icon>
-        </div>
-      </div>
-
-      <div class="panel-actions">
-        <!-- 风险等级筛选 - 改为 el-radio-group -->
-        <div class="violation-filters">
-          <div
-            class="filter-item"
-            :class="{ active: currentFilter === null }"
-            @click="currentFilter = null"
-          >
-            <el-icon><List /></el-icon>
-            <span>全部审查</span>
-            <span class="filter-count">{{ totalViolations }}</span>
-          </div>
-
-          <div
-            class="filter-item"
-            :class="{ active: currentFilter === 'high' }"
-            @click="currentFilter = 'high'"
-          >
-            <el-icon><WarnTriangleFilled /></el-icon>
-            <span>重大问题</span>
-            <span class="filter-count">{{ riskCounts.high }}</span>
-          </div>
-
-          <div
-            class="filter-item"
-            :class="{ active: currentFilter === 'medium' }"
-            @click="currentFilter = 'medium'"
-          >
-            <el-icon><WarningFilled /></el-icon>
-            <span>一般问题</span>
-            <span class="filter-count">{{ riskCounts.medium }}</span>
-          </div>
-
-          <div
-            class="filter-item"
-            :class="{ active: currentFilter === 'low' }"
-            @click="currentFilter = 'low'"
-          >
-            <el-icon><InfoFilled /></el-icon>
-            <span>轻微问题</span>
-            <span class="filter-count">{{ riskCounts.low }}</span>
-          </div>
-        </div>
-        <div>
-          <el-button
-            icon="Stamp"
-            type="primary"
-            @click="handleBatchSend"
-            :disabled="selection.length === 0"
-            style="padding-top: 10px"
-          >
-            批量发送
-          </el-button>
-          <el-button
-            icon="Promotion"
-            type="success"
-            @click="handleExport"
-            :disabled="selection.length === 0"
-            style="padding-top: 10px"
-          >
-            导出报告
-          </el-button>
-        </div>
-      </div>
-
-      <!-- 违规项表格 -->
-      <div class="panel-tabs">
-        <div class="violation-table">
-          <el-table
-            :data="pagedData"
-            height="100%"
-            style="width: 100%"
-            empty-text="未发现违规项"
-            @row-click="handleRowClick"
-            @selection-change="handleSelectionChange"
-            border
-            stripe
-          >
-            <el-table-column type="selection" width="45" align="center" />
-            <el-table-column
-              prop="risk_level"
-              label="风险等级"
-              width="80"
-              align="center"
+          <!-- 风险等级筛选 - 改为 el-radio-group -->
+          <div class="violation-filters">
+            <div
+              class="filter-item"
+              :class="{ active: currentFilter === null }"
+              @click="currentFilter = null"
             >
-              <template #default="{ row }">
-                <el-tooltip>
-                  <el-icon
-                    style="font-size: 20px; margin-top: 8px"
-                    :style="{
-                      color: getRiskColor(row.risk_level)
-                    }"
+              <el-icon><List /></el-icon>
+              <span>全部审查</span>
+              <span class="filter-count">{{ totalViolations }}</span>
+            </div>
+
+            <div
+              class="filter-item"
+              :class="{ active: currentFilter === 'high' }"
+              @click="currentFilter = 'high'"
+            >
+              <el-icon><WarnTriangleFilled /></el-icon>
+              <span>重大问题</span>
+              <span class="filter-count">{{ riskCounts.high }}</span>
+            </div>
+
+            <div
+              class="filter-item"
+              :class="{ active: currentFilter === 'medium' }"
+              @click="currentFilter = 'medium'"
+            >
+              <el-icon><WarningFilled /></el-icon>
+              <span>一般问题</span>
+              <span class="filter-count">{{ riskCounts.medium }}</span>
+            </div>
+
+            <div
+              class="filter-item"
+              :class="{ active: currentFilter === 'low' }"
+              @click="currentFilter = 'low'"
+            >
+              <el-icon><InfoFilled /></el-icon>
+              <span>轻微问题</span>
+              <span class="filter-count">{{ riskCounts.low }}</span>
+            </div>
+          </div>
+          <div>
+            <el-button
+              icon="Stamp"
+              type="primary"
+              @click="handleBatchSend"
+              :disabled="selection.length === 0"
+              style="padding-top: 10px"
+            >
+              批量发送
+            </el-button>
+            <el-button
+              icon="Promotion"
+              type="success"
+              @click="handleExport"
+              :disabled="selection.length === 0"
+              style="padding-top: 10px"
+            >
+              导出报告
+            </el-button>
+          </div>
+        </div>
+
+        <!-- 违规项表格 -->
+        <div class="panel-tabs">
+          <div class="violation-table">
+            <el-table
+              :data="pagedData"
+              height="100%"
+              style="width: 100%"
+              empty-text="未发现违规项"
+              @row-click="handleRowClick"
+              @selection-change="handleSelectionChange"
+              border
+              stripe
+            >
+              <el-table-column type="selection" width="45" align="center" />
+              <el-table-column
+                prop="risk_level"
+                label="风险等级"
+                width="80"
+                align="center"
+              >
+                <template #default="{ row }">
+                  <el-tooltip>
+                    <el-icon
+                      style="font-size: 20px; margin-top: 8px"
+                      :style="{
+                        color: getRiskColor(row.risk_level)
+                      }"
+                    >
+                      <component :is="getRiskIcon(row.risk_level)" />
+                    </el-icon>
+                    <template #content>
+                      {{ getRiskText(row.risk_level) }}
+                    </template>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="category"
+                label="问题来源"
+                width="90"
+                align="center"
+              >
+                <template #default="{ row }">
+                  <el-tag :type="getCategoryType(row.category)" size="small">
+                    {{ row.category }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="title"
+                label="审查内容"
+                min-width="200"
+                show-overflow-tooltip
+              >
+                <template #default="{ row }">
+                  <span
+                    style="color: var(--color-primary-dark); font-weight: 700"
+                    >{{ row.articleTitle }}</span
                   >
-                    <component :is="getRiskIcon(row.risk_level)" />
-                  </el-icon>
-                  <template #content>
-                    {{ getRiskText(row.risk_level) }}
-                  </template>
-                </el-tooltip>
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="category"
-              label="问题来源"
-              width="90"
-              align="center"
-            >
-              <template #default="{ row }">
-                <el-tag :type="getCategoryType(row.category)" size="small">
-                  {{ row.category }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="title"
-              label="审查内容"
-              min-width="200"
-              show-overflow-tooltip
-            >
-              <template #default="{ row }">
-                <span
-                  style="color: var(--color-primary-dark); font-weight: 700"
-                  >{{ row.articleTitle }}</span
-                >
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="description"
-              label="问题描述"
-              min-width="150"
-              show-overflow-tooltip
-              align="center"
-            >
-              <template #default="{ row }">
-                {{ row.description || '审查已通过' }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="suggestion"
-              label="处理建议"
-              min-width="150"
-              show-overflow-tooltip
-              align="center"
-            >
-              <template #default="{ row }">
-                {{ row.suggestion ? row.suggestion.join() : '无' }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              label="操作"
-              width="180"
-              fixed="right"
-              align="center"
-            >
-              <template #default="{ row }">
-                <el-button
-                  type="info"
-                  size="small"
-                  @click.stop="handleLocate(row)"
-                  :loading="locating[row.violation_id]"
-                  :disabled="!row.geometry_ref?.extents && row.risk_level === 0"
-                  plain
-                >
-                  定位
-                </el-button>
-                <el-button
-                  size="small"
-                  style="margin-left: 4px"
-                  type="info"
-                  plain
-                  :disabled="row.risk_level === 0"
-                  @click.stop=""
-                  >发送</el-button
-                >
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="description"
+                label="问题描述"
+                min-width="150"
+                show-overflow-tooltip
+                align="center"
+              >
+                <template #default="{ row }">
+                  {{ row.description || '审查已通过' }}
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="suggestion"
+                label="处理建议"
+                min-width="150"
+                show-overflow-tooltip
+                align="center"
+              >
+                <template #default="{ row }">
+                  {{ row.suggestion ? row.suggestion.join() : '无' }}
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="操作"
+                width="180"
+                fixed="right"
+                align="center"
+              >
+                <template #default="{ row }">
+                  <el-button
+                    type="info"
+                    size="small"
+                    @click.stop="handleLocate(row)"
+                    :loading="locating[row.violation_id]"
+                    :disabled="
+                      !row.geometry_ref?.extents && row.risk_level === 0
+                    "
+                    plain
+                  >
+                    定位
+                  </el-button>
+                  <el-button
+                    size="small"
+                    style="margin-left: 4px"
+                    type="info"
+                    plain
+                    :disabled="row.risk_level === 0"
+                    @click.stop=""
+                    >发送</el-button
+                  >
 
-                <!-- 点踩按钮 -->
-                <el-button
-                  size="small"
-                  style="margin-left: 4px; padding: 0 10px"
-                  type="info"
-                  plain
-                  :disabled="row.risk_level === 0"
-                  @click.stop="openFeedbackDialog(row)"
-                  title="反馈问题"
-                >
-                  反馈
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :total="sortedViolations.length"
-            layout="total,sizes, prev, pager, next, "
-            style="padding: 8px; justify-content: center"
+                  <!-- 点踩按钮 -->
+                  <el-button
+                    size="small"
+                    style="margin-left: 4px; padding: 0 10px"
+                    type="info"
+                    plain
+                    :disabled="row.risk_level === 0"
+                    @click.stop="openFeedbackDialog(row)"
+                    title="反馈问题"
+                  >
+                    反馈
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :total="sortedViolations.length"
+              layout="total,sizes, prev, pager, next, "
+              style="padding: 8px; justify-content: center"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 详情视图 -->
+      <div v-else class="detail-view">
+        <div class="detail-view-header">
+          <el-button icon="ArrowLeft" @click="handleBackToList" text
+            >返回列表</el-button
+          >
+          <span class="detail-title">{{
+            selectedDetailRow?.articleTitle
+          }}</span>
+        </div>
+        <div class="detail-view-body">
+          <!-- 根据详情类型动态渲染对应组件 -->
+          <ViolationDetailDialog
+            v-if="detailType === 'violation'"
+            :data="selectedDetailRow"
+            @locate="handleLocateFromDetail"
+          />
+          <PassedDetailDialog
+            v-else
+            :data="selectedDetailRow"
+            @locate="handleLocateFromDetail"
           />
         </div>
       </div>
@@ -320,6 +350,9 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ExcelJS from 'exceljs'
+
+import ViolationDetailDialog from './ViolationDetailDialog.vue'
+import PassedDetailDialog from './PassedDetailDialog.vue'
 
 interface Props {
   reportData: any
@@ -467,7 +500,11 @@ const getCategoryType = (category: string) => {
 }
 
 const handleRowClick = (row: any) => {
-  emit('rowClick', row)
+  selectedDetailRow.value = row
+  // 根据风险等级判断详情类型
+  detailType.value = row.risk_level === 0 ? 'passed' : 'violation'
+  // 切换至详情视图
+  currentView.value = 'detail'
 }
 
 const handleSelectionChange = (val: any[]) => {
@@ -476,6 +513,10 @@ const handleSelectionChange = (val: any[]) => {
 
 const handleLocate = (row: any) => {
   emit('locate', { ...row, noWriteRect: true })
+}
+
+const handleLocateFromDetail = (row: any) => {
+  emit('locate', row)
 }
 
 const handleBatchSend = () => {
@@ -817,6 +858,16 @@ const submitFeedback = async () => {
     isSubmittingFeedback.value = false
   }
 }
+
+const currentView = ref<'list' | 'detail'>('list') // 当前视图模式
+const selectedDetailRow = ref<any>(null) // 当前选中的详情数据
+const detailType = ref<'violation' | 'passed'>('violation') // 当前详情类型
+
+// 返回列表
+const handleBackToList = () => {
+  currentView.value = 'list'
+  selectedDetailRow.value = null
+}
 </script>
 
 <style scoped lang="scss">
@@ -870,12 +921,43 @@ const submitFeedback = async () => {
 }
 
 /* 侧边栏内容 */
-.panel-content {
+.panel-main-content {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   width: 100%;
+  flex: 1;
+  .list-view,
+  .detail-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .detail-view-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--el-border-color-light);
+    flex-shrink: 0;
+    .detail-title {
+      margin-left: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .detail-view-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
 
   .el-table {
     --el-table-header-bg-color: #eceef2;

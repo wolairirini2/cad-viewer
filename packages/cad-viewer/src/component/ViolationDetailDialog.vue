@@ -1,335 +1,309 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    title="审查内容详情"
-    width="1200px"
-    class="violation-detail-dialog-wrapper"
-    draggable
-  >
-    <div v-if="data" class="violation-detail-dialog">
-      <!-- 基本信息 -->
-      <div class="detail-section">
-        <div class="detail-row">
-          <span class="detail-label">检查内容:</span>
-          <span>{{ data.articleTitle }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">风险等级:</span>
-          <el-tag
-            :type="getRiskTagType(data.risk_level)"
-            style="font-weight: bold"
-          >
-            {{ getRiskText(data.risk_level) }}
-          </el-tag>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">问题来源:</span>
-          <el-tag
-            :type="getCategoryType(data.category)"
-            style="font-weight: bold"
-          >
-            {{ data.category }}
-          </el-tag>
-        </div>
+  <div v-if="data" class="violation-detail-dialog">
+    <!-- 基本信息 -->
+    <div class="detail-section">
+      <div class="detail-row">
+        <span class="detail-label">检查内容:</span>
+        <span>{{ data.articleTitle }}</span>
       </div>
-
-      <!-- 提取参数 -->
-      <div class="detail-section" v-if="reviewTrace?.extracted_parameters">
-        <h4>提取参数</h4>
-        <div class="detail-content">
-          <el-descriptions :column="2" size="small" border>
-            <el-descriptions-item
-              v-for="(label, key) in extractedParamsMap"
-              :key="key"
-              :label="label"
-            >
-              {{ formatValue(reviewTrace.extracted_parameters[key], key) }}
-            </el-descriptions-item>
-          </el-descriptions>
-        </div>
+      <div class="detail-row">
+        <span class="detail-label">风险等级:</span>
+        <el-tag
+          :type="getRiskTagType(data.risk_level)"
+          style="font-weight: bold"
+        >
+          {{ getRiskText(data.risk_level) }}
+        </el-tag>
       </div>
+      <div class="detail-row">
+        <span class="detail-label">问题来源:</span>
+        <el-tag
+          :type="getCategoryType(data.category)"
+          style="font-weight: bold"
+        >
+          {{ data.category }}
+        </el-tag>
+      </div>
+    </div>
 
-      <!-- 计算公式 (新增) -->
-      <div class="detail-section" v-if="calculationSteps.length">
-        <div class="section-header">
-          <h4>计算过程</h4>
+    <!-- 提取参数 -->
+    <div class="detail-section" v-if="reviewTrace?.extracted_parameters">
+      <h4>提取参数</h4>
+      <div class="detail-content">
+        <el-descriptions :column="2" size="small" border>
+          <el-descriptions-item
+            v-for="(label, key) in extractedParamsMap"
+            :key="key"
+            :label="label"
+          >
+            {{ formatValue(reviewTrace.extracted_parameters[key], key) }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+    </div>
+
+    <!-- 计算公式 (新增) -->
+    <div class="detail-section" v-if="calculationSteps.length">
+      <div class="section-header">
+        <h4>计算过程</h4>
+        <el-button
+          type="text"
+          size="small"
+          @click="toggleCalculationSteps"
+          class="toggle-btn"
+        >
+          {{ isCalculationStepsExpanded ? '折叠' : '展开' }}
+          <el-icon :class="{ 'rotate-icon': isCalculationStepsExpanded }">
+            <ArrowDown />
+          </el-icon>
+        </el-button>
+      </div>
+      <div
+        class="detail-content formula-content"
+        :class="{ collapsed: !isCalculationStepsExpanded }"
+      >
+        <div
+          v-for="(step, index) in displayCalculationSteps"
+          :key="index"
+          class="formula-step"
+        >
+          <div class="formula-step-title">
+            <span class="step-number">({{ getStepNumber(index) }})</span>
+            {{ step.title }}
+          </div>
+          <div class="formula-latex" v-html="renderFormula(step.formula)"></div>
+        </div>
+
+        <!-- 折叠时的提示 -->
+        <div
+          v-if="
+            !isCalculationStepsExpanded &&
+            calculationSteps.length > MAX_COLLAPSED_STEPS
+          "
+          class="collapse-hint"
+        >
+          <span class="hint-text"
+            >还有
+            {{ calculationSteps.length - MAX_COLLAPSED_STEPS }}
+            个计算步骤</span
+          >
           <el-button
             type="text"
             size="small"
-            @click="toggleCalculationSteps"
-            class="toggle-btn"
+            @click="expandCalculationSteps"
+            class="expand-btn"
           >
-            {{ isCalculationStepsExpanded ? '折叠' : '展开' }}
-            <el-icon :class="{ 'rotate-icon': isCalculationStepsExpanded }">
-              <ArrowDown />
-            </el-icon>
+            点击展开查看全部
           </el-button>
         </div>
-        <div
-          class="detail-content formula-content"
-          :class="{ collapsed: !isCalculationStepsExpanded }"
-        >
-          <div
-            v-for="(step, index) in displayCalculationSteps"
-            :key="index"
-            class="formula-step"
-          >
-            <div class="formula-step-title">
-              <span class="step-number">({{ getStepNumber(index) }})</span>
-              {{ step.title }}
-            </div>
-            <div
-              class="formula-latex"
-              v-html="renderFormula(step.formula)"
-            ></div>
-          </div>
+      </div>
+    </div>
 
-          <!-- 折叠时的提示 -->
-          <div
-            v-if="
-              !isCalculationStepsExpanded &&
-              calculationSteps.length > MAX_COLLAPSED_STEPS
-            "
-            class="collapse-hint"
+    <!-- 计算结果 -->
+    <div class="detail-section" v-if="reviewTrace?.calculation_result">
+      <h4>计算结果</h4>
+      <div class="detail-content">
+        <!-- 主要计算结果 -->
+        <el-descriptions
+          :column="2"
+          size="small"
+          border
+          class="calc-result-main"
+        >
+          <el-descriptions-item label="高压侧母线短路电流(kA)">
+            <span class="highlight-value">{{
+              reviewTrace.calculation_result.hv_bus_Isc_ka?.toFixed(2)
+            }}</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="低压侧母线短路电流(kA)">
+            <span class="highlight-value">{{
+              reviewTrace.calculation_result.lv_bus_Isc_ka?.toFixed(2)
+            }}</span>
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 详细计算过程 -->
+        <div class="calc-details-title">详细计算参数</div>
+        <el-descriptions :column="2" size="small" border>
+          <el-descriptions-item
+            v-for="(label, key) in calculationDetailsMap"
+            :key="key"
+            :label="label"
           >
-            <span class="hint-text"
-              >还有
-              {{ calculationSteps.length - MAX_COLLAPSED_STEPS }}
-              个计算步骤</span
+            {{
+              formatCalcDetail(
+                reviewTrace.calculation_result.calculation_details?.[key]
+              )
+            }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+    </div>
+
+    <!-- 设备材料清册和电气主接线图对比 -->
+    <div class="detail-section" v-if="reviewTrace?.comparison_groups">
+      <h4>设备材料清册和电气主接线图对比</h4>
+      <el-table
+        :data="flattenedData"
+        :span-method="objectSpanMethod"
+        border
+        stripe
+        style="width: 100%"
+      >
+        <!-- 设备名称列 -->
+        <el-table-column
+          prop="equipment_name"
+          label="设备名称"
+          min-width="100"
+          align="center"
+        />
+
+        <!-- 清册型号列 - 使用自定义 tooltip -->
+        <el-table-column label="清册型号" min-width="200">
+          <template #default="{ row }">
+            <el-tooltip
+              :content="row.equipment_list_model"
+              placement="top"
+              :disabled="!isOverflow(row.equipment_list_model, 200)"
             >
-            <el-button
-              type="text"
+              <div class="multiline-text ellipsis-text">
+                {{ row.equipment_list_model }}
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <!-- 图纸型号列 - 使用自定义 tooltip -->
+        <el-table-column label="图纸型号" min-width="200">
+          <template #default="{ row }">
+            <el-tooltip
+              :content="row.diagram_model || '-'"
+              placement="top"
+              :disabled="!isOverflow(row.diagram_model, 200)"
+            >
+              <div class="multiline-text ellipsis-text">
+                {{ row.diagram_model || '-' }}
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <!-- 型号匹配列 -->
+        <el-table-column
+          prop="model_matched"
+          label="型号匹配"
+          width="80"
+          align="center"
+        >
+          <template #default="{ row }">
+            <el-tag
+              :type="row.model_matched ? 'success' : 'danger'"
               size="small"
-              @click="expandCalculationSteps"
-              class="expand-btn"
             >
-              点击展开查看全部
+              {{ row.model_matched ? '匹配' : '不匹配' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <!-- 清册数量列 -->
+        <el-table-column
+          prop="equipment_list_count"
+          label="清册数量"
+          width="80"
+          align="center"
+        />
+
+        <!-- 图纸数量列 -->
+        <el-table-column
+          prop="diagram_count"
+          label="图纸数量"
+          width="80"
+          align="center"
+        >
+          <template #default="{ row }">
+            {{ row.diagram_count || 0 }}
+          </template>
+        </el-table-column>
+
+        <!-- 结果列 -->
+        <el-table-column prop="result" label="结果" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag
+              :type="getResultType(row.result)"
+              size="small"
+              effect="light"
+            >
+              {{ row.result }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <!-- 操作列 -->
+        <el-table-column label="操作" width="80" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-if="
+                row.diagram_world_bboxes && row.diagram_world_bboxes.length > 0
+              "
+              type="info"
+              plain
+              size="small"
+              @click="handleLocate(row)"
+            >
+              定位
+            </el-button>
+            <span v-else class="no-action"></span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!-- 文档专有详情 -->
+    <template v-else>
+      <!-- 问题描述 -->
+      <div class="detail-section" v-if="descriptions.length">
+        <h4>问题描述</h4>
+        <div class="detail-content description-content">
+          <div
+            v-for="(desc, index) in descriptions"
+            :key="index"
+            class="description-item"
+          >
+            <span class="item-number">{{ +index + 1 }}.</span>
+            <span class="item-content" v-html="desc.text"></span>
+            <el-button
+              v-if="data.category == '设备材料'"
+              type="text"
+              @click="handleLocate(desc.violation)"
+              icon="Location"
+            >
             </el-button>
           </div>
         </div>
       </div>
 
-      <!-- 计算结果 -->
-      <div class="detail-section" v-if="reviewTrace?.calculation_result">
-        <h4>计算结果</h4>
-        <div class="detail-content">
-          <!-- 主要计算结果 -->
-          <el-descriptions
-            :column="2"
-            size="small"
-            border
-            class="calc-result-main"
-          >
-            <el-descriptions-item label="高压侧母线短路电流(kA)">
-              <span class="highlight-value">{{
-                reviewTrace.calculation_result.hv_bus_Isc_ka?.toFixed(2)
-              }}</span>
-            </el-descriptions-item>
-            <el-descriptions-item label="低压侧母线短路电流(kA)">
-              <span class="highlight-value">{{
-                reviewTrace.calculation_result.lv_bus_Isc_ka?.toFixed(2)
-              }}</span>
-            </el-descriptions-item>
-          </el-descriptions>
-
-          <!-- 详细计算过程 -->
-          <div class="calc-details-title">详细计算参数</div>
-          <el-descriptions :column="2" size="small" border>
-            <el-descriptions-item
-              v-for="(label, key) in calculationDetailsMap"
-              :key="key"
-              :label="label"
-            >
-              {{
-                formatCalcDetail(
-                  reviewTrace.calculation_result.calculation_details?.[key]
-                )
-              }}
-            </el-descriptions-item>
-          </el-descriptions>
+      <!-- 修改建议 -->
+      <div class="detail-section" v-if="suggestions.length">
+        <h4>修改建议</h4>
+        <div class="detail-content suggestion">
+          <ol class="suggestion-ol">
+            <li v-for="(sug, index) in suggestions" :key="index">
+              {{ sug }}
+            </li>
+          </ol>
         </div>
       </div>
 
-      <!-- 设备材料清册和电气主接线图对比 -->
-      <div class="detail-section" v-if="reviewTrace?.comparison_groups">
-        <h4>设备材料清册和电气主接线图对比</h4>
-        <el-table
-          :data="flattenedData"
-          :span-method="objectSpanMethod"
-          border
-          stripe
-          style="width: 100%"
-        >
-          <!-- 设备名称列 -->
-          <el-table-column
-            prop="equipment_name"
-            label="设备名称"
-            min-width="100"
-            align="center"
-          />
-
-          <!-- 清册型号列 - 使用自定义 tooltip -->
-          <el-table-column label="清册型号" min-width="200">
-            <template #default="{ row }">
-              <el-tooltip
-                :content="row.equipment_list_model"
-                placement="top"
-                :disabled="!isOverflow(row.equipment_list_model, 200)"
-              >
-                <div class="multiline-text ellipsis-text">
-                  {{ row.equipment_list_model }}
-                </div>
-              </el-tooltip>
-            </template>
-          </el-table-column>
-
-          <!-- 图纸型号列 - 使用自定义 tooltip -->
-          <el-table-column label="图纸型号" min-width="200">
-            <template #default="{ row }">
-              <el-tooltip
-                :content="row.diagram_model || '-'"
-                placement="top"
-                :disabled="!isOverflow(row.diagram_model, 200)"
-              >
-                <div class="multiline-text ellipsis-text">
-                  {{ row.diagram_model || '-' }}
-                </div>
-              </el-tooltip>
-            </template>
-          </el-table-column>
-
-          <!-- 型号匹配列 -->
-          <el-table-column
-            prop="model_matched"
-            label="型号匹配"
-            width="80"
-            align="center"
-          >
-            <template #default="{ row }">
-              <el-tag
-                :type="row.model_matched ? 'success' : 'danger'"
-                size="small"
-              >
-                {{ row.model_matched ? '匹配' : '不匹配' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-
-          <!-- 清册数量列 -->
-          <el-table-column
-            prop="equipment_list_count"
-            label="清册数量"
-            width="80"
-            align="center"
-          />
-
-          <!-- 图纸数量列 -->
-          <el-table-column
-            prop="diagram_count"
-            label="图纸数量"
-            width="80"
-            align="center"
-          >
-            <template #default="{ row }">
-              {{ row.diagram_count || 0 }}
-            </template>
-          </el-table-column>
-
-          <!-- 结果列 -->
-          <el-table-column
-            prop="result"
-            label="结果"
-            width="100"
-            align="center"
-          >
-            <template #default="{ row }">
-              <el-tag
-                :type="getResultType(row.result)"
-                size="small"
-                effect="light"
-              >
-                {{ row.result }}
-              </el-tag>
-            </template>
-          </el-table-column>
-
-          <!-- 操作列 -->
-          <el-table-column
-            label="操作"
-            width="80"
-            align="center"
-            fixed="right"
-          >
-            <template #default="{ row }">
-              <el-button
-                v-if="
-                  row.diagram_world_bboxes &&
-                  row.diagram_world_bboxes.length > 0
-                "
-                type="info"
-                plain
-                size="small"
-                @click="handleLocate(row)"
-              >
-                定位
-              </el-button>
-              <span v-else class="no-action"></span>
-            </template>
-          </el-table-column>
-        </el-table>
+      <!-- 相关规范条文 -->
+      <div class="detail-section" v-if="data.origin">
+        <h4>相关规范条文</h4>
+        <div class="related-article">
+          <div class="article-content">
+            {{ data.origin || '未找到条文信息' }}
+          </div>
+        </div>
       </div>
-      <!-- 文档专有详情 -->
-      <template v-else>
-        <!-- 问题描述 -->
-        <div class="detail-section" v-if="descriptions.length">
-          <h4>问题描述</h4>
-          <div class="detail-content description-content">
-            <div
-              v-for="(desc, index) in descriptions"
-              :key="index"
-              class="description-item"
-            >
-              <span class="item-number">{{ +index + 1 }}.</span>
-              <span class="item-content" v-html="desc.text"></span>
-              <el-button
-                v-if="data.category == '设备材料'"
-                type="text"
-                @click="handleLocate(desc.violation)"
-                icon="Location"
-              >
-              </el-button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 修改建议 -->
-        <div class="detail-section" v-if="suggestions.length">
-          <h4>修改建议</h4>
-          <div class="detail-content suggestion">
-            <ol class="suggestion-ol">
-              <li v-for="(sug, index) in suggestions" :key="index">
-                {{ sug }}
-              </li>
-            </ol>
-          </div>
-        </div>
-
-        <!-- 相关规范条文 -->
-        <div class="detail-section" v-if="data.origin">
-          <h4>相关规范条文</h4>
-          <div class="related-article">
-            <div class="article-content">
-              {{ data.origin || '未找到条文信息' }}
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <template #footer>
-      <el-button type="primary" @click="visible = false">关闭</el-button>
     </template>
-  </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -339,7 +313,6 @@ import 'katex/dist/katex.min.css'
 import { ArrowDown } from '@element-plus/icons-vue'
 
 interface Props {
-  modelValue: boolean
   data: any
 }
 
@@ -350,14 +323,8 @@ interface CalculationStep {
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
   (e: 'locate', violation: any): void
 }>()
-
-const visible = computed({
-  get: () => props.modelValue,
-  set: val => emit('update:modelValue', val)
-})
 
 // 折叠/展开状态
 const isCalculationStepsExpanded = ref(false)

@@ -82,18 +82,6 @@
         @goBack="goBack"
       />
     </div>
-
-    <!-- 详情弹窗 -->
-    <ViolationDetailDialog
-      v-model="showViolationDetail"
-      :data="selectedViolation"
-      @locate="handleLocate"
-    />
-    <PassedDetailDialog
-      v-model="showPassedDetail"
-      :data="selectedViolation"
-      @locate="locateInCad"
-    />
   </div>
 
   <!-- 右键批注菜单 -->
@@ -245,8 +233,6 @@ import { MlStatusBar } from './statusBar'
 // 导入旧版本新增的功能组件
 import PreviewArea from './PreviewArea.vue'
 import ReviewReportPanel from './ReviewReportPanel.vue'
-import ViolationDetailDialog from './ViolationDetailDialog.vue'
-import PassedDetailDialog from './PassedDetailDialog.vue'
 
 const emit = defineEmits<{
   (e: 'create'): void
@@ -363,11 +349,6 @@ const fileType = computed(() => {
 // ==================== 旧版本新增功能：定位相关 ====================
 const highlightText = ref('')
 const currentLocateInfo = ref<{ fileId?: string; rowId?: string }>({})
-
-// ==================== 旧版本新增功能：详情弹窗 ====================
-const showViolationDetail = ref(false)
-const showPassedDetail = ref(false)
-const selectedViolation = ref<any>(null)
 
 // ==================== 旧版本新增功能：计算属性 ====================
 const projectName = computed(() => decodeURIComponent(props.projectName || ''))
@@ -496,13 +477,7 @@ const decodeFileName = (fileName: string): string => {
  * 处理行点击事件
  */
 const handleRowClick = (row: any) => {
-  selectedViolation.value = row
-  currentLocateInfo.value = {}
-  if (row.risk_level === 0) {
-    showPassedDetail.value = true
-  } else {
-    showViolationDetail.value = true
-  }
+  console.log('handleRowClick', row)
 }
 
 /**
