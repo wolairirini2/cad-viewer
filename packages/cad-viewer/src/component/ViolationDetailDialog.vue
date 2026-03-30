@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     title="审查内容详情"
-    width="1100px"
+    width="1200px"
     class="violation-detail-dialog-wrapper"
     draggable
   >
@@ -164,7 +164,7 @@
           <el-table-column
             prop="equipment_name"
             label="设备名称"
-            min-width="140"
+            min-width="100"
             align="center"
           />
 
@@ -202,7 +202,7 @@
           <el-table-column
             prop="model_matched"
             label="型号匹配"
-            width="100"
+            width="80"
             align="center"
           >
             <template #default="{ row }">
@@ -239,7 +239,7 @@
           <el-table-column
             prop="result"
             label="结果"
-            width="120"
+            width="100"
             align="center"
           >
             <template #default="{ row }">
@@ -256,7 +256,7 @@
           <!-- 操作列 -->
           <el-table-column
             label="操作"
-            width="100"
+            width="80"
             align="center"
             fixed="right"
           >
