@@ -875,7 +875,7 @@ const handleBackToList = () => {
 .regulation-panel {
   box-sizing: border-box;
   padding: 0 6px;
-  width: 50%;
+  width: 35%;
   background: #ffffff;
   border-left: 1px solid #e8e8e8;
   display: flex;
@@ -1022,6 +1022,9 @@ const handleBackToList = () => {
   align-items: center;
   justify-content: space-between;
   padding-right: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding-bottom: 10px;
 }
 
 /* 违规项表格 */
@@ -1080,7 +1083,6 @@ const handleBackToList = () => {
   gap: 8px;
   flex-shrink: 0;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--color-gray-200);
 
   // 筛选标签项 - 基础样式
   .filter-item {
