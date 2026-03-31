@@ -1,7 +1,11 @@
 <template>
   <div
     class="regulation-panel"
-    :class="{ collapsed: isCollapsed, fullscreen: isFullscreen }"
+    :class="{
+      collapsed: isCollapsed,
+      fullscreen: isFullscreen,
+      isdetail: currentView !== 'list'
+    }"
   >
     <el-button
       class="panel-toggle-btn"
@@ -875,7 +879,7 @@ const handleBackToList = () => {
 .regulation-panel {
   box-sizing: border-box;
   padding: 0 6px;
-  width: 35%;
+  width: 50%;
   background: #ffffff;
   border-left: 1px solid #e8e8e8;
   display: flex;
@@ -883,9 +887,14 @@ const handleBackToList = () => {
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   z-index: 100;
   flex-shrink: 0; /* 防止侧边栏被压缩 */
-  position: relative;
+  position: absolute;
+  right: 0;
+  height: 100%;
 }
 
+.regulation-panel.isdetail {
+  width: 35%;
+}
 .regulation-panel.collapsed {
   width: 0;
   border-left: none;
