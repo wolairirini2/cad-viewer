@@ -168,7 +168,7 @@ export class AcApLocateCmd extends AcEdCommand {
         // 2. 在右上角添加序号文本
         const text = new AcDbMText()
         // 位置设置在右上角稍微偏外一点
-        const textPosition = new AcGePoint2d(max_point.x + 20, max_point.y + 105)
+        const textPosition = new AcGePoint2d(max_point.x + 10, max_point.y + 10)
         text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
         text.contents = this.getCircledNumber(index + 1)
         text.height = this.calculateTextHeight()
