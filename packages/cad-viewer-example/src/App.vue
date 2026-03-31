@@ -27,6 +27,433 @@ const reviewReportData = ref<any>(null)
 reviewReportData.value = {
   rules: [
     {
+      code: 'EQUIP-COMP-001',
+      name: '设备清册与主接线图一致性规范',
+      type: '企业标准',
+      articles: [
+        {
+          id: 'equipment_comparison_result',
+          title: '设备材料清册与主接线图对比结果',
+          origin: '基于设备名称分组、型号相似度匹配与数量一致性校核。',
+          content: '返回设备材料清册与主接线图的设备型号和数量对比结果。',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [],
+              description:
+                '已完成设备材料清册与主接线图自动比对，未发现数量不一致。',
+              geometry_ref: {
+                chapter: null,
+                extents: {
+                  max_point: {
+                    x: -302984.677123469,
+                    y: 225665.3659325138
+                  },
+                  min_point: {
+                    x: -394484.294794503,
+                    y: 174087.4868022078
+                  }
+                },
+                file_id: '0d9cacf6-9841-4493-a086-0d022584f8a7',
+                handles: null
+              },
+              review_trace: {
+                errors: [],
+                assistant_text: null,
+                cad_manifest_path: null,
+                comparison_groups: [
+                  {
+                    items: [
+                      {
+                        result: '图纸缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 6,
+                        equipment_list_model: 'LRB-110 200~600/5A 10P30'
+                      },
+                      {
+                        result: '图纸缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 6,
+                        equipment_list_model: 'LR-110 200~600/5A 0.5/0.2S'
+                      }
+                    ],
+                    equipment_name: '电流互感器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '图纸缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        model_matched: false,
+                        equipment_name: '隔离开关',
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 2,
+                        equipment_list_model:
+                          '最高电压72.5kV，额定电流630A，爬电距离2248mm，配电动操作机构'
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model:
+                          '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
+                        model_matched: false,
+                        equipment_name: '隔离开关',
+                        diagram_world_bboxes: [
+                          [
+                            -325945.91341731785, 218443.8472716925,
+                            -325438.3416984018, 219194.76289282684
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      }
+                    ],
+                    equipment_name: '隔离开关'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '图纸缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 2,
+                        equipment_list_model: '百兆、16光口；千兆、4光口'
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model:
+                          'SZ20-63000/110\n110±8x1.25%/10.5kV\n63000/63000kVA\nYNd11\nUk%=17\n附有载调压开关',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -310629.2991234272, 205027.13027179133,
+                            -308767.40898671956, 207775.2224719691
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '#3主变进线',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -392192.046583206, 205039.79882758227,
+                            -390300.05739728536, 207782.9416438829
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '同\n#1\n主\n变',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -358515.29699257767, 205056.99193927913,
+                            -357457.1811264507, 207750.02211835785
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '#1主变',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -336655.68777764344, 221312.5518780552,
+                            -335588.27776455175, 222789.69215878684
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '#2主变',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -372867.744065393, 221312.82106541854,
+                            -371785.9730852571, 222777.10822983188
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '#2主变进线分支1',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -354820.9941594858, 198726.6406411708,
+                            -353329.98235468566, 200381.74595109522
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '#3主变备用',
+                        model_matched: false,
+                        equipment_name: '主变压器',
+                        diagram_world_bboxes: [
+                          [
+                            -378451.3479433866, 221329.55798263717,
+                            -377406.6467167868, 222831.58332085138
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      }
+                    ],
+                    equipment_name: '主变压器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '清册缺失',
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 5,
+                        diagram_model:
+                          '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
+                        model_matched: false,
+                        equipment_name: '接地开关',
+                        diagram_world_bboxes: [
+                          [
+                            -342321.2684608885, 221998.2639963049,
+                            -341915.2756380271, 223084.17585723274
+                          ],
+                          [
+                            -341475.67675521807, 221998.5937210268,
+                            -341073.58965844545, 223085.73816021485
+                          ],
+                          [
+                            -340621.5047415499, 221998.643781972,
+                            -340212.15626703354, 223081.0036996439
+                          ],
+                          [
+                            -369265.63508439035, 216281.25337664224,
+                            -368869.2090148063, 217333.53143394698
+                          ],
+                          [
+                            -343163.5790417246, 221997.3706781847,
+                            -342753.415132125, 223072.36398348177
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      }
+                    ],
+                    equipment_name: '接地开关'
+                  }
+                ],
+                annotated_image_path: null,
+                equipment_list_devices: [
+                  {
+                    name: '电流互感器',
+                    count: 6,
+                    model: 'LRB-110 200~600/5A 10P30'
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 6,
+                    model: 'LR-110 200~600/5A 0.5/0.2S'
+                  },
+                  {
+                    name: '隔离开关',
+                    count: 2,
+                    model:
+                      '最高电压72.5kV，额定电流630A，爬电距离2248mm，配电动操作机构'
+                  },
+                  {
+                    name: '主变压器',
+                    count: 2,
+                    model: '百兆、16光口；千兆、4光口'
+                  }
+                ],
+                wiring_diagram_devices: [
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model:
+                      'SZ20-63000/110\n110±8x1.25%/10.5kV\n63000/63000kVA\nYNd11\nUk%=17\n附有载调压开关',
+                    evidence_world_bboxes: [
+                      [
+                        -310629.2991234272, 205027.13027179133,
+                        -308767.40898671956, 207775.2224719691
+                      ]
+                    ]
+                  },
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model: '#3主变进线',
+                    evidence_world_bboxes: [
+                      [
+                        -392192.046583206, 205039.79882758227,
+                        -390300.05739728536, 207782.9416438829
+                      ]
+                    ]
+                  },
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model: '同\n#1\n主\n变',
+                    evidence_world_bboxes: [
+                      [
+                        -358515.29699257767, 205056.99193927913,
+                        -357457.1811264507, 207750.02211835785
+                      ]
+                    ]
+                  },
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model: '#1主变',
+                    evidence_world_bboxes: [
+                      [
+                        -336655.68777764344, 221312.5518780552,
+                        -335588.27776455175, 222789.69215878684
+                      ]
+                    ]
+                  },
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model: '#2主变',
+                    evidence_world_bboxes: [
+                      [
+                        -372867.744065393, 221312.82106541854,
+                        -371785.9730852571, 222777.10822983188
+                      ]
+                    ]
+                  },
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model: '#2主变进线分支1',
+                    evidence_world_bboxes: [
+                      [
+                        -354820.9941594858, 198726.6406411708,
+                        -353329.98235468566, 200381.74595109522
+                      ]
+                    ]
+                  },
+                  {
+                    name: '主变压器',
+                    count: 1,
+                    model: '#3主变备用',
+                    evidence_world_bboxes: [
+                      [
+                        -378451.3479433866, 221329.55798263717,
+                        -377406.6467167868, 222831.58332085138
+                      ]
+                    ]
+                  },
+                  {
+                    name: '隔离开关',
+                    count: 1,
+                    model: '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
+                    evidence_world_bboxes: [
+                      [
+                        -325945.91341731785, 218443.8472716925,
+                        -325438.3416984018, 219194.76289282684
+                      ]
+                    ]
+                  },
+                  {
+                    name: '接地开关',
+                    count: 5,
+                    model: '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
+                    evidence_world_bboxes: [
+                      [
+                        -342321.2684608885, 221998.2639963049,
+                        -341915.2756380271, 223084.17585723274
+                      ],
+                      [
+                        -341475.67675521807, 221998.5937210268,
+                        -341073.58965844545, 223085.73816021485
+                      ],
+                      [
+                        -340621.5047415499, 221998.643781972,
+                        -340212.15626703354, 223081.0036996439
+                      ],
+                      [
+                        -369265.63508439035, 216281.25337664224,
+                        -368869.2090148063, 217333.53143394698
+                      ],
+                      [
+                        -343163.5790417246, 221997.3706781847,
+                        -342753.415132125, 223072.36398348177
+                      ]
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      category: '设备材料清册'
+    },
+    {
       code: 'DESIGN-SPEC-001',
       name: '工程设计说明编制规范',
       type: '行业标准',

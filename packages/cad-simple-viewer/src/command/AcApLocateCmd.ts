@@ -168,11 +168,11 @@ export class AcApLocateCmd extends AcEdCommand {
         // 2. 在右上角添加序号文本
         const text = new AcDbMText()
         // 位置设置在右上角稍微偏外一点
-        const textPosition = new AcGePoint2d(max_point.x + 5, max_point.y + 5)
+        const textPosition = new AcGePoint2d(max_point.x + 20, max_point.y + 105)
         text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
         text.contents = this.getCircledNumber(index + 1)
-        text.height = 20 // 文字高度
-        text.width = 20
+        text.height = this.calculateTextHeight()
+        text.width = 25 * this.calculateTextHeight()
         text.styleName = 'Standard'
 
         // 设置文字颜色为橙色
@@ -217,6 +217,22 @@ export class AcApLocateCmd extends AcEdCommand {
     } catch (e) {
       return false
     }
+  }
+
+  private calculateTextHeight(): number {
+    try {
+      const view = AcApDocManager.instance.curView as any
+      const layoutView = view?.activeLayoutView
+      if (layoutView?._camera) {
+        const zoom = layoutView._camera.zoom || 1
+        const baseTextHeight = 1
+        const textHeight = baseTextHeight / zoom
+        return textHeight
+      }
+    } catch (e) {
+      console.warn('[AnnotationCmd] Failed to calculate text height:', e)
+    }
+    return 10
   }
 }
 
