@@ -1,5 +1,10 @@
 // AcApLocateCmd.ts
-import { AcDbPolyline, AcGePoint2d, AcCmColor } from '@mlightcad/data-model'
+import {
+  AcDbPolyline,
+  AcGePoint2d,
+  AcCmColor,
+  AcDbMText
+} from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
 import { AcEdCommand, AcEdOpenMode } from '../editor'
@@ -8,6 +13,10 @@ export interface SingleExtent {
   min_point: { x: number; y: number }
   max_point: { x: number; y: number }
 }
+
+// 橙色定义
+const ORANGE_COLOR = { r: 255, g: 165, b: 0 }
+
 /**
  * 定位命令 - 在CAD中创建临时高亮方框标记区域
  */
@@ -72,6 +81,40 @@ export class AcApLocateCmd extends AcEdCommand {
   }
 
   /**
+   * 获取带圈数字字符
+   * @param num 序号 (1-20)
+   * @returns 带圈数字字符如 ①, ②, ③
+   */
+  private getCircledNumber(num: number): string {
+    const circledNumbers = [
+      '①',
+      '②',
+      '③',
+      '④',
+      '⑤',
+      '⑥',
+      '⑦',
+      '⑧',
+      '⑨',
+      '⑩',
+      '⑪',
+      '⑫',
+      '⑬',
+      '⑭',
+      '⑮',
+      '⑯',
+      '⑰',
+      '⑱',
+      '⑲',
+      '⑳'
+    ]
+    if (num >= 1 && num <= 20) {
+      return circledNumbers[num - 1]
+    }
+    return num.toString()
+  }
+
+  /**
    * 执行定位命令（符合基类签名：仅一个context参数）
    */
   execute(context: AcApContext): void {
@@ -94,40 +137,61 @@ export class AcApLocateCmd extends AcEdCommand {
 
       // 创建所有临时高亮方框
       const objectIds: string[] = []
-      // 创建所有临时高亮方框
-      for (const extent of extentsArray) {
-        // 绘制红色方框...
+
+      extentsArray.forEach((extent, index) => {
         const { min_point, max_point } = extent
 
-        // 创建临时高亮方框
-        const polyline = new AcDbPolyline()
-
-        // 创建矩形框的四个顶点（逆时针）
+        // 创建矩形的四个角点
         const p1 = new AcGePoint2d(min_point.x, min_point.y)
         const p2 = new AcGePoint2d(max_point.x, min_point.y)
         const p3 = new AcGePoint2d(max_point.x, max_point.y)
         const p4 = new AcGePoint2d(min_point.x, max_point.y)
 
-        polyline.addVertexAt(0, p1)
-        polyline.addVertexAt(1, p2)
-        polyline.addVertexAt(2, p3)
-        polyline.addVertexAt(3, p4)
-        polyline.closed = true
+        // 1. 创建橙色边框线
+        const outlinePolyline = new AcDbPolyline()
+        outlinePolyline.addVertexAt(0, p1)
+        outlinePolyline.addVertexAt(1, p2)
+        outlinePolyline.addVertexAt(2, p3)
+        outlinePolyline.addVertexAt(3, p4)
+        outlinePolyline.closed = true
 
-        // 设置样式：红色、线宽
-        const color = new AcCmColor()
-        color.setRGB(255, 0, 0)
-        polyline.color = color
-        polyline.lineWeight = 40 // 设置较粗的线宽以便可见
+        // 设置样式：橙色边框、线宽
+        const orangeColor = new AcCmColor()
+        orangeColor.setRGB(ORANGE_COLOR.r, ORANGE_COLOR.g, ORANGE_COLOR.b)
+        outlinePolyline.color = orangeColor
+        outlinePolyline.lineWeight = 40 // 设置较粗的线宽以便可见
 
         // 添加到模型空间
-        db.tables.blockTable.modelSpace.appendEntity(polyline)
-        objectIds.push(polyline.objectId)
-      }
+        db.tables.blockTable.modelSpace.appendEntity(outlinePolyline)
+        objectIds.push(outlinePolyline.objectId)
+
+        // 2. 在右上角添加序号文本
+        const text = new AcDbMText()
+        // 位置设置在右上角稍微偏外一点
+        const textPosition = new AcGePoint2d(max_point.x + 5, max_point.y + 5)
+        text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
+        text.contents = this.getCircledNumber(index + 1)
+        text.height = 20 // 文字高度
+        text.width = 20
+        text.styleName = 'Standard'
+
+        // 设置文字颜色为橙色
+        const textColor = new AcCmColor()
+        textColor.setRGB(ORANGE_COLOR.r, ORANGE_COLOR.g, ORANGE_COLOR.b)
+        text.color = textColor
+
+        // 添加到模型空间
+        db.tables.blockTable.modelSpace.appendEntity(text)
+        objectIds.push(text.objectId)
+      })
 
       // 保存所有 objectId 以便后续清除（逗号分隔）
       AcApLocateCmd._currentLocateBoxId = objectIds.join(',')
-      console.log('[AcApLocateCmd] 临时定位方框已创建:', objectIds.length, '个')
+      console.log(
+        '[AcApLocateCmd] 临时定位方框已创建:',
+        objectIds.length / 2,
+        '个'
+      )
     } catch (error) {
       console.error('[AcApLocateCmd] 定位失败:', error)
     }
