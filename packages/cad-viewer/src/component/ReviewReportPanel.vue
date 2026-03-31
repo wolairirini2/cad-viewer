@@ -887,9 +887,7 @@ const handleBackToList = () => {
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   z-index: 100;
   flex-shrink: 0; /* 防止侧边栏被压缩 */
-  position: absolute;
-  right: 0;
-  height: 100%;
+  position: relative;
 }
 
 .regulation-panel.isdetail {

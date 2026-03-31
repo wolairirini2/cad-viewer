@@ -168,11 +168,11 @@ export class AcApLocateCmd extends AcEdCommand {
         // 2. 在右上角添加序号文本
         const text = new AcDbMText()
         // 位置设置在右上角稍微偏外一点
-        const textPosition = new AcGePoint2d(max_point.x + 10, max_point.y + 10)
+        const textPosition = new AcGePoint2d(max_point.x + 5, max_point.y + 5)
         text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
         text.contents = this.getCircledNumber(index + 1)
         text.height = this.calculateTextHeight()
-        text.width = 25 * this.calculateTextHeight()
+        text.width = 25
         text.styleName = 'Standard'
 
         // 设置文字颜色为橙色
@@ -225,7 +225,7 @@ export class AcApLocateCmd extends AcEdCommand {
       const layoutView = view?.activeLayoutView
       if (layoutView?._camera) {
         const zoom = layoutView._camera.zoom || 1
-        const baseTextHeight = 1
+        const baseTextHeight = 20
         const textHeight = baseTextHeight / zoom
         return textHeight
       }

@@ -544,14 +544,15 @@ const handleCadLocate = async (row: any) => {
 const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
   if (!geometry?.extents) return
 
-  if (noWriteRect) {
-    const view = AcApDocManager.instance.curView
+  const view = AcApDocManager.instance.curView
 
-    const box = new AcGeBox2d(
-      { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
-      { x: geometry.extents.max_point.x, y: geometry.extents.max_point.y }
-    )
-    view.zoomTo(box, 2)
+  // 移动到定位
+  const box = new AcGeBox2d(
+    { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
+    { x: geometry.extents.max_point.x, y: geometry.extents.max_point.y }
+  )
+  view.zoomTo(box, 2)
+  if (noWriteRect) {
     return
   }
 
@@ -1198,6 +1199,7 @@ defineExpose({
   display: flex;
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .cad-container {
