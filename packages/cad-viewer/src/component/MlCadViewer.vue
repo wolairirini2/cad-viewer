@@ -551,16 +551,27 @@ const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
     { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
     { x: geometry.extents.max_point.x, y: geometry.extents.max_point.y }
   )
-  view.zoomTo(box, 0.5)
   if (noWriteRect) {
+    // return
+    console.log('noWriteRect')
+    const box2 = new AcGeBox2d(
+      { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
+      {
+        x: geometry.extents.max_point.x - 224200,
+        y: geometry.extents.max_point.y
+      }
+    )
+    view.zoomTo(box2, 1)
     return
+  } else {
+    view.zoomTo(box, 2)
   }
 
   // 如果有 all_extents（多区域），则使用它
   const extentsToUse = geometry.all_extents || [geometry.extents]
 
   // 支持多区域定位
-  const success = await AcApLocateCmd.locate(extentsToUse, 0.5)
+  const success = await AcApLocateCmd.locate(extentsToUse)
 
   if (success) {
     ElMessage.success(`已定位到 ${extentsToUse.length} 个区域`)
