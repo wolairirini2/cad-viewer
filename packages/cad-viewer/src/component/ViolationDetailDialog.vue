@@ -143,7 +143,7 @@
     </div>
 
     <!-- 设备材料清册和电气主接线图对比 -->
-    <div class="detail-section" v-if="reviewTrace?.comparison_groups">
+    <div class="detail-section compare-table" v-if="reviewTrace?.comparison_groups">
       <h4>设备材料清册和电气主接线图对比</h4>
       <el-table
         :data="flattenedData"
@@ -151,6 +151,7 @@
         border
         stripe
         style="width: 100%"
+        height="100%"
       >
         <!-- 设备名称列 -->
         <el-table-column
@@ -650,11 +651,14 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 
 <style scoped lang="scss">
 .violation-detail-dialog {
+  height: 100%;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
 }
 
 .detail-section {
-  margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px dashed #f0f0f0;
 }
@@ -662,6 +666,12 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 .detail-section:last-child {
   border-bottom: none;
   margin-bottom: 0;
+}
+
+.compare-table{
+  flex: 1;
+  overflow: hidden;
+  padding-bottom: 100px;
 }
 
 .section-header {

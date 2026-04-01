@@ -893,7 +893,7 @@ const handleBackToList = () => {
 .regulation-panel {
   box-sizing: border-box;
   padding: 0 6px;
-  width: 50%;
+  width: 60%;
   background: #ffffff;
   border-left: 1px solid #e8e8e8;
   display: flex;
@@ -905,7 +905,7 @@ const handleBackToList = () => {
 }
 
 .regulation-panel.isdetail {
-  width: 35%;
+  width: 50%;
 }
 .regulation-panel.collapsed {
   width: 0;
@@ -975,8 +975,7 @@ const handleBackToList = () => {
 
   .detail-view-body {
     flex: 1;
-    overflow-y: auto;
-    padding: 16px;
+    overflow: hidden;
   }
 
   .el-table {
