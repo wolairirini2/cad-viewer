@@ -143,7 +143,10 @@
     </div>
 
     <!-- 设备材料清册和电气主接线图对比 -->
-    <div class="detail-section compare-table" v-if="reviewTrace?.comparison_groups">
+    <div
+      class="detail-section compare-table"
+      v-if="reviewTrace?.comparison_groups"
+    >
       <h4>设备材料清册和电气主接线图对比</h4>
       <el-table
         :data="flattenedData"
@@ -471,6 +474,7 @@ const formatCalcDetail = (
 // 处理定位点击
 const handleLocate = (rowOrViolation: any) => {
   const diagramWorldBboxes = rowOrViolation.diagram_world_bboxes
+  const extents = rowOrViolation.extents
 
   if (!diagramWorldBboxes || diagramWorldBboxes.length === 0) return
 
@@ -484,7 +488,7 @@ const handleLocate = (rowOrViolation: any) => {
   const locateData = {
     geometry_ref: {
       file_id: props.data?.allViolations?.[0]?.geometry_ref?.file_id,
-      extents: extentsArray[0], // 第一个用于缩放定位
+      extents, // 用于缩放定位
       all_extents: extentsArray // 所有区域用于绘制多个方框
     }
   }
@@ -668,7 +672,7 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
   margin-bottom: 0;
 }
 
-.compare-table{
+.compare-table {
   flex: 1;
   overflow: hidden;
   padding-bottom: 100px;

@@ -551,7 +551,7 @@ const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
     { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
     { x: geometry.extents.max_point.x, y: geometry.extents.max_point.y }
   )
-  view.zoomTo(box, 2)
+  view.zoomTo(box, 0.5)
   if (noWriteRect) {
     return
   }
