@@ -110,15 +110,17 @@
           border
           class="calc-result-main"
         >
-          <el-descriptions-item label="高压侧母线短路电流(kA)">
-            <span class="highlight-value">{{
-              reviewTrace.calculation_result.hv_bus_Isc_ka?.toFixed(2)
-            }}</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="低压侧母线短路电流(kA)">
-            <span class="highlight-value">{{
-              reviewTrace.calculation_result.lv_bus_Isc_ka?.toFixed(2)
-            }}</span>
+          <el-descriptions-item
+            v-for="(label, key) in calculationDataMap"
+            :key="key"
+            :label="label"
+          >
+            {{
+              formatCalcDetail(
+                reviewTrace.calculation_result.calculation_data?.[key],
+                2
+              )
+            }}
           </el-descriptions-item>
         </el-descriptions>
 
@@ -364,21 +366,6 @@ const getStepNumber = (index: number) => {
 }
 
 // 提取参数映射表
-const default_extractedParamsMap: { [key: string]: string } = {
-  upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
-  upstream_main_transformer_capacity_mva: '上级系统主变容量 (MVA)',
-  upstream_main_transformer_impedance_percent: '上级系统主变短路阻抗百分比 (%)',
-  base_capacity_mva: '基准容量 (MVA)',
-  hv_base_voltage_kv: '高压侧基准电压 (kV)',
-  lv_base_voltage_kv: '低压侧基准电压 (kV)',
-  overhead_line_length_km: '架空线长度 (km)',
-  overhead_line_unit_reactance_ohm_per_km: '架空线单位电抗 (Ω/km)',
-  cable_length_km: '电缆长度 (km)',
-  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω/km)',
-  transformer_capacity_mva: '变压器容量 (MVA)',
-  transformer_impedance_percent: '变压器短路阻抗百分比 (%)'
-}
-// 提取参数映射表
 const extractedParamsMap = computed(() => {
   let result: { [key: string]: string } = {}
   reviewTrace.value.extracted_parameters &&
@@ -386,24 +373,29 @@ const extractedParamsMap = computed(() => {
       if (reviewTrace.value.extracted_parameters_map) {
         result[key] = reviewTrace.value.extracted_parameters_map[key] || key
       } else {
-        result[key] = default_extractedParamsMap[key] || key
+        result[key] = key
       }
     })
   return result
 })
 
-const default_calculationDetailsMap: { [key: string]: string } = {
-  Zj_hv: '高压侧基准电抗 (Ω)',
-  Ij_hv: '高压侧基准电流 (kA)',
-  Zj_lv: '低压侧基准电抗 (Ω)',
-  Ij_lv: '低压侧基准电流 (kA)',
-  X_sys_star: '系统标幺电抗',
-  X_line_star: '线路标幺电抗',
-  X_line_ohm: '线路有名电抗 (Ω)',
-  X_transformer_star: '变压器标幺电抗',
-  X_total_hv_star: '高压侧总标幺电抗',
-  X_total_lv_star: '低压侧总标幺电抗'
-}
+const calculationDataMap = computed(() => {
+  let result: { [key: string]: string } = {}
+  reviewTrace.value.calculation_result.calculation_data &&
+    Object.keys(reviewTrace.value.calculation_result.calculation_data).map(
+      key => {
+        if (reviewTrace.value.calculation_result.calculation_data_map) {
+          result[key] =
+            reviewTrace.value.calculation_result.calculation_data_map[key] ||
+            key
+        } else {
+          result[key] = key
+        }
+      }
+    )
+  return result
+})
+
 // 计算详情映射表
 const calculationDetailsMap = computed(() => {
   let result: { [key: string]: string } = {}
@@ -415,7 +407,7 @@ const calculationDetailsMap = computed(() => {
             reviewTrace.value.calculation_result.calculation_details_map[key] ||
             key
         } else {
-          result[key] = default_calculationDetailsMap[key] || key
+          result[key] = key
         }
       }
     )
@@ -466,10 +458,13 @@ const formatValue = (value: any, key: string | number): string => {
 }
 
 // 格式化计算详情数值
-const formatCalcDetail = (value: number | undefined): string => {
+const formatCalcDetail = (
+  value: number | undefined,
+  fixed: number = 4
+): string => {
   if (value === undefined || value === null) return '-'
   // 保留4位小数，去除末尾的0
-  return value.toFixed(4).replace(/\.?0+$/, '')
+  return value.toFixed(fixed).replace(/\.?0+$/, '')
 }
 
 // 处理定位点击
