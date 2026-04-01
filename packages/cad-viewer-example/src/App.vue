@@ -671,256 +671,371 @@ reviewReportData.value = {
       category: '设备材料清册'
     },
     {
-      code: 'EQUIP-COMP-001',
-      name: '设备清册与主接线图一致性规范',
-      type: '企业标准',
+      code: 'DESIGN-SPEC-001',
+      name: '工程设计说明编制规范',
+      type: '行业标准',
       articles: [
         {
-          id: 'equipment_consistency',
-          title: '设备一致性检查',
-          origin: '设备材料清册应与电气主接线图保持一致',
-          content: '设备清册与主接线图应在设备数量、规格参数、设备存在性上一致',
+          id: '0',
+          title: '短路电流审查',
+          origin: 'GB/T 15544.1-2023',
+          content: '短路电流审查',
           violations: [
             {
               risk_level: 'high',
               suggestion: [
-                '请核查中性点零序CT 12kV 100/1A 5P30/5P30级 15/15VA的数量!'
+                "在设计说明的'短路电流计算'章节中补充以下参数：架空线路长度, 电缆线路长度, 系统短路容量, 上级系统主变压器容量, 上级系统主变压器短路阻抗比"
               ],
-              description:
-                "设备清册中'中性点零序CT'（12kV 100/1A 5P30/5P30级 15/15VA）数量为2，CAD图中找到0处。",
+              description: '缺少短路电流计算的关键参数，无法进行计算验证。',
               geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: -191521.9640928123,
-                    y: -148263.64864823624
-                  },
-                  min_point: {
-                    x: -191798.22062829687,
-                    y: -148358.29517052922
-                  }
-                },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查间隙电流互感器 12kV 100-300/1A 5P30/5P30级 15/15VA的数量!'
-              ],
-              description:
-                "设备清册中'间隙电流互感器'（12kV 100-300/1A 5P30/5P30级 15/15VA）数量为2，CAD图中找到0处（三相标注×3=0）。",
-              geometry_ref: {
-                chapter: null,
+                chapter:
+                  '泰州鸿庆变110kV进线2回，其中1回接入220kV通园变、1回接入220kV洋思变。\n\n查得220kV通园变110kV母线大方式下正序阻抗标幺值为0.0457，远景大方式下正序阻抗标幺值为0.013；线路阻抗标幺值为XL*=0.043；220kV洋思变110kV母线大方式下正序阻抗标幺值为0.0734，远景大方式下正序阻抗标幺值为0.013，线路阻抗标幺值为XL*=0.045。本站短路电流计算以通园变馈供为依据。\n\n1号、2号主变压器容量均为63MVA，主变阻抗电压Uk=17%，主变计算阻抗标幺值Xb*=0.27。\n\n本期各电路元件阻抗见下图，图中阻抗均已归算为基准容量为100MVA的标幺值。\n\n图3.2-1 短路电流计算阻抗图\n\n（1）本期短路电流计算结果见表3.2-2。\n\n表3.2-2 本期短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 5.66 | 14.43\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 15.33 | 39.09\n\n（2）远景短路电流计算\n\n远景鸿庆变电源来自220kV变电站。\n\n1）该220kV变电站110kV母线远景阻抗为0.013(标幺值)。\n\n2）110千伏鸿庆变电站主变压器容量为63MVA（Uk=17%），计算阻抗标幺值Xb*=0.27。\n\n3）不考虑110kV侧电源并列对本站供电，本站低压侧为无电源的负荷端。\n\n4）鸿庆变10kV侧母线在正常情况下按照分列运行方式考虑。\n\n远景各电路元件阻抗见图3.2-1，图中阻抗均按照基准电压为系统平均额定电压、基准容量为100MVA归算后的标幺值。\n\n远景短路电流计算结果见表3.2-2。\n\n表3.2-2   远景短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 8.93 | 22.77\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 16.87 | 43.01\n\n根据短路电流计算，本期及远景110kV和10kV侧短路电流均可控制在40kA、31.5kA以下。结合国网2026年版通用设备，本工程110kV、10kV设备短路电流水平按40kA、31.5kA选择。',
                 extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
                 handles: null
               },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查隔离开关 126kV，3150A，40kA/3s，配置2只微动开关的数量!'
-              ],
-              description:
-                "设备清册中'隔离开关'（126kV，3150A，40kA/3s，配置2只微动开关）数量为3，CAD图中找到18处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: 473564.95751572,
-                    y: -166197.8866421183
-                  },
-                  min_point: {
-                    x: 464889.6430528725,
-                    y: -175409.0086098614
-                  }
+              review_trace: {
+                defaults_applied: {
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4
                 },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: [
-                  '38EB13',
-                  '38EB15',
-                  '38EB1A',
-                  '38EB1C',
-                  '38EB1E',
-                  '3919BD',
-                  '3919C1',
-                  '3919C3',
-                  '3919C5',
-                  '3919C7',
-                  '3919D0',
-                  '391D50',
-                  '391D55',
-                  '391D57',
-                  '391D5E',
-                  '391D60',
-                  '391D62',
-                  '392263'
-                ]
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查110kV电容式电压互感器 20000pF,110/√3/0.1/√3/0.1/√3/0.1/√3/0.1kV  0.2/0.5（3P）/0.5（3P）/3P  10/10/10/10VA,外绝缘爬电距离不小于1812.5mm的数量!'
-              ],
-              description:
-                "设备清册中'110kV电容式电压互感器'（20000pF,110/√3/0.1/√3/0.1/√3/0.1/√3/0.1kV  0.2/0.5（3P）/0.5（3P）/3P  10/10/10/10VA,外绝缘爬电距离不小于1812.5mm）数量为15，CAD图中找到0处（三相标注×3=0）。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查110kV双柱水平旋转隔离开关 126kV，3150A，40kA/3s，双接地,配置6只微动开关,外绝缘爬电距离不小于25mm/kV的数量!'
-              ],
-              description:
-                "设备清册中'110kV双柱水平旋转隔离开关'（126kV，3150A，40kA/3s，双接地,配置6只微动开关,外绝缘爬电距离不小于25mm/kV）数量为2，CAD图中找到18处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: 473564.95751572,
-                    y: -166197.8866421183
-                  },
-                  min_point: {
-                    x: 464889.6430528725,
-                    y: -175409.0086098614
-                  }
+                extracted_parameters: {
+                  cable_length_km: null,
+                  base_capacity_mva: 100,
+                  hv_base_voltage_kv: 115,
+                  lv_base_voltage_kv: 10.5,
+                  overhead_line_length_km: null,
+                  transformer_capacity_mva: 63,
+                  normal_supply_hv_bus_Isc_ka: 5.66,
+                  normal_supply_lv_bus_Isc_ka: 15.33,
+                  transformer_impedance_percent: 17,
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  upstream_short_circuit_capacity_mva: null,
+                  upstream_main_transformer_capacity_mva: null,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4,
+                  upstream_main_transformer_impedance_percent: null
                 },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: [
-                  '38EB13',
-                  '38EB15',
-                  '38EB1A',
-                  '38EB1C',
-                  '38EB1E',
-                  '3919BD',
-                  '3919C1',
-                  '3919C3',
-                  '3919C5',
-                  '3919C7',
-                  '3919D0',
-                  '391D50',
-                  '391D55',
-                  '391D57',
-                  '391D5E',
-                  '391D60',
-                  '391D62',
-                  '392263'
-                ]
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查隔离开关 40.5kV 1250A 31.5kA，配置2只微动开关，满足一键顺控功能的数量!'
-              ],
-              description:
-                "设备清册中'隔离开关'（40.5kV 1250A 31.5kA，配置2只微动开关，满足一键顺控功能）数量为3，CAD图中找到6处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: 445516.3814443483,
-                    y: -169195.8130595214
-                  },
-                  min_point: {
-                    x: 434351.6590295973,
-                    y: -174577.8368036391
-                  }
-                },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: [
-                  '38F730',
-                  '3918C3',
-                  '3918D6',
-                  '3918DC',
-                  '3918F0',
-                  '391FE7'
-                ]
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: ['请核查电流互感器 4000/1A,5P30,15VA的数量!'],
-              description:
-                "设备清册中'电流互感器'（4000/1A,5P30,15VA）数量为1，CAD图中找到3处（三相标注×3=9）。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: 480667.6127904095,
-                    y: -183764.7289309421
-                  },
-                  min_point: {
-                    x: 455903.5321677676,
-                    y: -191155.982043519
-                  }
-                },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: ['38EFE4', '38FBA3', '3FAE43']
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查接地开关 2kV,31.5kA，配置电动接地刀，配置2只微动开关，满足一键顺控功能的数量!'
-              ],
-              description:
-                "设备清册中'接地开关'（2kV,31.5kA，配置电动接地刀，配置2只微动开关，满足一键顺控功能）数量为1，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查隔离开关 GW4-40.5DW/1250A-4，附钢支架的数量!'
-              ],
-              description:
-                "设备清册中'隔离开关'（GW4-40.5DW/1250A-4，附钢支架）数量为1，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: ['请核查隔离开关(单接地) GN19-12/630A的数量!'],
-              description:
-                "设备清册中'隔离开关(单接地)'（GN19-12/630A）数量为1，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
+                extracted_parameters_map: {
+                  cable_length_km: '电缆长度 (km)',
+                  base_capacity_mva: '基准容量 (MVA)',
+                  hv_base_voltage_kv: '高压侧基准电压 (kV)',
+                  lv_base_voltage_kv: '低压侧基准电压 (kV)',
+                  overhead_line_length_km: '架空线长度 (km)',
+                  transformer_capacity_mva: '变压器容量 (MVA)',
+                  transformer_impedance_percent: '变压器短路阻抗百分比 (%)',
+                  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω/km)',
+                  upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
+                  upstream_main_transformer_capacity_mva:
+                    '上级系统主变容量 (MVA)',
+                  overhead_line_unit_reactance_ohm_per_km:
+                    '架空线单位电抗 (Ω/km)',
+                  upstream_main_transformer_impedance_percent:
+                    '上级系统主变短路阻抗百分比 (%)'
+                }
+              }
             }
           ]
+        },
+        {
+          id: '1',
+          title: '断路器：最高工作电压审查',
+          origin: 'GB/T 156-2017',
+          content: '断路器设备最高工作电压审查',
+          violations: [
+            {
+              risk_level: 'medium',
+              suggestion: [
+                '补充该设备的 stardard_voltage（标称电压）和 maximum_voltage（最高工作电压）。'
+              ],
+              description:
+                '设备“SF6断路器”缺少标称电压或最高工作电压，无法完成 GB/T 156-2017 校核。',
+              geometry_ref: {
+                chapter:
+                  '序号 | 短路点编号 | 计 算 值 | 计 算 值 | 计 算 值 | 计 算 值 | 断路器型式 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 备  注\n序号 | 短路点编号 | 标称电压 | 工作电流 | 热稳定电流值 | 短路电流冲击值 | 断路器型式 | 额定电压 | 额定电流 | 额定开断电流 | 热稳定电流 | 极限通过电流峰值 | 备  注\n序号 | 短路点编号 | (kV) | (A) | (kA) | (kA) | 断路器型式 | (kV) | (A) | (kA) | (kA/s) | (kA) | 备  注\n1 | k1 | 110 | 551 | 8.93 | 222.77 | SF6断路器 | 126 | 3150 | 40 | 7/3 | 100 | \n2 | k2 | 10 | 3031 | 16.87 | 43.01 | 真空断路器 | 12 | 4000 | 40 | 40/4 | 100 | 主变、分段\n2 | k2 | 10 | 600 | 16.87 | 43.01 | 真空断路器 | 12 | 1250 | 31.5 | 31.5/4 | 80 | 出线、电容器',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: '断路器额定电压126kV与系统标称电压110kV不匹配',
+                  device_name: 'SF6断路器',
+                  is_compliant: '否',
+                  maximum_voltage: null,
+                  stardard_voltage: 110
+                },
+                gb_t_156_mapping: {
+                  '6.0': 7.2,
+                  '10.0': 12,
+                  '35.0': 40.5,
+                  '110.0': 126,
+                  '220.0': 252
+                }
+              }
+            },
+            {
+              risk_level: 'medium',
+              suggestion: [
+                '补充该设备的 stardard_voltage（标称电压）和 maximum_voltage（最高工作电压）。'
+              ],
+              description:
+                '设备“真空断路器”缺少标称电压或最高工作电压，无法完成 GB/T 156-2017 校核。',
+              geometry_ref: {
+                chapter:
+                  '序号 | 短路点编号 | 计 算 值 | 计 算 值 | 计 算 值 | 计 算 值 | 断路器型式 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 备  注\n序号 | 短路点编号 | 标称电压 | 工作电流 | 热稳定电流值 | 短路电流冲击值 | 断路器型式 | 额定电压 | 额定电流 | 额定开断电流 | 热稳定电流 | 极限通过电流峰值 | 备  注\n序号 | 短路点编号 | (kV) | (A) | (kA) | (kA) | 断路器型式 | (kV) | (A) | (kA) | (kA/s) | (kA) | 备  注\n1 | k1 | 110 | 551 | 8.93 | 222.77 | SF6断路器 | 126 | 3150 | 40 | 7/3 | 100 | \n2 | k2 | 10 | 3031 | 16.87 | 43.01 | 真空断路器 | 12 | 4000 | 40 | 40/4 | 100 | 主变、分段\n2 | k2 | 10 | 600 | 16.87 | 43.01 | 真空断路器 | 12 | 1250 | 31.5 | 31.5/4 | 80 | 出线、电容器',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: '断路器额定电压12kV与系统标称电压10kV不匹配',
+                  device_name: '真空断路器',
+                  is_compliant: '否',
+                  maximum_voltage: null,
+                  stardard_voltage: 10
+                },
+                gb_t_156_mapping: {
+                  '6.0': 7.2,
+                  '10.0': 12,
+                  '35.0': 40.5,
+                  '110.0': 126,
+                  '220.0': 252
+                }
+              }
+            },
+            {
+              risk_level: 'medium',
+              suggestion: [
+                '补充该设备的 stardard_voltage（标称电压）和 maximum_voltage（最高工作电压）。'
+              ],
+              description:
+                '设备“真空断路器”缺少标称电压或最高工作电压，无法完成 GB/T 156-2017 校核。',
+              geometry_ref: {
+                chapter:
+                  '序号 | 短路点编号 | 计 算 值 | 计 算 值 | 计 算 值 | 计 算 值 | 断路器型式 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 备  注\n序号 | 短路点编号 | 标称电压 | 工作电流 | 热稳定电流值 | 短路电流冲击值 | 断路器型式 | 额定电压 | 额定电流 | 额定开断电流 | 热稳定电流 | 极限通过电流峰值 | 备  注\n序号 | 短路点编号 | (kV) | (A) | (kA) | (kA) | 断路器型式 | (kV) | (A) | (kA) | (kA/s) | (kA) | 备  注\n1 | k1 | 110 | 551 | 8.93 | 222.77 | SF6断路器 | 126 | 3150 | 40 | 7/3 | 100 | \n2 | k2 | 10 | 3031 | 16.87 | 43.01 | 真空断路器 | 12 | 4000 | 40 | 40/4 | 100 | 主变、分段\n2 | k2 | 10 | 600 | 16.87 | 43.01 | 真空断路器 | 12 | 1250 | 31.5 | 31.5/4 | 80 | 出线、电容器',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: '断路器额定电压12kV与系统标称电压10kV不匹配',
+                  device_name: '真空断路器',
+                  is_compliant: '否',
+                  maximum_voltage: null,
+                  stardard_voltage: 10
+                },
+                gb_t_156_mapping: {
+                  '6.0': 7.2,
+                  '10.0': 12,
+                  '35.0': 40.5,
+                  '110.0': 126,
+                  '220.0': 252
+                }
+              }
+            }
+          ]
+        },
+        {
+          id: '3',
+          title: '断路器：短路电流冲击值（即动稳定电流峰值）审查',
+          origin: 'GB/T 15544.1-2023',
+          content: '断路器设备短路电流冲击值（即动稳定电流峰值）审查',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                '按公式 i_peak=√2×k×I_0s 重新校核该设备短路电流冲击值，并核对0秒短路电流周期分量 8.93kA 及冲击系数 1.80 的取值依据。'
+              ],
+              description:
+                '设备“110kV SF6断路器”短路电流冲击值与公式计算值差异过大：计算值 22.73kA，设计值 222.77kA，差异 89.8%。',
+              geometry_ref: {
+                chapter:
+                  '泰州鸿庆变110kV进线2回，其中1回接入220kV通园变、1回接入220kV洋思变。\n\n查得220kV通园变110kV母线大方式下正序阻抗标幺值为0.0457，远景大方式下正序阻抗标幺值为0.013；线路阻抗标幺值为XL*=0.043；220kV洋思变110kV母线大方式下正序阻抗标幺值为0.0734，远景大方式下正序阻抗标幺值为0.013，线路阻抗标幺值为XL*=0.045。本站短路电流计算以通园变馈供为依据。\n\n1号、2号主变压器容量均为63MVA，主变阻抗电压Uk=17%，主变计算阻抗标幺值Xb*=0.27。\n\n本期各电路元件阻抗见下图，图中阻抗均已归算为基准容量为100MVA的标幺值。\n\n图3.2-1 短路电流计算阻抗图\n\n（1）本期短路电流计算结果见表3.2-2。\n\n表3.2-2 本期短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 5.66 | 14.43\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 15.33 | 39.09\n\n（2）远景短路电流计算\n\n远景鸿庆变电源来自220kV变电站。\n\n1）该220kV变电站110kV母线远景阻抗为0.013(标幺值)。\n\n2）110千伏鸿庆变电站主变压器容量为63MVA（Uk=17%），计算阻抗标幺值Xb*=0.27。\n\n3）不考虑110kV侧电源并列对本站供电，本站低压侧为无电源的负荷端。\n\n4）鸿庆变10kV侧母线在正常情况下按照分列运行方式考虑。\n\n远景各电路元件阻抗见图3.2-1，图中阻抗均按照基准电压为系统平均额定电压、基准容量为100MVA归算后的标幺值。\n\n远景短路电流计算结果见表3.2-2。\n\n表3.2-2   远景短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 8.93 | 22.77\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 16.87 | 43.01\n\n根据短路电流计算，本期及远景110kV和10kV侧短路电流均可控制在40kA、31.5kA以下。结合国网2026年版通用设备，本工程110kV、10kV设备短路电流水平按40kA、31.5kA选择。',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: 'k1点',
+                  device_name: '110kV SF6断路器',
+                  shock_coefficient: null,
+                  short_circuit_current_0s: 8.93,
+                  short_circuit_shock_value: 222.77
+                },
+                formula: 'i_peak = sqrt(2) * k * I_0s',
+                formula_units: {
+                  shock_coefficient: '-',
+                  short_circuit_current_0s: 'kA',
+                  short_circuit_shock_value: 'kA'
+                },
+                defaults_applied: {
+                  shock_coefficient: 1.8
+                },
+                tolerance_percent: 5,
+                calculation_result: {
+                  difference_percent: 89.7957,
+                  declared_short_circuit_shock_value: 222.77,
+                  calculated_short_circuit_shock_value: 22.7321
+                }
+              }
+            }
+          ]
+        },
+        {
+          id: '4',
+          title: '断路器：t秒热稳定电流审查',
+          origin: 'GB/T 15544.1-2023',
+          content: '断路器设备t秒热稳定电流审查',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                '按热稳定校验原则，确保设备“110kV SF6断路器”的实际t秒热稳定电流大于等于理论短路电流周期分量，并复核设备选型参数。'
+              ],
+              description:
+                '设备“110kV SF6断路器”t秒热稳定电流不足以满足理论短路电流周期分量要求：实际t秒热稳定电流 7.00kA，理论短路电流周期分量 8.93kA，不足 21.6%。',
+              geometry_ref: {
+                chapter:
+                  '泰州鸿庆变110kV进线2回，其中1回接入220kV通园变、1回接入220kV洋思变。\n\n查得220kV通园变110kV母线大方式下正序阻抗标幺值为0.0457，远景大方式下正序阻抗标幺值为0.013；线路阻抗标幺值为XL*=0.043；220kV洋思变110kV母线大方式下正序阻抗标幺值为0.0734，远景大方式下正序阻抗标幺值为0.013，线路阻抗标幺值为XL*=0.045。本站短路电流计算以通园变馈供为依据。\n\n1号、2号主变压器容量均为63MVA，主变阻抗电压Uk=17%，主变计算阻抗标幺值Xb*=0.27。\n\n本期各电路元件阻抗见下图，图中阻抗均已归算为基准容量为100MVA的标幺值。\n\n图3.2-1 短路电流计算阻抗图\n\n（1）本期短路电流计算结果见表3.2-2。\n\n表3.2-2 本期短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 5.66 | 14.43\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 15.33 | 39.09\n\n（2）远景短路电流计算\n\n远景鸿庆变电源来自220kV变电站。\n\n1）该220kV变电站110kV母线远景阻抗为0.013(标幺值)。\n\n2）110千伏鸿庆变电站主变压器容量为63MVA（Uk=17%），计算阻抗标幺值Xb*=0.27。\n\n3）不考虑110kV侧电源并列对本站供电，本站低压侧为无电源的负荷端。\n\n4）鸿庆变10kV侧母线在正常情况下按照分列运行方式考虑。\n\n远景各电路元件阻抗见图3.2-1，图中阻抗均按照基准电压为系统平均额定电压、基准容量为100MVA归算后的标幺值。\n\n远景短路电流计算结果见表3.2-2。\n\n表3.2-2   远景短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 8.93 | 22.77\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 16.87 | 43.01\n\n根据短路电流计算，本期及远景110kV和10kV侧短路电流均可控制在40kA、31.5kA以下。结合国网2026年版通用设备，本工程110kV、10kV设备短路电流水平按40kA、31.5kA选择。',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: 'k1短路点，额定开断电流40kA',
+                  t_seconds: 3,
+                  device_name: '110kV SF6断路器',
+                  thermal_stable_current: 7,
+                  short_circuit_current_0s: 8.93
+                },
+                formula: 'I_thermal_actual(t) >= I_0s_theoretical',
+                formula_scope: '无穷大电源供电系统热稳定校验',
+                formula_units: {
+                  t_seconds: 's',
+                  thermal_stable_current: 'kA',
+                  short_circuit_current_0s: 'kA'
+                },
+                tolerance_percent: 5,
+                calculation_result: {
+                  is_satisfied: false,
+                  margin_current: -1.93,
+                  margin_percent: -21.6125,
+                  deficit_percent: 21.6125,
+                  declared_thermal_stable_current: 7,
+                  theoretical_short_circuit_current_0s: 8.93
+                }
+              }
+            }
+          ]
+        },
+        {
+          id: '5',
+          title: '断路器：额定电流选型审查',
+          origin:
+            'GB 50060-2008、DL/T 615-2013、GB/T 156-2017、GB/T 15544 1-2023',
+          content: '断路器设备额定电流选型审查',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                '按 I_rated >= I_load×1.2×2 重新校核断路器“10kV主变、分段真空断路器”选型，将额定电流提高至不低于 7274.40A。'
+              ],
+              description:
+                '断路器“10kV主变、分段真空断路器”额定电流选型不足：额定电流 4000.00A，小于最小需求值 7274.40A，不足 45.0%。',
+              geometry_ref: {
+                chapter:
+                  '泰州鸿庆变110kV进线2回，其中1回接入220kV通园变、1回接入220kV洋思变。\n\n查得220kV通园变110kV母线大方式下正序阻抗标幺值为0.0457，远景大方式下正序阻抗标幺值为0.013；线路阻抗标幺值为XL*=0.043；220kV洋思变110kV母线大方式下正序阻抗标幺值为0.0734，远景大方式下正序阻抗标幺值为0.013，线路阻抗标幺值为XL*=0.045。本站短路电流计算以通园变馈供为依据。\n\n1号、2号主变压器容量均为63MVA，主变阻抗电压Uk=17%，主变计算阻抗标幺值Xb*=0.27。\n\n本期各电路元件阻抗见下图，图中阻抗均已归算为基准容量为100MVA的标幺值。\n\n图3.2-1 短路电流计算阻抗图\n\n（1）本期短路电流计算结果见表3.2-2。\n\n表3.2-2 本期短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 5.66 | 14.43\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 15.33 | 39.09\n\n（2）远景短路电流计算\n\n远景鸿庆变电源来自220kV变电站。\n\n1）该220kV变电站110kV母线远景阻抗为0.013(标幺值)。\n\n2）110千伏鸿庆变电站主变压器容量为63MVA（Uk=17%），计算阻抗标幺值Xb*=0.27。\n\n3）不考虑110kV侧电源并列对本站供电，本站低压侧为无电源的负荷端。\n\n4）鸿庆变10kV侧母线在正常情况下按照分列运行方式考虑。\n\n远景各电路元件阻抗见图3.2-1，图中阻抗均按照基准电压为系统平均额定电压、基准容量为100MVA归算后的标幺值。\n\n远景短路电流计算结果见表3.2-2。\n\n表3.2-2   远景短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 8.93 | 22.77\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 16.87 | 43.01\n\n根据短路电流计算，本期及远景110kV和10kV侧短路电流均可控制在40kA、31.5kA以下。结合国网2026年版通用设备，本工程110kV、10kV设备短路电流水平按40kA、31.5kA选择。',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: '短路点k2，额定开断电流40kA',
+                  device_name: '10kV主变、分段真空断路器',
+                  load_current: 3031,
+                  rated_current: 4000,
+                  overload_current: null,
+                  short_circuit_current: 16870
+                },
+                formula: 'I_rated >= I_load * 1.2 * 2',
+                formula_units: {
+                  load_current: 'A',
+                  rated_current: 'A',
+                  required_min_rated_current: 'A'
+                },
+                formula_factors: {
+                  safety_factor: 1.2,
+                  parallel_factor: 2
+                },
+                calculation_result: {
+                  is_satisfied: false,
+                  margin_current: -3274.4,
+                  margin_percent: -45.0126,
+                  declared_load_current: 3031,
+                  declared_rated_current: 4000,
+                  required_min_rated_current: 7274.4
+                }
+              }
+            },
+            {
+              risk_level: 'high',
+              suggestion: [
+                '按 I_rated >= I_load×1.2×2 重新校核断路器“10kV出线、电容器真空断路器”选型，将额定电流提高至不低于 1440.00A。'
+              ],
+              description:
+                '断路器“10kV出线、电容器真空断路器”额定电流选型不足：额定电流 1250.00A，小于最小需求值 1440.00A，不足 13.2%。',
+              geometry_ref: {
+                chapter:
+                  '泰州鸿庆变110kV进线2回，其中1回接入220kV通园变、1回接入220kV洋思变。\n\n查得220kV通园变110kV母线大方式下正序阻抗标幺值为0.0457，远景大方式下正序阻抗标幺值为0.013；线路阻抗标幺值为XL*=0.043；220kV洋思变110kV母线大方式下正序阻抗标幺值为0.0734，远景大方式下正序阻抗标幺值为0.013，线路阻抗标幺值为XL*=0.045。本站短路电流计算以通园变馈供为依据。\n\n1号、2号主变压器容量均为63MVA，主变阻抗电压Uk=17%，主变计算阻抗标幺值Xb*=0.27。\n\n本期各电路元件阻抗见下图，图中阻抗均已归算为基准容量为100MVA的标幺值。\n\n图3.2-1 短路电流计算阻抗图\n\n（1）本期短路电流计算结果见表3.2-2。\n\n表3.2-2 本期短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 5.66 | 14.43\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 15.33 | 39.09\n\n（2）远景短路电流计算\n\n远景鸿庆变电源来自220kV变电站。\n\n1）该220kV变电站110kV母线远景阻抗为0.013(标幺值)。\n\n2）110千伏鸿庆变电站主变压器容量为63MVA（Uk=17%），计算阻抗标幺值Xb*=0.27。\n\n3）不考虑110kV侧电源并列对本站供电，本站低压侧为无电源的负荷端。\n\n4）鸿庆变10kV侧母线在正常情况下按照分列运行方式考虑。\n\n远景各电路元件阻抗见图3.2-1，图中阻抗均按照基准电压为系统平均额定电压、基准容量为100MVA归算后的标幺值。\n\n远景短路电流计算结果见表3.2-2。\n\n表3.2-2   远景短路电流计算结果表\n\n短路点编号 | 短路位置 | 基准容量 | 基准电压 | 短路形式 | 暂态短路电流(有效值) | 短路电流冲击值(峰值)\n短路点编号 | 短路位置 | Si | Ui | 短路形式 | I” | Ich\n短路点编号 | 短路位置 | MVA | kV | 短路形式 | kA | kA\nk1 | 110kV母线 | 100 | 115 | 三相短路 | 8.93 | 22.77\nK2 | 10kV母线分列 | 100 | 10.5 | 三相短路 | 16.87 | 43.01\n\n根据短路电流计算，本期及远景110kV和10kV侧短路电流均可控制在40kA、31.5kA以下。结合国网2026年版通用设备，本工程110kV、10kV设备短路电流水平按40kA、31.5kA选择。',
+                extents: null,
+                file_id: 'e220a503-8ba2-4b77-841b-804177c2e76d',
+                handles: null
+              },
+              review_trace: {
+                item: {
+                  remark: '短路点k2，额定开断电流31.5kA',
+                  device_name: '10kV出线、电容器真空断路器',
+                  load_current: 600,
+                  rated_current: 1250,
+                  overload_current: null,
+                  short_circuit_current: 16870
+                },
+                formula: 'I_rated >= I_load * 1.2 * 2',
+                formula_units: {
+                  load_current: 'A',
+                  rated_current: 'A',
+                  required_min_rated_current: 'A'
+                },
+                formula_factors: {
+                  safety_factor: 1.2,
+                  parallel_factor: 2
+                },
+                calculation_result: {
+                  is_satisfied: false,
+                  margin_current: -190,
+                  margin_percent: -13.1944,
+                  declared_load_current: 600,
+                  declared_rated_current: 1250,
+                  required_min_rated_current: 1440
+                }
+              }
+            }
+          ]
+        },
+        {
+          id: '6',
+          title: '断路器：额定开断电流选型审查',
+          origin: 'GB/T 15544.1-2023',
+          content: '断路器设备额定开断电流选型审查',
+          violations: []
         }
       ],
-      category: '设备材料清册'
+      category: '设计说明'
     }
   ],
   discipline_id: 'cdbff4a3-0233-46e2-97d9-444326aed3fb'

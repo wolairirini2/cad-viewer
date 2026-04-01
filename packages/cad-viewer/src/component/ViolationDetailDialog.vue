@@ -364,7 +364,7 @@ const getStepNumber = (index: number) => {
 }
 
 // 提取参数映射表
-const extractedParamsMap = {
+const default_extractedParamsMap: { [key: string]: string } = {
   upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
   upstream_main_transformer_capacity_mva: '上级系统主变容量 (MVA)',
   upstream_main_transformer_impedance_percent: '上级系统主变短路阻抗百分比 (%)',
@@ -378,9 +378,21 @@ const extractedParamsMap = {
   transformer_capacity_mva: '变压器容量 (MVA)',
   transformer_impedance_percent: '变压器短路阻抗百分比 (%)'
 }
+// 提取参数映射表
+const extractedParamsMap = computed(() => {
+  let result: { [key: string]: string } = {}
+  reviewTrace.value.extracted_parameters &&
+    Object.keys(reviewTrace.value.extracted_parameters).map(key => {
+      if (reviewTrace.value.extracted_parameters_map) {
+        result[key] = reviewTrace.value.extracted_parameters_map[key] || key
+      } else {
+        result[key] = default_extractedParamsMap[key] || key
+      }
+    })
+  return result
+})
 
-// 计算详情映射表
-const calculationDetailsMap = {
+const default_calculationDetailsMap: { [key: string]: string } = {
   Zj_hv: '高压侧基准电抗 (Ω)',
   Ij_hv: '高压侧基准电流 (kA)',
   Zj_lv: '低压侧基准电抗 (Ω)',
@@ -392,6 +404,23 @@ const calculationDetailsMap = {
   X_total_hv_star: '高压侧总标幺电抗',
   X_total_lv_star: '低压侧总标幺电抗'
 }
+// 计算详情映射表
+const calculationDetailsMap = computed(() => {
+  let result: { [key: string]: string } = {}
+  reviewTrace.value.calculation_result.calculation_details &&
+    Object.keys(reviewTrace.value.calculation_result.calculation_details).map(
+      key => {
+        if (reviewTrace.value.calculation_result.calculation_details_map) {
+          result[key] =
+            reviewTrace.value.calculation_result.calculation_details_map[key] ||
+            key
+        } else {
+          result[key] = default_calculationDetailsMap[key] || key
+        }
+      }
+    )
+  return result
+})
 
 // 获取第一条violation的review_trace（所有条目一致）
 const reviewTrace = computed(() => {
@@ -425,7 +454,7 @@ const renderFormula = (formula: string): string => {
 }
 
 // 格式化提取参数的值（现在只返回纯数值，单位已在名称中）
-const formatValue = (value: any, key: string): string => {
+const formatValue = (value: any, key: string | number): string => {
   if (value === undefined || value === null) return '-'
   if (
     reviewTrace.value.defaults_applied &&

@@ -256,12 +256,26 @@
       <!-- 详情视图 -->
       <div v-else class="detail-view">
         <div class="detail-view-header">
-          <el-button icon="ArrowLeft" @click="handleBackToList"
-            >返回列表</el-button
-          >
           <span class="detail-title">{{
             selectedDetailRow?.articleTitle
           }}</span>
+
+          <el-button icon="ArrowLeft" @click="handleBackToList"
+            >返回列表</el-button
+          >
+          <!-- 全屏切换按钮 -->
+          <el-icon
+            @click="toggleFullscreen"
+            style="
+              font-size: 20px;
+              color: var(--color-gray-500);
+              cursor: pointer;
+              margin-left: 12px;
+            "
+            :title="isFullscreen ? '退出全屏' : '全屏显示'"
+          >
+            <component :is="isFullscreen ? Crop : FullScreen" />
+          </el-icon>
         </div>
         <div class="detail-view-body">
           <!-- 根据详情类型动态渲染对应组件 -->
