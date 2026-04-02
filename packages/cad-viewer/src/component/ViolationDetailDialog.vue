@@ -467,8 +467,14 @@ const formatCalcDetail = (
   fixed: number = 4
 ): string => {
   if (value === undefined || value === null) return '-'
-  // 保留4位小数，去除末尾的0
-  return value.toFixed(fixed).replace(/\.?0+$/, '')
+  if (typeof value === 'number') {
+    // 保留4位小数，去除末尾的0
+    return value.toFixed(fixed).replace(/\.?0+$/, '')
+  }
+  if (typeof value === 'boolean') {
+    return value ? '是' : '否'
+  }
+  return value
 }
 
 // 处理定位点击
