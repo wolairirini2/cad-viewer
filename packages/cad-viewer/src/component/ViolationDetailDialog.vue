@@ -177,7 +177,7 @@
               :disabled="!isOverflow(row.equipment_list_model, 200)"
             >
               <div class="multiline-text ellipsis-text">
-                {{ row.equipment_list_model }}
+                {{ row.equipment_list_model || '-' }}
               </div>
             </el-tooltip>
           </template>
@@ -192,7 +192,7 @@
               :disabled="!isOverflow(row.diagram_model, 200)"
             >
               <div class="multiline-text ellipsis-text">
-                {{ row.diagram_model }}
+                {{ row.diagram_model || '-' }}
               </div>
             </el-tooltip>
           </template>
@@ -252,8 +252,9 @@
         <el-table-column label="操作" width="80" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="
-                row.diagram_world_bboxes && row.diagram_world_bboxes.length > 0
+              :disabled="
+                !row.diagram_world_bboxes ||
+                row.diagram_world_bboxes?.length == 0
               "
               type="info"
               plain
@@ -262,7 +263,6 @@
             >
               定位
             </el-button>
-            <span v-else class="no-action"></span>
           </template>
         </el-table-column>
       </el-table>
