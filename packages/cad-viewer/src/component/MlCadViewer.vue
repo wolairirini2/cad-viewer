@@ -552,18 +552,9 @@ const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
     { x: geometry.extents.max_point.x, y: geometry.extents.max_point.y }
   )
   if (noWriteRect) {
-    // return
     console.log('noWriteRect')
-    const box2 = new AcGeBox2d(
-      { x: geometry.extents.min_point.x, y: geometry.extents.min_point.y },
-      {
-        x: geometry.extents.max_point.x - 224200,
-        y: geometry.extents.max_point.y
-      }
-    )
-    view.zoomTo(box2, 1)
+    view.zoomTo(box, 1)
     ElMessage.success(`已定位到问题区域`)
-
     return
   } else {
     view.zoomTo(box, 2)
