@@ -515,7 +515,8 @@ const getRiskText = (level: string) => {
   const map: Record<string, string> = {
     high: '重大问题',
     medium: '一般问题',
-    low: '轻微问题'
+    low: '轻微问题',
+    pass: '审查通过'
   }
   return map[level] || level
 }

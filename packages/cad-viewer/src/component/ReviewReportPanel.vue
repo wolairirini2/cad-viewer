@@ -364,7 +364,8 @@ import {
   List,
   Back,
   FullScreen,
-  Crop
+  Crop,
+  CircleCheckFilled
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ExcelJS from 'exceljs'
@@ -482,7 +483,7 @@ const getRiskIcon = (level: string) => {
     case 'low':
       return InfoFilled
     default:
-      return WarningFilled
+      return CircleCheckFilled
   }
 }
 
