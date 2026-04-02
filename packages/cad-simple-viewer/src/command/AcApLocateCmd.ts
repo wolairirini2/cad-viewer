@@ -154,21 +154,59 @@ export class AcApLocateCmd extends AcEdCommand {
         outlinePolyline.addVertexAt(2, p3)
         outlinePolyline.addVertexAt(3, p4)
         outlinePolyline.closed = true
+        // 使用多条偏移线模拟粗边框
+        const createThickBorder = (
+          minX: number,
+          minY: number,
+          maxX: number,
+          maxY: number,
+          thickness: number,
+          color: AcCmColor
+        ): string[] => {
+          const objectIds: string[] = []
+          const offset = 0.3 // 每条线之间的偏移
+
+          for (let i = 0; i < thickness; i++) {
+            const offsetVal = i * offset
+
+            const p1 = new AcGePoint2d(minX - offsetVal, minY - offsetVal)
+            const p2 = new AcGePoint2d(maxX + offsetVal, minY - offsetVal)
+            const p3 = new AcGePoint2d(maxX + offsetVal, maxY + offsetVal)
+            const p4 = new AcGePoint2d(minX - offsetVal, maxY + offsetVal)
+
+            const line = new AcDbPolyline()
+            line.addVertexAt(0, p1)
+            line.addVertexAt(1, p2)
+            line.addVertexAt(2, p3)
+            line.addVertexAt(3, p4)
+            line.closed = true
+            line.color = color
+
+            db.tables.blockTable.modelSpace.appendEntity(line)
+            objectIds.push(line.objectId)
+          }
+
+          return objectIds
+        }
 
         // 设置样式：橙色边框、线宽
         const orangeColor = new AcCmColor()
         orangeColor.setRGB(ORANGE_COLOR.r, ORANGE_COLOR.g, ORANGE_COLOR.b)
-        outlinePolyline.color = orangeColor
-        outlinePolyline.lineWeight = 40 // 设置较粗的线宽以便可见
 
-        // 添加到模型空间
-        db.tables.blockTable.modelSpace.appendEntity(outlinePolyline)
-        objectIds.push(outlinePolyline.objectId)
+        const borderIds = createThickBorder(
+          min_point.x,
+          min_point.y,
+          max_point.x,
+          max_point.y,
+          20, // 5条线叠加
+          orangeColor
+        )
+        objectIds.push(...borderIds)
 
         // 2. 在右上角添加序号文本
         const text = new AcDbMText()
         // 位置设置在右上角稍微偏外一点
-        const textPosition = new AcGePoint2d(max_point.x + 5, max_point.y + 5)
+        const textPosition = new AcGePoint2d(max_point.x + 20, max_point.y + 100)
         text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
         text.contents = this.getCircledNumber(index + 1)
         text.height = this.calculateTextHeight()

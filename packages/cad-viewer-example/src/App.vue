@@ -72,7 +72,23 @@ reviewReportData.value = {
                         diagram_model: '',
                         model_matched: false,
                         equipment_name: '电流互感器',
-                        diagram_world_bboxes: [],
+                        diagram_world_bboxes: [
+                          [
+                            -310629.2991234272, 205027.13027179133,
+                            -308767.40898671956, 207775.2224719691
+                          ]
+                        ],
+
+                        extents: {
+                          min_point: {
+                            x: -310629.2991234272,
+                            y: 205027.13027179133
+                          },
+                          max_point: {
+                            x: -308767.40898671956,
+                            y: 207775.2224719691
+                          }
+                        },
                         equipment_list_count: 6,
                         equipment_list_model: 'LRB-110 200~600/5A 10P30'
                       },
@@ -490,8 +506,6 @@ reviewReportData.value = {
                   overhead_line_unit_reactance_ohm_per_km: 0.4
                 },
                 calculation_result: {
-                  hv_bus_Isc_ka: 8.6095,
-                  lv_bus_Isc_ka: 9.4265,
                   calculation_steps: [
                     {
                       title: '计算高压侧基准电流',
@@ -555,7 +569,6 @@ reviewReportData.value = {
                     }
                   ],
                   calculation_details: {
-                    Ij_hv: 5.0204,
                     Ij_lv: 54.9857,
                     Zj_hv: 13.225,
                     Zj_lv: 0.1103,
@@ -565,10 +578,14 @@ reviewReportData.value = {
                     X_total_hv_star: 0.5831,
                     X_total_lv_star: 5.8331,
                     X_transformer_star: 5.25
+                  },
+                  calculation_data: {
+                    hv_bus_Isc_ka: 8.6095,
+                    lv_bus_Isc_ka: 9.4265,
+                    lv_bus_Is2c_ka: 9.4265
                   }
                 },
                 extracted_parameters: {
-                  cable_length_km: 1,
                   base_capacity_mva: 1000,
                   hv_base_voltage_kv: 115,
                   lv_base_voltage_kv: 10.5,
@@ -916,6 +933,89 @@ reviewReportData.value = {
                 handles: null
               },
               review_trace: null
+            }
+          ]
+        },
+        {
+          id: '0',
+          title: '电流审查',
+          origin: 'GB/T 15544.1-2023',
+          content: '电流审查',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                "在设计说明的'短路电流计算'章节中补充以下参数：基准容量, 高压侧基准电压, 低压侧基准电压, 架空线路长度, 电缆线路长度, 变压器容量, 变压器短路阻抗百分比, 系统短路容量, 上级系统主变压器容量, 上级系统主变压器短路阻抗比"
+              ],
+              description: '缺少短路电流计算的关键参数，无法进行计算验证。',
+              geometry_ref: {
+                chapter:
+                  '序号 | 短路点编号 | 计 算 值 | 计 算 值 | 计 算 值 | 计 算 值 | 断路器型式 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 备  注\n序号 | 短路点编号 | 标称电压 | 工作电流 | 热稳定电流值 | 短路电流冲击值 | 断路器型式 | 额定电压 | 额定电流 | 额定开断电流 | 热稳定电流 | 极限通过电流峰值 | 备  注\n序号 | 短路点编号 | (kV) | (A) | (kA) | (kA) | 断路器型式 | (kV) | (A) | (kA) | (kA/s) | (kA) | 备  注\n1 | k1 | 110 | 551 | 8.93 | 222.77 | SF6断路器 | 126 | 3150 | 40 | 7/3 | 100 | \n2 | k2 | 10 | 3031 | 16.87 | 43.01 | 真空断路器 | 12 | 4000 | 40 | 40/4 | 100 | 主变、分段\n2 | k2 | 10 | 600 | 16.87 | 43.01 | 真空断路器 | 12 | 1250 | 31.5 | 31.5/4 | 80 | 出线、电容器',
+                extents: null,
+                file_id: '880abdad-f514-4de6-9b85-cd96752c4fc3',
+                handles: null
+              },
+              review_trace: {
+                defaults_applied: {
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4
+                },
+                extracted_parameters: {
+                  cable_length_km: null,
+                  base_capacity_mva: null,
+                  hv_base_voltage_kv: null,
+                  lv_base_voltage_kv: null,
+                  overhead_line_length_km: null,
+                  transformer_capacity_mva: null,
+                  normal_supply_hv_bus_Isc_ka: 8.93,
+                  normal_supply_lv_bus_Isc_ka: 16.87,
+                  transformer_impedance_percent: null,
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  upstream_short_circuit_capacity_mva: null,
+                  upstream_main_transformer_capacity_mva: null,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4,
+                  upstream_main_transformer_impedance_percent: null
+                }
+              },
+              param_key_map: {
+                calculation_data_map: {
+                  hv_bus_Isc_ka: '高压侧母线短路电流 (kA)',
+                  lv_bus_Isc_ka: '低压侧母线短路电流 (kA)'
+                },
+                calculation_details_map: {
+                  Ij_hv: '高压侧基准电流 (kA)',
+                  Ij_lv: '低压侧基准电流 (kA)',
+                  Zj_hv: '高压侧基准电抗 (Ω)',
+                  Zj_lv: '低压侧基准电抗 (Ω)',
+                  X_line_ohm: '线路有名电抗 (Ω)',
+                  X_sys_star: '系统标幺电抗',
+                  X_line_star: '线路标幺电抗',
+                  X_total_hv_star: '高压侧总标幺电抗',
+                  X_total_lv_star: '低压侧总标幺电抗',
+                  X_transformer_star: '变压器标幺电抗'
+                },
+                extracted_parameters_map: {
+                  cable_length_km: '电缆长度 (km)',
+                  base_capacity_mva: '基准容量 (MVA)',
+                  hv_base_voltage_kv: '高压侧基准电压 (kV)',
+                  lv_base_voltage_kv: '低压侧基准电压 (kV)',
+                  overhead_line_length_km: '架空线长度 (km)',
+                  transformer_capacity_mva: '变压器容量 (MVA)',
+                  normal_supply_hv_bus_Isc_ka:
+                    '正常运行高压侧母线短路电流 (kA)',
+                  normal_supply_lv_bus_Isc_ka:
+                    '正常运行低压侧母线短路电流 (kA)',
+                  transformer_impedance_percent: '变压器短路阻抗百分比 (%)',
+                  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω/km)',
+                  upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
+                  upstream_main_transformer_capacity_mva:
+                    '上级系统主变容量 (MVA)',
+                  overhead_line_unit_reactance_ohm_per_km:
+                    '架空线单位电抗 (Ω/km)',
+                  upstream_main_transformer_impedance_percent:
+                    '上级系统主变短路阻抗百分比 (%)'
+                }
+              }
             }
           ]
         }

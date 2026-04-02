@@ -47,6 +47,7 @@
       <div class="section-header">
         <h4>计算过程</h4>
         <el-button
+          v-if="calculationSteps.length > MAX_COLLAPSED_STEPS"
           type="text"
           size="small"
           @click="toggleCalculationSteps"
@@ -100,7 +101,10 @@
     </div>
 
     <!-- 计算结果 -->
-    <div class="detail-section" v-if="reviewTrace?.calculation_result">
+    <div
+      class="detail-section"
+      v-if="reviewTrace?.calculation_result?.calculation_data"
+    >
       <h4>计算结果</h4>
       <div class="detail-content">
         <!-- 主要计算结果 -->
@@ -183,19 +187,19 @@
         <el-table-column label="图纸型号" min-width="200">
           <template #default="{ row }">
             <el-tooltip
-              :content="row.diagram_model || '-'"
+              :content="row.diagram_model"
               placement="top"
               :disabled="!isOverflow(row.diagram_model, 200)"
             >
               <div class="multiline-text ellipsis-text">
-                {{ row.diagram_model || '-' }}
+                {{ row.diagram_model }}
               </div>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <!-- 型号匹配列 -->
-        <el-table-column
+        <!-- <el-table-column
           prop="model_matched"
           label="型号匹配"
           width="80"
@@ -209,7 +213,7 @@
               {{ row.model_matched ? '匹配' : '不匹配' }}
             </el-tag>
           </template>
-        </el-table-column>
+        </el-table-column> -->
 
         <!-- 清册数量列 -->
         <el-table-column
@@ -372,49 +376,35 @@ const getStepNumber = (index: number) => {
 // 提取参数映射表
 const extractedParamsMap = computed(() => {
   let result: { [key: string]: string } = {}
-  reviewTrace.value.extracted_parameters &&
-    Object.keys(reviewTrace.value.extracted_parameters).map(key => {
-      if (reviewTrace.value.extracted_parameters_map) {
-        result[key] = reviewTrace.value.extracted_parameters_map[key] || key
-      } else {
-        result[key] = key
-      }
-    })
+  if (paramKeyMap.value?.extracted_parameters_map) {
+    result = paramKeyMap.value.extracted_parameters_map
+    if (Object.keys(result).length % 2 !== 0) {
+      result[''] = ''
+    }
+  }
   return result
 })
 
 const calculationDataMap = computed(() => {
   let result: { [key: string]: string } = {}
-  reviewTrace.value.calculation_result.calculation_data &&
-    Object.keys(reviewTrace.value.calculation_result.calculation_data).map(
-      key => {
-        if (reviewTrace.value.calculation_result.calculation_data_map) {
-          result[key] =
-            reviewTrace.value.calculation_result.calculation_data_map[key] ||
-            key
-        } else {
-          result[key] = key
-        }
-      }
-    )
+  if (paramKeyMap.value?.calculation_data_map) {
+    result = paramKeyMap.value.calculation_data_map
+    if (Object.keys(result).length % 2 !== 0) {
+      result[''] = ''
+    }
+  }
   return result
 })
 
 // 计算详情映射表
 const calculationDetailsMap = computed(() => {
   let result: { [key: string]: string } = {}
-  reviewTrace.value.calculation_result.calculation_details &&
-    Object.keys(reviewTrace.value.calculation_result.calculation_details).map(
-      key => {
-        if (reviewTrace.value.calculation_result.calculation_details_map) {
-          result[key] =
-            reviewTrace.value.calculation_result.calculation_details_map[key] ||
-            key
-        } else {
-          result[key] = key
-        }
-      }
-    )
+  if (paramKeyMap.value?.calculation_details_map) {
+    result = paramKeyMap.value.calculation_details_map
+    if (Object.keys(result).length % 2 !== 0) {
+      result[''] = ''
+    }
+  }
   return result
 })
 
@@ -422,6 +412,12 @@ const calculationDetailsMap = computed(() => {
 const reviewTrace = computed(() => {
   if (!props.data?.allViolations?.length) return null
   return props.data.allViolations[0]?.review_trace || null
+})
+
+// 参数映射表
+const paramKeyMap = computed(() => {
+  if (!props.data?.allViolations?.length) return null
+  return props.data.allViolations[0]?.param_key_map || null
 })
 
 // 计算步骤列表
@@ -451,7 +447,7 @@ const renderFormula = (formula: string): string => {
 
 // 格式化提取参数的值（现在只返回纯数值，单位已在名称中）
 const formatValue = (value: any, key: string | number): string => {
-  if (value === undefined || value === null) return '-'
+  if (value === undefined || value === null) return ''
   if (
     reviewTrace.value.defaults_applied &&
     reviewTrace.value.defaults_applied[key]
@@ -466,7 +462,7 @@ const formatCalcDetail = (
   value: number | undefined,
   fixed: number = 4
 ): string => {
-  if (value === undefined || value === null) return '-'
+  if (value === undefined || value === null) return ''
   if (typeof value === 'number') {
     // 保留4位小数，去除末尾的0
     return value.toFixed(fixed).replace(/\.?0+$/, '')
@@ -611,8 +607,9 @@ const getResultType = (result: string): string => {
   const typeMap: Record<string, string> = {
     数量不一致: 'warning',
     图纸缺失: 'danger',
+    清册缺失: 'danger',
     型号不匹配: 'danger',
-    匹配成功: 'success',
+    匹配: 'success',
     一致: 'success'
   }
   return typeMap[result] || 'info'

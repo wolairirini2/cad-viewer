@@ -562,6 +562,8 @@ const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
       }
     )
     view.zoomTo(box2, 1)
+    ElMessage.success(`已定位到问题区域`)
+
     return
   } else {
     view.zoomTo(box, 2)
