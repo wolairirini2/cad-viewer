@@ -88,29 +88,8 @@ export class AcApLocateCmd extends AcEdCommand {
    * @returns 带圈数字字符如 ①, ②, ③
    */
   private getCircledNumber(num: number): string {
-    const circledNumbers = [
-      '①',
-      '②',
-      '③',
-      '④',
-      '⑤',
-      '⑥',
-      '⑦',
-      '⑧',
-      '⑨',
-      '⑩',
-      '⑪',
-      '⑫',
-      '⑬',
-      '⑭',
-      '⑮',
-      '⑯',
-      '⑰',
-      '⑱',
-      '⑲',
-      '⑳'
-    ]
-    if (num >= 1 && num <= 20) {
+    const circledNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
+    if (num >= 1 && num <= 10) {
       return circledNumbers[num - 1]
     }
     return num.toString()
@@ -187,24 +166,26 @@ export class AcApLocateCmd extends AcEdCommand {
     try {
       const view = AcApDocManager.instance.curView as any
       const layoutView = view?.activeLayoutView
+
       if (layoutView?._camera) {
-        const zoom = layoutView._camera.zoom || 1
-        const worldSize = pixelSize / zoom
+        // 获取视图范围（世界坐标）
+        const viewExtents = layoutView._camera.viewExtents
+        if (viewExtents) {
+          // 视图对角线长度
+          const dx = viewExtents.max.x - viewExtents.min.x
+          const dy = viewExtents.max.y - viewExtents.min.y
+          const diagonal = Math.sqrt(dx * dx + dy * dy)
 
-        // 根据 zoom 级别设置合理的上下限
-        // 当 zoom 很大（放大）时，worldSize 会很小，需要限制最小值
-        // 当 zoom 很小（缩小）时，worldSize 会很大，需要限制最大值
-
-        const minSize = 0.5 // 最小 0.5 世界单位（避免太细看不见）
-        const maxSize = 50 // 最大 50 世界单位（避免太粗遮挡）
-
-        return Math.max(minSize, Math.min(maxSize, worldSize))
+          // 返回对角线的固定比例
+          return diagonal * pixelSize
+        }
       }
     } catch (e) {
-      console.warn('[AcApLocateCmd] Failed to calculate pixel size:', e)
+      console.warn('[AcApLocateCmd] Failed to calculate view relative size:', e)
     }
-    // 默认返回一个中等值
-    return Math.max(2, Math.min(10, pixelSize))
+
+    // 默认回退值
+    return 1
   }
 
   /**
