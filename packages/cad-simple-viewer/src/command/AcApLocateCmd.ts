@@ -1,9 +1,11 @@
 // AcApLocateCmd.ts
 import {
-  AcDbPolyline,
   AcGePoint2d,
   AcCmColor,
-  AcDbMText
+  AcDbMText,
+  AcDbHatch,
+  AcGeLoop2d,
+  AcGeLine2d
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
@@ -115,6 +117,128 @@ export class AcApLocateCmd extends AcEdCommand {
   }
 
   /**
+   * 创建矩形边界环
+   */
+  private createRectangularLoop(
+    min_point: { x: number; y: number },
+    max_point: { x: number; y: number }
+  ): AcGeLoop2d {
+    // 创建矩形的四个角点
+    const p1 = new AcGePoint2d(min_point.x, min_point.y)
+    const p2 = new AcGePoint2d(max_point.x, min_point.y)
+    const p3 = new AcGePoint2d(max_point.x, max_point.y)
+    const p4 = new AcGePoint2d(min_point.x, max_point.y)
+
+    // 创建四条边（AcGeLine2d）
+    const line1 = new AcGeLine2d(p1, p2) // 底边
+    const line2 = new AcGeLine2d(p2, p3) // 右边
+    const line3 = new AcGeLine2d(p3, p4) // 顶边
+    const line4 = new AcGeLine2d(p4, p1) // 左边
+
+    // 创建闭合环
+    const loop = new AcGeLoop2d([line1, line2, line3, line4])
+    return loop
+  }
+  /**
+   * 创建带边框的 Hatch（外环是边框，内环挖空）
+   */
+  private createBorderHatch(
+    min_point: { x: number; y: number },
+    max_point: { x: number; y: number },
+    borderWidth: number,
+    borderColor: AcCmColor
+  ): string {
+    const db = AcApDocManager.instance.curDocument?.database
+    if (!db) return ''
+
+    // 创建空心边框 Hatch
+    const borderHatch = new AcDbHatch()
+    borderHatch.isSolidFill = true
+    borderHatch.color = borderColor
+
+    // 外边界（大一圈，形成边框外沿）
+    const outerMinX = min_point.x - borderWidth
+    const outerMinY = min_point.y - borderWidth
+    const outerMaxX = max_point.x + borderWidth
+    const outerMaxY = max_point.y + borderWidth
+
+    // 外环（顺时针）
+    const outerLoop = this.createRectangularLoop(
+      { x: outerMinX, y: outerMinY },
+      { x: outerMaxX, y: outerMaxY }
+    )
+    borderHatch.add(outerLoop)
+
+    // 内环（挖空，逆时针或顺时针，与外环方向相反形成空心）
+    const innerLoop = this.createRectangularLoop(
+      { x: min_point.x, y: min_point.y },
+      { x: max_point.x, y: max_point.y }
+    )
+    borderHatch.add(innerLoop)
+
+    db.tables.blockTable.modelSpace.appendEntity(borderHatch)
+    return borderHatch.objectId
+  }
+
+  /**
+   * 计算基于屏幕像素的CAD世界坐标尺寸（带上下限保护）
+   */
+  private calculatePixelSizeInWorld(pixelSize: number): number {
+    try {
+      const view = AcApDocManager.instance.curView as any
+      const layoutView = view?.activeLayoutView
+      if (layoutView?._camera) {
+        const zoom = layoutView._camera.zoom || 1
+        const worldSize = pixelSize / zoom
+
+        // 根据 zoom 级别设置合理的上下限
+        // 当 zoom 很大（放大）时，worldSize 会很小，需要限制最小值
+        // 当 zoom 很小（缩小）时，worldSize 会很大，需要限制最大值
+
+        const minSize = 0.5 // 最小 0.5 世界单位（避免太细看不见）
+        const maxSize = 50 // 最大 50 世界单位（避免太粗遮挡）
+
+        return Math.max(minSize, Math.min(maxSize, worldSize))
+      }
+    } catch (e) {
+      console.warn('[AcApLocateCmd] Failed to calculate pixel size:', e)
+    }
+    // 默认返回一个中等值
+    return Math.max(2, Math.min(10, pixelSize))
+  }
+
+  /**
+   * 获取当前视图下的标准尺寸配置（带比例保护）
+   */
+  private getViewDependentSizes(): {
+    borderWidth: number
+    textHeight: number
+    textOffset: number
+  } {
+    // 基础像素尺寸
+    const BORDER_WIDTH_PIXELS = 1 // 边框 3 像素
+    const TEXT_HEIGHT_PIXELS = 14 // 文字 14 像素（与边框保持 4.67:1 比例）
+    const TEXT_OFFSET_PIXELS = 6 // 文字偏移 6 像素
+
+    const borderWidth = this.calculatePixelSizeInWorld(BORDER_WIDTH_PIXELS)
+    const textHeight = this.calculatePixelSizeInWorld(TEXT_HEIGHT_PIXELS)
+    const textOffset = this.calculatePixelSizeInWorld(TEXT_OFFSET_PIXELS)
+
+    // 确保文字和边框的比例始终合理（文字高度约为边框宽度的 4-5 倍）
+    const ratio = textHeight / borderWidth
+    if (ratio < 3 || ratio > 8) {
+      // 比例失调时，强制调整文字高度
+      const adjustedTextHeight = borderWidth * 4.5
+      return {
+        borderWidth,
+        textHeight: adjustedTextHeight,
+        textOffset: adjustedTextHeight * 0.4
+      }
+    }
+
+    return { borderWidth, textHeight, textOffset }
+  }
+  /**
    * 执行定位命令（符合基类签名：仅一个context参数）
    */
   execute(context: AcApContext): void {
@@ -130,87 +254,47 @@ export class AcApLocateCmd extends AcEdCommand {
       // 先清除上次的临时方框
       AcApLocateCmd.clearLocateBox()
 
-      // 统一转换为数组处理
       const extentsArray = Array.isArray(this.extents)
         ? this.extents
         : [this.extents]
 
-      // 创建所有临时高亮方框
       const objectIds: string[] = []
+
+      // 获取当前视图下的统一尺寸
+      const { borderWidth, textHeight, textOffset } =
+        this.getViewDependentSizes()
 
       extentsArray.forEach((extent, index) => {
         const { min_point, max_point } = extent
 
-        // 创建矩形的四个角点
-        const p1 = new AcGePoint2d(min_point.x, min_point.y)
-        const p2 = new AcGePoint2d(max_point.x, min_point.y)
-        const p3 = new AcGePoint2d(max_point.x, max_point.y)
-        const p4 = new AcGePoint2d(min_point.x, max_point.y)
+        // 定义边框颜色（深橙色）
+        const borderColor = new AcCmColor()
+        borderColor.setRGB(255, 140, 0)
 
-        // 1. 创建橙色边框线
-        const outlinePolyline = new AcDbPolyline()
-        outlinePolyline.addVertexAt(0, p1)
-        outlinePolyline.addVertexAt(1, p2)
-        outlinePolyline.addVertexAt(2, p3)
-        outlinePolyline.addVertexAt(3, p4)
-        outlinePolyline.closed = true
-        // 使用多条偏移线模拟粗边框
-        const createThickBorder = (
-          minX: number,
-          minY: number,
-          maxX: number,
-          maxY: number,
-          thickness: number,
-          color: AcCmColor
-        ): string[] => {
-          const objectIds: string[] = []
-          const offset = 0.3 // 每条线之间的偏移
-
-          for (let i = 0; i < thickness; i++) {
-            const offsetVal = i * offset
-
-            const p1 = new AcGePoint2d(minX - offsetVal, minY - offsetVal)
-            const p2 = new AcGePoint2d(maxX + offsetVal, minY - offsetVal)
-            const p3 = new AcGePoint2d(maxX + offsetVal, maxY + offsetVal)
-            const p4 = new AcGePoint2d(minX - offsetVal, maxY + offsetVal)
-
-            const line = new AcDbPolyline()
-            line.addVertexAt(0, p1)
-            line.addVertexAt(1, p2)
-            line.addVertexAt(2, p3)
-            line.addVertexAt(3, p4)
-            line.closed = true
-            line.color = color
-
-            db.tables.blockTable.modelSpace.appendEntity(line)
-            objectIds.push(line.objectId)
-          }
-
-          return objectIds
+        // 创建空心边框 Hatch（使用统一的 borderWidth）
+        const borderId = this.createBorderHatch(
+          min_point,
+          max_point,
+          borderWidth, // 统一计算后的边框宽度
+          borderColor
+        )
+        if (borderId) {
+          objectIds.push(borderId)
         }
 
-        // 设置样式：橙色边框、线宽
-        const orangeColor = new AcCmColor()
-        orangeColor.setRGB(ORANGE_COLOR.r, ORANGE_COLOR.g, ORANGE_COLOR.b)
-
-        const borderIds = createThickBorder(
-          min_point.x,
-          min_point.y,
-          max_point.x,
-          max_point.y,
-          20, // 5条线叠加
-          orangeColor
-        )
-        objectIds.push(...borderIds)
-
-        // 2. 在右上角添加序号文本
+        // 添加序号文本（使用统一的 textHeight 和 textOffset）
         const text = new AcDbMText()
-        // 位置设置在右上角稍微偏外一点
-        const textPosition = new AcGePoint2d(max_point.x + 20, max_point.y + 100)
+
+        // 位置设置在右上角，使用统一的偏移量
+        const textPosition = new AcGePoint2d(
+          max_point.x + textOffset,
+          max_point.y + textOffset
+        )
+
         text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
         text.contents = this.getCircledNumber(index + 1)
-        text.height = this.calculateTextHeight()
-        text.width = 25
+        text.height = textHeight // 统一计算后的文字高度
+        text.width = textHeight * 1.2 // 宽度与高度成比例
         text.styleName = 'Standard'
 
         // 设置文字颜色为橙色
@@ -218,16 +302,14 @@ export class AcApLocateCmd extends AcEdCommand {
         textColor.setRGB(ORANGE_COLOR.r, ORANGE_COLOR.g, ORANGE_COLOR.b)
         text.color = textColor
 
-        // 添加到模型空间
         db.tables.blockTable.modelSpace.appendEntity(text)
         objectIds.push(text.objectId)
       })
 
-      // 保存所有 objectId 以便后续清除（逗号分隔）
       AcApLocateCmd._currentLocateBoxId = objectIds.join(',')
       console.log(
         '[AcApLocateCmd] 临时定位方框已创建:',
-        objectIds.length / 2,
+        extentsArray.length,
         '个'
       )
     } catch (error) {
@@ -255,22 +337,6 @@ export class AcApLocateCmd extends AcEdCommand {
     } catch (e) {
       return false
     }
-  }
-
-  private calculateTextHeight(): number {
-    try {
-      const view = AcApDocManager.instance.curView as any
-      const layoutView = view?.activeLayoutView
-      if (layoutView?._camera) {
-        const zoom = layoutView._camera.zoom || 1
-        const baseTextHeight = 20
-        const textHeight = baseTextHeight / zoom
-        return textHeight
-      }
-    } catch (e) {
-      console.warn('[AnnotationCmd] Failed to calculate text height:', e)
-    }
-    return 10
   }
 }
 

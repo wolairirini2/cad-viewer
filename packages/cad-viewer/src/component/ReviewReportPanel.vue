@@ -265,8 +265,7 @@
           >
           <el-button
             v-if="selectedDetailRow.category === '设计说明'"
-            type="info"
-            plain
+            icon="Location"
             @click="handleLocate(selectedDetailRow)"
             >定位</el-button
           >

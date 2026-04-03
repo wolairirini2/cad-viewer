@@ -34,7 +34,8 @@ reviewReportData.value = {
         {
           id: 'equipment_comparison_result',
           title: '设备材料清册与主接线图对比结果',
-          origin: '基于设备名称分组、型号相似度匹配与数量一致性校核。',
+          origin:
+            '基于设备类型分组、产品型号 embedding 相似度匹配与结构化字段校核。',
           content: '返回设备材料清册与主接线图的设备型号和数量对比结果。',
           violations: [
             {
@@ -46,602 +47,113 @@ reviewReportData.value = {
                 chapter: null,
                 extents: {
                   max_point: {
-                    x: -302984.677123469,
-                    y: 225665.3659325138
+                    x: -191209.8115356336,
+                    y: -147893.8507374082
                   },
                   min_point: {
-                    x: -394484.294794503,
-                    y: 174087.4868022078
-                  }
-                },
-                file_id: '0d9cacf6-9841-4493-a086-0d022584f8a7',
-                handles: null
-              },
-              review_trace: {
-                errors: [],
-                assistant_text: null,
-                cad_manifest_path: null,
-                comparison_groups: [
-                  {
-                    items: [
-                      {
-                        result: '图纸缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 0,
-                        diagram_model: '',
-                        model_matched: false,
-                        equipment_name: '电流互感器',
-                        diagram_world_bboxes: [
-                          [
-                            -310629.2991234272, 205027.13027179133,
-                            -308767.40898671956, 207775.2224719691
-                          ]
-                        ],
-
-                        extents: {
-                          min_point: {
-                            x: -310629.2991234272,
-                            y: 205027.13027179133
-                          },
-                          max_point: {
-                            x: -308767.40898671956,
-                            y: 207775.2224719691
-                          }
-                        },
-                        equipment_list_count: 6,
-                        equipment_list_model: 'LRB-110 200~600/5A 10P30'
-                      },
-                      {
-                        result: '图纸缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 0,
-                        diagram_model: '',
-                        model_matched: false,
-                        equipment_name: '电流互感器',
-                        diagram_world_bboxes: [],
-                        equipment_list_count: 6,
-                        equipment_list_model: 'LR-110 200~600/5A 0.5/0.2S'
-                      }
-                    ],
-                    equipment_name: '电流互感器'
-                  },
-                  {
-                    items: [
-                      {
-                        result: '图纸缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 0,
-                        diagram_model: '',
-                        model_matched: false,
-                        equipment_name: '隔离开关',
-                        diagram_world_bboxes: [],
-                        equipment_list_count: 2,
-                        equipment_list_model:
-                          '最高电压72.5kV，额定电流630A，爬电距离2248mm，配电动操作机构'
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model:
-                          '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
-                        model_matched: false,
-                        equipment_name: '隔离开关',
-                        diagram_world_bboxes: [
-                          [
-                            -325945.91341731785, 218443.8472716925,
-                            -325438.3416984018, 219194.76289282684
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      }
-                    ],
-                    equipment_name: '隔离开关'
-                  },
-                  {
-                    items: [
-                      {
-                        result: '图纸缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 0,
-                        diagram_model: '',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [],
-                        equipment_list_count: 2,
-                        equipment_list_model: '百兆、16光口；千兆、4光口'
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model:
-                          'SZ20-63000/110\n110±8x1.25%/10.5kV\n63000/63000kVA\nYNd11\nUk%=17\n附有载调压开关',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -310629.2991234272, 205027.13027179133,
-                            -308767.40898671956, 207775.2224719691
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model: '#3主变进线',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -392192.046583206, 205039.79882758227,
-                            -390300.05739728536, 207782.9416438829
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model: '同\n#1\n主\n变',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -358515.29699257767, 205056.99193927913,
-                            -357457.1811264507, 207750.02211835785
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model: '#1主变',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -336655.68777764344, 221312.5518780552,
-                            -335588.27776455175, 222789.69215878684
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model: '#2主变',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -372867.744065393, 221312.82106541854,
-                            -371785.9730852571, 222777.10822983188
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model: '#2主变进线分支1',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -354820.9941594858, 198726.6406411708,
-                            -353329.98235468566, 200381.74595109522
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      },
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 1,
-                        diagram_model: '#3主变备用',
-                        model_matched: false,
-                        equipment_name: '主变压器',
-                        diagram_world_bboxes: [
-                          [
-                            -378451.3479433866, 221329.55798263717,
-                            -377406.6467167868, 222831.58332085138
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      }
-                    ],
-                    equipment_name: '主变压器'
-                  },
-                  {
-                    items: [
-                      {
-                        result: '清册缺失',
-                        match_reason: null,
-                        match_source: 'unmatched',
-                        diagram_count: 5,
-                        diagram_model:
-                          '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
-                        model_matched: false,
-                        equipment_name: '接地开关',
-                        diagram_world_bboxes: [
-                          [
-                            -342321.2684608885, 221998.2639963049,
-                            -341915.2756380271, 223084.17585723274
-                          ],
-                          [
-                            -341475.67675521807, 221998.5937210268,
-                            -341073.58965844545, 223085.73816021485
-                          ],
-                          [
-                            -340621.5047415499, 221998.643781972,
-                            -340212.15626703354, 223081.0036996439
-                          ],
-                          [
-                            -369265.63508439035, 216281.25337664224,
-                            -368869.2090148063, 217333.53143394698
-                          ],
-                          [
-                            -343163.5790417246, 221997.3706781847,
-                            -342753.415132125, 223072.36398348177
-                          ]
-                        ],
-                        equipment_list_count: 0,
-                        equipment_list_model: ''
-                      }
-                    ],
-                    equipment_name: '接地开关'
-                  }
-                ],
-                annotated_image_path: null,
-                equipment_list_devices: [
-                  {
-                    name: '电流互感器',
-                    count: 6,
-                    model: 'LRB-110 200~600/5A 10P30'
-                  },
-                  {
-                    name: '电流互感器',
-                    count: 6,
-                    model: 'LR-110 200~600/5A 0.5/0.2S'
-                  },
-                  {
-                    name: '隔离开关',
-                    count: 2,
-                    model:
-                      '最高电压72.5kV，额定电流630A，爬电距离2248mm，配电动操作机构'
-                  },
-                  {
-                    name: '主变压器',
-                    count: 2,
-                    model: '百兆、16光口；千兆、4光口'
-                  }
-                ],
-                wiring_diagram_devices: [
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model:
-                      'SZ20-63000/110\n110±8x1.25%/10.5kV\n63000/63000kVA\nYNd11\nUk%=17\n附有载调压开关',
-                    evidence_world_bboxes: [
-                      [
-                        -310629.2991234272, 205027.13027179133,
-                        -308767.40898671956, 207775.2224719691
-                      ]
-                    ]
-                  },
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model: '#3主变进线',
-                    evidence_world_bboxes: [
-                      [
-                        -392192.046583206, 205039.79882758227,
-                        -390300.05739728536, 207782.9416438829
-                      ]
-                    ]
-                  },
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model: '同\n#1\n主\n变',
-                    evidence_world_bboxes: [
-                      [
-                        -358515.29699257767, 205056.99193927913,
-                        -357457.1811264507, 207750.02211835785
-                      ]
-                    ]
-                  },
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model: '#1主变',
-                    evidence_world_bboxes: [
-                      [
-                        -336655.68777764344, 221312.5518780552,
-                        -335588.27776455175, 222789.69215878684
-                      ]
-                    ]
-                  },
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model: '#2主变',
-                    evidence_world_bboxes: [
-                      [
-                        -372867.744065393, 221312.82106541854,
-                        -371785.9730852571, 222777.10822983188
-                      ]
-                    ]
-                  },
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model: '#2主变进线分支1',
-                    evidence_world_bboxes: [
-                      [
-                        -354820.9941594858, 198726.6406411708,
-                        -353329.98235468566, 200381.74595109522
-                      ]
-                    ]
-                  },
-                  {
-                    name: '主变压器',
-                    count: 1,
-                    model: '#3主变备用',
-                    evidence_world_bboxes: [
-                      [
-                        -378451.3479433866, 221329.55798263717,
-                        -377406.6467167868, 222831.58332085138
-                      ]
-                    ]
-                  },
-                  {
-                    name: '隔离开关',
-                    count: 1,
-                    model: '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
-                    evidence_world_bboxes: [
-                      [
-                        -325945.91341731785, 218443.8472716925,
-                        -325438.3416984018, 219194.76289282684
-                      ]
-                    ]
-                  },
-                  {
-                    name: '接地开关',
-                    count: 5,
-                    model: '隔离刀闸 3150A 40kA/3s\n接地刀闸 40kA/3s',
-                    evidence_world_bboxes: [
-                      [
-                        -342321.2684608885, 221998.2639963049,
-                        -341915.2756380271, 223084.17585723274
-                      ],
-                      [
-                        -341475.67675521807, 221998.5937210268,
-                        -341073.58965844545, 223085.73816021485
-                      ],
-                      [
-                        -340621.5047415499, 221998.643781972,
-                        -340212.15626703354, 223081.0036996439
-                      ],
-                      [
-                        -369265.63508439035, 216281.25337664224,
-                        -368869.2090148063, 217333.53143394698
-                      ],
-                      [
-                        -343163.5790417246, 221997.3706781847,
-                        -342753.415132125, 223072.36398348177
-                      ]
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ],
-      category: '设备材料清册'
-    },
-    {
-      code: 'DESIGN-SPEC-001',
-      name: '工程设计说明编制规范',
-      type: '行业标准',
-      articles: [
-        {
-          id: '0',
-          title: '短路电流审查',
-          origin: 'GB/T 15544.1-2023',
-          content: '短路电流审查',
-          violations: [
-            {
-              risk_level: 'high',
-              suggestion: ['检查设计说明中的高压母线侧短路电流计算是否正确'],
-              description:
-                '高压侧母线计算值与设计说明差异过大：计算值8.61kA与设计值9.63kA 差异10.6%',
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: -191521.9640928123,
-                    y: -148163.64864823624
-                  },
-                  min_point: {
-                    x: -191798.22062829687,
-                    y: -148258.29517052922
+                    x: -192050.8115356336,
+                    y: -148487.8507374082
                   }
                 },
                 file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
                 handles: null
               },
               review_trace: {
-                defaults_applied: {
-                  cable_unit_reactance_ohm_per_km: 0.12,
-                  overhead_line_unit_reactance_ohm_per_km: 0.4
+                errors: [],
+                assistant_text: null,
+                bbox_filter_stats: {
+                  total_entities: 5231,
+                  indexed_entities: 5231,
+                  main_view_entities: 2681,
+                  text_support_entities: 339,
+                  geometry_seed_entities: 2342,
+                  base_candidate_entities: 5231,
+                  hidden_layer_excluded_entities: 0,
+                  tiny_geometry_excluded_entities: 2550
                 },
-                calculation_result: {
-                  calculation_steps: [
-                    {
-                      title: '计算高压侧基准电流',
-                      formula:
-                        '$$I_{B}^{(高)}=\\frac{S_{B}}{\\sqrt{3} \\cdot U_{B}^{(高)}}=\\frac{1000.0\\ \\text{MVA}}{\\sqrt{3}\\times115.0\\ \\text{kV}}=5.0204\\ \\text{kA}$$'
-                    },
-                    {
-                      title: '计算高压侧基准电抗',
-                      formula:
-                        '$$X_{B}^{(高)}=\\frac{\\left(U_{B}^{(高)}\\right)^2}{S_{B}}=\\frac{(115.0\\ \\text{kV})^2}{1000.0\\ \\text{MVA}}=13.225\\ \\Omega$$'
-                    },
-                    {
-                      title: '计算低压侧基准电流',
-                      formula:
-                        '$$I_{B}^{(低)}=\\frac{S_{B}}{\\sqrt{3} \\cdot U_{B}^{(低)}}=\\frac{1000.0\\ \\text{MVA}}{\\sqrt{3}\\times10.5\\ \\text{kV}}=54.9857\\ \\text{kA}$$'
-                    },
-                    {
-                      title: '计算低压侧基准电抗',
-                      formula:
-                        '$$X_{B}^{(低)}=\\frac{\\left(U_{B}^{(低)}\\right)^2}{S_{B}}=\\frac{(10.5\\ \\text{kV})^2}{1000.0\\ \\text{MVA}}=0.1103\\ \\Omega$$'
-                    },
-                    {
-                      title: '计算系统电抗标幺值',
-                      formula:
-                        '$$X_{\\mathrm{s}{*}}=\\frac{S_{B}}{S_{\\mathrm{k}}^{\\prime\\prime}}=\\frac{1000.0\\ \\text{MVA}}{2222.0\\ \\text{MVA}}=0.45$$'
-                    },
-                    {
-                      title: '计算线路电抗有名值',
-                      formula:
-                        '$$X_{\\mathrm{有名值}}=L_{\\mathrm{架空}}\\times x_{\\mathrm{架空}}+L_{\\mathrm{电缆}}\\times x_{\\mathrm{电缆}}=4.1\\ \\text{km}\\times0.4\\ \\Omega/\\text{km}+1.0\\ \\text{km}\\times0.12\\ \\Omega/\\text{km}=1.76\\ \\Omega$$'
-                    },
-                    {
-                      title: '计算线路电抗标幺值',
-                      formula:
-                        '$$X_{\\ell{*}}=\\frac{X_{\\mathrm{有名值}}}{X_{B}^{(高)}}=\\frac{1.76\\ \\Omega}{13.225\\ \\Omega}=0.1331$$'
-                    },
-                    {
-                      title: '计算变压器电抗标幺值',
-                      formula:
-                        '$$X_{\\mathrm{b}{*}}=\\frac{U_{k}{(\\%)}}{100}\\times\\frac{S_{B}}{S_{\\mathrm{N}}}=\\frac{10.5\\ \\%}{100}\\times\\frac{1000.0\\ \\text{MVA}}{20.0\\ \\text{MVA}}=5.25$$'
-                    },
-                    {
-                      title: '计算高压侧总电抗标幺值',
-                      formula:
-                        '$$X_{\\Sigma*}^{(高)}=X_{\\mathrm{s*}}+X_{\\mathrm{L}{*}}=0.45+0.1331=0.5831$$'
-                    },
-                    {
-                      title: '计算高压侧短路电流',
-                      formula:
-                        '$$I_{d}^{(高)}= \\frac{1}{X_{\\Sigma*}^{(高)}} \\times I_{B}^{(高)}=\\frac{1}{0.5831} \\times5.0204\\ \\text{kA}=8.6095\\ \\text{kA}$$'
-                    },
-                    {
-                      title: '计算低压侧总电抗标幺值',
-                      formula:
-                        '$$X_{\\Sigma}^{(低)*}=X_{\\mathrm{s*}}+X_{\\mathrm{L}{*}}+X_{\\mathrm{b}^{*}}=0.45+0.1331+5.25=5.8331$$'
-                    },
-                    {
-                      title: '计算低压侧短路电流',
-                      formula:
-                        '$$I_{d}^{(低)}= \\frac{1}{X_{\\Sigma*}^{(低)}} \\times I_{B}^{(低)}=\\frac{1}{5.8331} \\times54.9857\\ \\text{kA}=9.4265\\ \\text{kA}$$'
-                    }
-                  ],
-                  calculation_details: {
-                    Ij_lv: 54.9857,
-                    Zj_hv: 13.225,
-                    Zj_lv: 0.1103,
-                    X_line_ohm: 1.76,
-                    X_sys_star: 0.45,
-                    X_line_star: 0.1331,
-                    X_total_hv_star: 0.5831,
-                    X_total_lv_star: 5.8331,
-                    X_transformer_star: 5.25
-                  },
-                  calculation_data: {
-                    hv_bus_Isc_ka: 8.6095,
-                    lv_bus_Isc_ka: 9.4265,
-                    lv_bus_Is2c_ka: 9.4265
-                  }
-                },
-                extracted_parameters: {
-                  base_capacity_mva: 1000,
-                  hv_base_voltage_kv: 115,
-                  lv_base_voltage_kv: 10.5,
-                  overhead_line_length_km: 4.1,
-                  transformer_capacity_mva: 20,
-                  normal_supply_hv_bus_Isc_ka: 9.626,
-                  normal_supply_lv_bus_Isc_ka: 9.429,
-                  transformer_impedance_percent: 10.5,
-                  cable_unit_reactance_ohm_per_km: 0.12,
-                  upstream_short_circuit_capacity_mva: 2222,
-                  upstream_main_transformer_capacity_mva: null,
-                  overhead_line_unit_reactance_ohm_per_km: 0.4,
-                  upstream_main_transformer_impedance_percent: null
-                },
+                cad_manifest_path: null,
                 comparison_groups: [
                   {
                     items: [
                       {
-                        result: '数量不一致',
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191533.35575292652,
+                            y: -148177.45352007766
+                          },
+                          min_point: {
+                            x: -191797.81284850018,
+                            y: -148235.07651187014
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason: 'product_model_missing_on_one_side',
+                        match_source: 'structured_fields_mismatch',
                         diagram_count: 2,
                         diagram_model:
-                          'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n口口口口口口',
-                        model_matched: true,
+                          'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n附有载调压开关',
+                        llm_cache_hit: null,
+                        model_matched: false,
                         equipment_name: '电力变压器',
+                        similarity_score: null,
                         diagram_world_bboxes: [
                           [
-                            -191798.22062829687, -148258.29517052922,
-                            -191756.51480293984, -148163.64864823624
+                            -191797.81284850018, -148235.07651187014,
+                            -191765.80430332405, -148177.61053095447
                           ],
                           [
-                            -191563.66991816933, -148258.29517052922,
-                            -191521.9640928123, -148163.64864823624
+                            -191565.36429810262, -148235.07651187014,
+                            -191533.35575292652, -148177.45352007766
                           ]
                         ],
-                        equipment_list_count: 3,
-                        equipment_list_model:
-                          'SZ11-20000/110  110±8×1.25%/10.5kV  20000kVA  \nYN,d11  容量比100/100  Uk%=10.5\n附：高压中性点LRB-60 100/5A  一只\n高压及中性点套管泄漏比距≥2.5cm/kV(按系统最高电压，下同)\n低压套管泄漏比距≥3.1cm/kV\n中性点绝缘水平   BIL 325kV \nSIL 140kV\n有载调压开关选用MR系列，额定电流 300A，档数 9档  配电动操作机构，另附发信号用温度计和测温元件PT100；远方监测装置及全套附件，变压器本体油枕装设油位发送器一只，瓦斯继电器一只，压力释放阀一只；,有载调压开关油枕装设油位发送器一只，瓦斯继电器一只。\n不带滚轮小车'
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
                       },
                       {
-                        result: '数量不一致',
-                        diagram_count: 2,
-                        diagram_model:
-                          'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n口口口口口口',
-                        model_matched: true,
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191692.96061626292,
+                            y: -148370.20759266155
+                          },
+                          min_point: {
+                            x: -191699.6457652988,
+                            y: -148381.70610291313
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason: 'product_model_missing_on_one_side',
+                        match_source: 'structured_fields_mismatch',
+                        diagram_count: 1,
+                        diagram_model: 'DKSC-350/10.5\n-100/0.4 ZNyn11',
+                        llm_cache_hit: null,
+                        model_matched: false,
                         equipment_name: '电力变压器',
+                        similarity_score: null,
                         diagram_world_bboxes: [
                           [
-                            -191798.22062829687, -148258.29517052922,
-                            -191756.51480293984, -148163.64864823624
-                          ],
-                          [
-                            -191563.66991816933, -148258.29517052922,
-                            -191521.9640928123, -148163.64864823624
+                            -191699.6457652988, -148381.70610291313,
+                            -191692.96061626292, -148370.20759266155
                           ]
                         ],
-                        equipment_list_count: 3,
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '图纸缺失',
+                        extents: null,
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电力变压器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 7,
                         equipment_list_model:
                           'SZ11-20000/110  110±8×1.25%/10.5kV  20000kVA  \nYN,d11  容量比100/100  Uk%=10.5\n附：高压中性点LRB-60 100/5A  一只\n高压及中性点套管泄漏比距≥2.5cm/kV(按系统最高电压，下同)\n低压套管泄漏比距≥3.1cm/kV\n中性点绝缘水平   BIL 325kV \nSIL 140kV\n有载调压开关选用MR系列，额定电流 300A，档数 9档  配电动操作机构，另附发信号用温度计和测温元件PT100；远方监测装置及全套附件，变压器本体油枕装设油位发送器一只，瓦斯继电器一只，压力释放阀一只；,有载调压开关油枕装设油位发送器一只，瓦斯继电器一只。\n不带滚轮小车'
                       }
@@ -651,371 +163,1527 @@ reviewReportData.value = {
                   {
                     items: [
                       {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191424.42038445952,
+                            y: -147988.0880246978
+                          },
+                          min_point: {
+                            x: -191867.44346734212,
+                            y: -148155.66065077673
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason:
+                          'structured_field_missing:rated_current_a',
+                        match_source: 'structured_fields_mismatch',
+                        diagram_count: 6,
+                        diagram_model: '隔离开关 1250A 40kA/4s',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '隔离开关',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191776.73125233882, -147994.10832407392,
+                            -191773.25390888035, -147988.08802469785
+                          ],
+                          [
+                            -191544.28270194132, -147994.10832407387,
+                            -191540.80535848284, -147988.0880246978
+                          ],
+                          [
+                            -191867.44346734212, -148103.98211224217,
+                            -191863.56280670303, -148099.1661874652
+                          ],
+                          [
+                            -191428.30104509863, -148103.98211224217,
+                            -191424.42038445952, -148099.1661874652
+                          ],
+                          [
+                            -191774.0222173206, -148155.66065077673,
+                            -191770.00774076008, -148149.77452049378
+                          ],
+                          [
+                            -191541.57366692304, -148155.66065077673,
+                            -191537.55919036252, -148149.77452049378
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191323.7001384339,
+                            y: -148146.29635259928
+                          },
+                          min_point: {
+                            x: -191916.44493251725,
+                            y: -148155.66065077673
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason:
+                          'structured_field_missing:rated_current_a',
+                        match_source: 'structured_fields_mismatch',
+                        diagram_count: 2,
+                        diagram_model: '隔离开关 1250A 40kA',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '隔离开关',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191916.44493251725, -148152.3162585705,
+                            -191912.83515351996, -148146.29635259928
+                          ],
+                          [
+                            -191327.44698322372, -148155.66065077673,
+                            -191323.7001384339, -148150.30962324678
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
                         result: '图纸缺失',
+                        extents: null,
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
                         diagram_count: 0,
                         diagram_model: '',
+                        llm_cache_hit: null,
                         model_matched: false,
-                        equipment_name: '中性点隔离开关',
+                        equipment_name: '隔离开关',
+                        similarity_score: null,
                         diagram_world_bboxes: [],
                         equipment_list_count: 2,
                         equipment_list_model:
                           'GW13-72.5(W)/630A  630A/31.5kA\n附：电动操作机构  电机电源AC380V  控制电源AC220V\n绝缘爬电比距≥3.1cm/kV'
                       }
                     ],
-                    equipment_name: '中性点隔离开关'
+                    equipment_name: '隔离开关'
                   },
                   {
                     items: [
                       {
                         result: '图纸缺失',
+                        extents: null,
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
                         diagram_count: 0,
                         diagram_model: '',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '避雷器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 2,
+                        equipment_list_model:
+                          'YH1.5WZ-72/186  附放电记录器\n绝缘爬电比距≥2.5cm/kV'
+                      },
+                      {
+                        result: '图纸缺失',
+                        extents: null,
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '避雷器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 12,
+                        equipment_list_model: '102/266kV 10kA'
+                      }
+                    ],
+                    equipment_name: '避雷器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191572.78392622655,
+                            y: -147961.36057552454
+                          },
+                          min_point: {
+                            x: -191812.2740186278,
+                            y: -147972.01098255583
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason:
+                          'structured_field_missing:accuracy_class_config',
+                        match_source: 'structured_fields_mismatch',
+                        diagram_count: 2,
+                        diagram_model:
+                          '计量PT1100.10.1kV\n333\n0.2/0.2 30/30VA',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电压互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191579.82546822992, -147972.0109825556,
+                            -191572.78392622655, -147961.36057552454
+                          ],
+                          [
+                            -191812.2740186278, -147972.01098255583,
+                            -191803.68677228218, -147961.36057552474
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191445.0157909558,
+                            y: -148289.60968141534
+                          },
+                          min_point: {
+                            x: -191457.19062418622,
+                            y: -148306.4727399769
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason:
+                          'structured_field_missing:accuracy_class_config',
+                        match_source: 'structured_fields_mismatch',
+                        diagram_count: 1,
+                        diagram_model: '电压互感器（A、C相）\n10/0.1kV 6P',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电压互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191457.19062418622, -148306.4727399769,
+                            -191445.0157909558, -148289.60968141534
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191693.09431924365,
+                            y: -148370.484190896
+                          },
+                          min_point: {
+                            x: -191699.6457652988,
+                            y: -148381.58455491028
+                          }
+                        },
+                        match_stage: 'structured_fields',
+                        match_reason: 'structured_field_missing:voltage_ratio',
+                        match_source: 'structured_fields_mismatch',
+                        diagram_count: 1,
+                        diagram_model: '电压互感器 10/0.1kV',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电压互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191699.6457652988, -148381.58455491028,
+                            -191693.09431924365, -148370.484190896
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '图纸缺失',
+                        extents: null,
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 0,
+                        diagram_model: '',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电压互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [],
+                        equipment_list_count: 6,
+                        equipment_list_model: '0.5/3P (110/√3)/(0.1/√3)/0.1 kV'
+                      }
+                    ],
+                    equipment_name: '电压互感器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191534.65313544095,
+                            y: -147968.68545485655
+                          },
+                          min_point: {
+                            x: -191778.73741202638,
+                            y: -147975.1070395815
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 2,
+                        diagram_model: '故障接地开关 40kA',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '接地开关',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191778.73741202638, -147975.1070395815,
+                            -191767.10168583845, -147968.68545485663
+                          ],
+                          [
+                            -191546.28886162888, -147975.1070395814,
+                            -191534.65313544095, -147968.68545485655
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191442.21789704575,
+                            y: -147969.0905647225
+                          },
+                          min_point: {
+                            x: -191886.57913876942,
+                            y: -148106.64987229084
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 6,
+                        diagram_model: '接地开关 1250A 40kA/4s',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '接地开关',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191778.87115600557, -147975.24381609497,
+                            -191767.2354298176, -147969.09056472252
+                          ],
+                          [
+                            -191546.42260560807, -147975.24381609494,
+                            -191534.7868794201, -147969.0905647225
+                          ],
+                          [
+                            -191600.58891779263, -148067.95267557155,
+                            -191592.29679104293, -148063.40585287023
+                          ],
+                          [
+                            -191600.3188405919, -148067.86923361465,
+                            -191592.28988747086, -148063.3211782524
+                          ],
+                          [
+                            -191886.57913876942, -148106.64987229084,
+                            -191881.36031928923, -148092.06934186482
+                          ],
+                          [
+                            -191447.57053241003, -148106.64987229084,
+                            -191442.21789704575, -148092.06934186482
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      }
+                    ],
+                    equipment_name: '接地开关'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191540.54758696744,
+                            y: -148002.93065367755
+                          },
+                          min_point: {
+                            x: -191788.51958383634,
+                            y: -148016.52280137045
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 6,
+                        diagram_model:
+                          '电流互感器\n2*200/5A 0.2S 20VA\n2*300/5A 0.5/5P30/5P30',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191778.12441878853, -148016.38410598584,
+                            -191772.99613736494, -148002.93065367758
+                          ],
+                          [
+                            -191783.39130241275, -148016.38410598584,
+                            -191778.67882759107, -148003.06934906222
+                          ],
+                          [
+                            -191788.51958383634, -148016.52280137045,
+                            -191783.80710901465, -148002.93065367758
+                          ],
+                          [
+                            -191545.67586839103, -148016.3841059858,
+                            -191540.54758696744, -148002.93065367755
+                          ],
+                          [
+                            -191550.94275201525, -148016.3841059858,
+                            -191546.23027719356, -148003.06934906216
+                          ],
+                          [
+                            -191555.9324312382, -148016.52280137042,
+                            -191551.35855861715, -148002.93065367755
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191326.51027202627,
+                            y: -148103.6970470462
+                          },
+                          min_point: {
+                            x: -191921.39166669868,
+                            y: -148113.8616560997
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 12,
+                        diagram_model: '电流互感器2*150/5A\n5P30/5P30/0.5',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191921.39166669868, -148113.8616560997,
+                            -191916.9797145909, -148103.83079190218
+                          ],
+                          [
+                            -191916.57862803564, -148113.72791124374,
+                            -191912.16667592787, -148103.6970470462
+                          ],
+                          [
+                            -191911.6318938542, -148113.72791124374,
+                            -191906.2840731175, -148103.96453675814
+                          ],
+                          [
+                            -191778.0366938811, -148113.59416638777,
+                            -191773.2193220085, -148103.6970470462
+                          ],
+                          [
+                            -191783.25551340976, -148113.72791124374,
+                            -191778.5719574225, -148103.83079190218
+                          ],
+                          [
+                            -191788.2067011677, -148113.8616560997,
+                            -191783.6569610658, -148103.6970470462
+                          ],
+                          [
+                            -191545.58814348353, -148113.72791124374,
+                            -191540.63695572558, -148103.6970470462
+                          ],
+                          [
+                            -191550.8069630122, -148113.72791124374,
+                            -191546.12340702495, -148103.6970470462
+                          ],
+                          [
+                            -191555.75815077018, -148113.8616560997,
+                            -191551.20841066827, -148103.6970470462
+                          ],
+                          [
+                            -191331.99672332563, -148113.72791124374,
+                            -191326.51027202627, -148103.6970470462
+                          ],
+                          [
+                            -191336.94791108358, -148113.72791124374,
+                            -191332.53198686702, -148103.83079190218
+                          ],
+                          [
+                            -191341.89909884153, -148113.72791124374,
+                            -191337.61699051035, -148103.83079190218
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191576.4959522418,
+                            y: -148217.28288028273
+                          },
+                          min_point: {
+                            x: -191815.3669272491,
+                            y: -148223.3011173648
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 2,
+                        diagram_model: 'LRB-60\n100/5A,10P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191815.3669272491, -148223.3011173648,
+                            -191808.94450263935, -148217.28288028273
+                          ],
+                          [
+                            -191582.91837685154, -148223.3011173648,
+                            -191576.4959522418, -148217.28288028273
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191576.4959522418,
+                            y: -148217.42871139382
+                          },
+                          min_point: {
+                            x: -191815.3669272491,
+                            y: -148223.45069718995
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 2,
+                        diagram_model: '间隙105-115mm\n间隙CT 100/5A,10P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191815.3669272491, -148223.45069718995,
+                            -191808.94450263935, -148217.42871139382
+                          ],
+                          [
+                            -191582.91837685154, -148223.45069718995,
+                            -191576.4959522418, -148217.42871139382
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191774.90383481528,
+                            y: -148299.4966907078
+                          },
+                          min_point: {
+                            x: -191789.30459694433,
+                            y: -148309.0650500828
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 3,
+                        diagram_model: '电流互感器\n3000/5A\n0.5/5P20/5P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191789.30459694433, -148308.9302844578,
+                            -191784.59406727593, -148299.6314563328
+                          ],
+                          [
+                            -191784.32489415203, -148309.0650500828,
+                            -191779.88353760756, -148299.4966907078
+                          ],
+                          [
+                            -191779.4797779217, -148308.9302844578,
+                            -191774.90383481528, -148299.6314563328
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191916.5151499326,
+                            y: -148308.4733850218
+                          },
+                          min_point: {
+                            x: -191921.77349378457,
+                            y: -148311.5729943968
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 1,
+                        diagram_model: '电流互感器\n400/5A\n0.2/0.5/5P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191921.77349378457, -148311.5729943968,
+                            -191916.5151499326, -148308.4733850218
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191352.6259972765,
+                            y: -148305.1042443968
+                          },
+                          min_point: {
+                            x: -191367.45722352574,
+                            y: -148311.7077600218
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 3,
+                        diagram_model: '电流互感器\n300/5A\n0.5/5P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191367.45722352574, -148311.5729943968,
+                            -191362.46853833282, -148305.1042443968
+                          ],
+                          [
+                            -191362.19887967373, -148311.5729943968,
+                            -191357.4798531399, -148305.1042443968
+                          ],
+                          [
+                            -191357.4798531399, -148311.7077600218,
+                            -191352.6259972765, -148305.2390100218
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191736.4524367053,
+                            y: -148382.6789116616
+                          },
+                          min_point: {
+                            x: -191751.55332161358,
+                            y: -148389.4171929116
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 2,
+                        diagram_model: '电流互感器\n100/5A\n0.5/5P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191751.55332161358, -148389.1476616616,
+                            -191746.2949777616, -148382.6789116616
+                          ],
+                          [
+                            -191741.84560988683, -148389.4171929116,
+                            -191736.4524367053, -148382.8136772866
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      },
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191786.99814945488,
+                            y: -148384.8957085366
+                          },
+                          min_point: {
+                            x: -191801.79156739984,
+                            y: -148391.5968804116
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 3,
+                        diagram_model: '电流互感器\n3000/5A\n0.5/5P20',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '电流互感器',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191801.79156739984, -148391.3117241616,
+                            -191796.52852447712, -148385.1808647866
+                          ],
+                          [
+                            -191796.10179126717, -148391.4543022866,
+                            -191791.69221476433, -148384.8957085366
+                          ],
+                          [
+                            -191791.54997036103, -148391.5968804116,
+                            -191786.99814945488, -148385.0382866616
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      }
+                    ],
+                    equipment_name: '电流互感器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191332.7996186377,
+                            y: -148027.29532087536
+                          },
+                          min_point: {
+                            x: -191916.8460190725,
+                            y: -148130.00938394203
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 6,
+                        diagram_model: '断路器\n1250A 40kA',
+                        llm_cache_hit: null,
                         model_matched: false,
                         equipment_name: '断路器',
-                        diagram_world_bboxes: [],
-                        equipment_list_count: 7,
-                        equipment_list_model: '1250A，31.5kA/4s'
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191551.07003420146, -148037.49203857675,
+                            -191546.5871600711, -148027.29532087536
+                          ],
+                          [
+                            -191783.51858459896, -148037.4920385768,
+                            -191779.0357104686, -148027.43127711143
+                          ],
+                          [
+                            -191916.8460190725, -148127.8695981893,
+                            -191912.70145800154, -148120.6478212739
+                          ],
+                          [
+                            -191782.98788163907, -148128.00333479885,
+                            -191779.1072209639, -148120.91529449297
+                          ],
+                          [
+                            -191550.67314712686, -148128.13707140842,
+                            -191546.524854681, -148120.78155788343
+                          ],
+                          [
+                            -191336.81409519824, -148130.00938394203,
+                            -191332.7996186377, -148120.78155788343
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
                       }
                     ],
                     equipment_name: '断路器'
+                  },
+                  {
+                    items: [
+                      {
+                        result: '清册缺失',
+                        extents: {
+                          max_point: {
+                            x: -191356.66539652273,
+                            y: -148265.79450459505
+                          },
+                          min_point: {
+                            x: -191915.66017115323,
+                            y: -148389.12741330435
+                          }
+                        },
+                        match_stage: null,
+                        match_reason: null,
+                        match_source: 'unmatched',
+                        diagram_count: 4,
+                        diagram_model: '零序CT∅120 100/1A',
+                        llm_cache_hit: null,
+                        model_matched: false,
+                        equipment_name: '中性点零序CT',
+                        similarity_score: null,
+                        diagram_world_bboxes: [
+                          [
+                            -191915.66017115323, -148270.60942443323,
+                            -191910.84683745203, -148265.79450459505
+                          ],
+                          [
+                            -191361.47873022393, -148270.60942443323,
+                            -191356.66539652273, -148265.79450459505
+                          ],
+                          [
+                            -191751.4397818745, -148389.12741330435,
+                            -191746.22533703153, -148382.97501573333
+                          ],
+                          [
+                            -191741.81311447208, -148389.12741330435,
+                            -191736.33126220127, -148382.84126796006
+                          ]
+                        ],
+                        equipment_list_count: 0,
+                        equipment_list_model: ''
+                      }
+                    ],
+                    equipment_name: '中性点零序CT'
                   }
-                ]
-              }
-            }
-          ]
-        }
-      ],
-      category: '设备材料清册'
-    },
-    {
-      code: 'EQUIP-COMP-001',
-      name: '设备清册与主接线图一致性规范',
-      type: '企业标准',
-      articles: [
-        {
-          id: 'equipment_consistency',
-          title: '设备一致性检查',
-          origin: '设备材料清册应与电气主接线图保持一致',
-          content: '设备清册与主接线图应在设备数量、规格参数、设备存在性上一致',
-          violations: [
-            {
-              risk_level: 'pass',
-              suggestion: [
-                '请核查中性点零序CT 12kV 100/1A 5P30/5P30级 15/15VA的数量!'
-              ],
-              description:
-                "设备清册中'中性点零序CT'（12kV 100/1A 5P30/5P30级 15/15VA）数量为2，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
+                ],
+                default_world_bbox: {
                   max_point: {
-                    x: -191521.9640928123,
-                    y: -148263.64864823624
+                    x: -191209.8115356336,
+                    y: -147893.8507374082
                   },
                   min_point: {
-                    x: -191798.22062829687,
-                    y: -148358.29517052922
+                    x: -192050.8115356336,
+                    y: -148487.8507374082
                   }
                 },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查间隙电流互感器 12kV 100-300/1A 5P30/5P30级 15/15VA的数量!'
-              ],
-              description:
-                "设备清册中'间隙电流互感器'（12kV 100-300/1A 5P30/5P30级 15/15VA）数量为2，CAD图中找到0处（三相标注×3=0）。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查隔离开关 126kV，3150A，40kA/3s，配置2只微动开关的数量!'
-              ],
-              description:
-                "设备清册中'隔离开关'（126kV，3150A，40kA/3s，配置2只微动开关）数量为3，CAD图中找到18处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
+                bbox_selection_mode: 'main_view',
+                annotated_image_path: null,
+                bbox_outlier_handles: [
+                  'FE72B',
+                  'FE72C',
+                  'FE730',
+                  'FE83A',
+                  '1016F0',
+                  '1016F1',
+                  '1016C2',
+                  '1016ED',
+                  '1016DF',
+                  '1016EC',
+                  'FEC07',
+                  'FEC0A',
+                  'FE76A',
+                  'FE835',
+                  'FE7FB',
+                  'FE834',
+                  '1012C3',
+                  'FE75A',
+                  '1012CD',
+                  'FE7DF'
+                ],
+                main_view_world_bbox: {
                   max_point: {
-                    x: 473564.95751572,
-                    y: -166197.8866421183
+                    x: -191209.8115356336,
+                    y: -147893.8507374082
                   },
                   min_point: {
-                    x: 464889.6430528725,
-                    y: -175409.0086098614
+                    x: -192050.8115356336,
+                    y: -148487.8507374082
                   }
                 },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: [
-                  '38EB13',
-                  '38EB15',
-                  '38EB1A',
-                  '38EB1C',
-                  '38EB1E',
-                  '3919BD',
-                  '3919C1',
-                  '3919C3',
-                  '3919C5',
-                  '3919C7',
-                  '3919D0',
-                  '391D50',
-                  '391D55',
-                  '391D57',
-                  '391D5E',
-                  '391D60',
-                  '391D62',
-                  '392263'
-                ]
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查110kV电容式电压互感器 20000pF,110/√3/0.1/√3/0.1/√3/0.1/√3/0.1kV  0.2/0.5（3P）/0.5（3P）/3P  10/10/10/10VA,外绝缘爬电距离不小于1812.5mm的数量!'
-              ],
-              description:
-                "设备清册中'110kV电容式电压互感器'（20000pF,110/√3/0.1/√3/0.1/√3/0.1/√3/0.1kV  0.2/0.5（3P）/0.5（3P）/3P  10/10/10/10VA,外绝缘爬电距离不小于1812.5mm）数量为15，CAD图中找到0处（三相标注×3=0）。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查110kV双柱水平旋转隔离开关 126kV，3150A，40kA/3s，双接地,配置6只微动开关,外绝缘爬电距离不小于25mm/kV的数量!'
-              ],
-              description:
-                "设备清册中'110kV双柱水平旋转隔离开关'（126kV，3150A，40kA/3s，双接地,配置6只微动开关,外绝缘爬电距离不小于25mm/kV）数量为2，CAD图中找到18处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
+                equipment_list_devices: [
+                  {
+                    name: '电力变压器',
+                    count: 7,
+                    model:
+                      'SZ11-20000/110  110±8×1.25%/10.5kV  20000kVA  \nYN,d11  容量比100/100  Uk%=10.5\n附：高压中性点LRB-60 100/5A  一只\n高压及中性点套管泄漏比距≥2.5cm/kV(按系统最高电压，下同)\n低压套管泄漏比距≥3.1cm/kV\n中性点绝缘水平   BIL 325kV \nSIL 140kV\n有载调压开关选用MR系列，额定电流 300A，档数 9档  配电动操作机构，另附发信号用温度计和测温元件PT100；远方监测装置及全套附件，变压器本体油枕装设油位发送器一只，瓦斯继电器一只，压力释放阀一只；,有载调压开关油枕装设油位发送器一只，瓦斯继电器一只。\n不带滚轮小车',
+                    source_text:
+                      'SZ11-20000/110  110±8×1.25%/10.5kV  20000kVA  \nYN,d11  容量比100/100  Uk%=10.5\n附：高压中性点LRB-60 100/5A  一只\n高压及中性点套管泄漏比距≥2.5cm/kV(按系统最高电压，下同)\n低压套管泄漏比距≥3.1cm/kV\n中性点绝缘水平   BIL 325kV \nSIL 140kV\n有载调压开关选用MR系列，额定电流 300A，档数 9档  配电动操作机构，另附发信号用温度计和测温元件PT100；远方监测装置及全套附件，变压器本体油枕装设油位发送器一只，瓦斯继电器一只，压力释放阀一只；,有载调压开关油枕装设油位发送器一只，瓦斯继电器一只。\n不带滚轮小车',
+                    extraction_result: null
+                  },
+                  {
+                    name: '隔离开关',
+                    count: 2,
+                    model:
+                      'GW13-72.5(W)/630A  630A/31.5kA\n附：电动操作机构  电机电源AC380V  控制电源AC220V\n绝缘爬电比距≥3.1cm/kV',
+                    source_text:
+                      'GW13-72.5(W)/630A  630A/31.5kA\n附：电动操作机构  电机电源AC380V  控制电源AC220V\n绝缘爬电比距≥3.1cm/kV',
+                    extraction_result: null
+                  },
+                  {
+                    name: '避雷器',
+                    count: 2,
+                    model:
+                      'YH1.5WZ-72/186  附放电记录器\n绝缘爬电比距≥2.5cm/kV',
+                    source_text:
+                      'YH1.5WZ-72/186  附放电记录器\n绝缘爬电比距≥2.5cm/kV',
+                    extraction_result: null
+                  },
+                  {
+                    name: '避雷器',
+                    count: 12,
+                    model: '102/266kV 10kA',
+                    source_text: 'HY5WZ-17/45',
+                    extraction_result: null
+                  },
+                  {
+                    name: '电压互感器',
+                    count: 6,
+                    model: '0.5/3P (110/√3)/(0.1/√3)/0.1 kV',
+                    source_text: '0.5/3P (110/√3)/(0.1/√3)/0.1 kV',
+                    extraction_result: null
+                  }
+                ],
+                full_entity_world_bbox: {
                   max_point: {
-                    x: 473564.95751572,
-                    y: -166197.8866421183
+                    x: -191209.8115356336,
+                    y: -147893.8507374082
                   },
                   min_point: {
-                    x: 464889.6430528725,
-                    y: -175409.0086098614
+                    x: -192050.8115356336,
+                    y: -148487.8507374082
                   }
                 },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: [
-                  '38EB13',
-                  '38EB15',
-                  '38EB1A',
-                  '38EB1C',
-                  '38EB1E',
-                  '3919BD',
-                  '3919C1',
-                  '3919C3',
-                  '3919C5',
-                  '3919C7',
-                  '3919D0',
-                  '391D50',
-                  '391D55',
-                  '391D57',
-                  '391D5E',
-                  '391D60',
-                  '391D62',
-                  '392263'
-                ]
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查隔离开关 40.5kV 1250A 31.5kA，配置2只微动开关，满足一键顺控功能的数量!'
-              ],
-              description:
-                "设备清册中'隔离开关'（40.5kV 1250A 31.5kA，配置2只微动开关，满足一键顺控功能）数量为3，CAD图中找到6处。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: 445516.3814443483,
-                    y: -169195.8130595214
+                wiring_diagram_devices: [
+                  {
+                    name: '电压互感器',
+                    count: 2,
+                    model: '计量PT1100.10.1kV\n333\n0.2/0.2 30/30VA',
+                    name_source: 'llm_extract',
+                    source_text: '计量PT1100.10.1kV\n333\n0.2/0.2 30/30VA',
+                    extraction_result: {
+                      remark: null,
+                      product_model: null,
+                      voltage_ratio: '110/0.1/0.1kV',
+                      burden_va_config: '30/30VA',
+                      accuracy_class_config: '0.2/0.2'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191579.82546822992, -147972.0109825556,
+                        -191572.78392622655, -147961.36057552454
+                      ],
+                      [
+                        -191812.2740186278, -147972.01098255583,
+                        -191803.68677228218, -147961.36057552474
+                      ]
+                    ]
                   },
-                  min_point: {
-                    x: 434351.6590295973,
-                    y: -174577.8368036391
-                  }
-                },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: [
-                  '38F730',
-                  '3918C3',
-                  '3918D6',
-                  '3918DC',
-                  '3918F0',
-                  '391FE7'
-                ]
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: ['请核查电流互感器 4000/1A,5P30,15VA的数量!'],
-              description:
-                "设备清册中'电流互感器'（4000/1A,5P30,15VA）数量为1，CAD图中找到3处（三相标注×3=9）。",
-              geometry_ref: {
-                chapter: null,
-                extents: {
-                  max_point: {
-                    x: 480667.6127904095,
-                    y: -183764.7289309421
+                  {
+                    name: '电压互感器',
+                    count: 1,
+                    model: '电压互感器（A、C相）\n10/0.1kV 6P',
+                    name_source: 'llm_extract',
+                    source_text: '电压互感器（A、C相）\n10/0.1kV 6P',
+                    extraction_result: {
+                      remark: 'A、C相',
+                      product_model: null,
+                      voltage_ratio: '10/0.1kV',
+                      burden_va_config: null,
+                      accuracy_class_config: '6P'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191457.19062418622, -148306.4727399769,
+                        -191445.0157909558, -148289.60968141534
+                      ]
+                    ]
                   },
-                  min_point: {
-                    x: 455903.5321677676,
-                    y: -191155.982043519
+                  {
+                    name: '电压互感器',
+                    count: 1,
+                    model: '电压互感器 10/0.1kV',
+                    name_source: 'llm_extract',
+                    source_text: '电压互感器 10/0.1kV',
+                    extraction_result: {
+                      remark: null,
+                      product_model: null,
+                      voltage_ratio: '10/0.1kV',
+                      burden_va_config: null,
+                      accuracy_class_config: null
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191699.6457652988, -148381.58455491028,
+                        -191693.09431924365, -148370.484190896
+                      ]
+                    ]
+                  },
+                  {
+                    name: '接地开关',
+                    count: 2,
+                    model: '故障接地开关 40kA',
+                    name_source: 'llm_extract',
+                    source_text: '故障接地开关 40kA',
+                    extraction_result: {
+                      remark: '故障接地开关',
+                      product_model: null,
+                      rated_current_a: null,
+                      rated_voltage_kv: null,
+                      short_time_withstand_current: '40kA'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191778.73741202638, -147975.1070395815,
+                        -191767.10168583845, -147968.68545485663
+                      ],
+                      [
+                        -191546.28886162888, -147975.1070395814,
+                        -191534.65313544095, -147968.68545485655
+                      ]
+                    ]
+                  },
+                  {
+                    name: '接地开关',
+                    count: 6,
+                    model: '接地开关 1250A 40kA/4s',
+                    name_source: 'llm_extract',
+                    source_text: '接地开关 1250A 40kA/4s',
+                    extraction_result: {
+                      remark: null,
+                      product_model: null,
+                      rated_current_a: '1250A',
+                      rated_voltage_kv: null,
+                      short_time_withstand_current: '40kA/4s'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191778.87115600557, -147975.24381609497,
+                        -191767.2354298176, -147969.09056472252
+                      ],
+                      [
+                        -191546.42260560807, -147975.24381609494,
+                        -191534.7868794201, -147969.0905647225
+                      ],
+                      [
+                        -191600.58891779263, -148067.95267557155,
+                        -191592.29679104293, -148063.40585287023
+                      ],
+                      [
+                        -191600.3188405919, -148067.86923361465,
+                        -191592.28988747086, -148063.3211782524
+                      ],
+                      [
+                        -191886.57913876942, -148106.64987229084,
+                        -191881.36031928923, -148092.06934186482
+                      ],
+                      [
+                        -191447.57053241003, -148106.64987229084,
+                        -191442.21789704575, -148092.06934186482
+                      ]
+                    ]
+                  },
+                  {
+                    name: '隔离开关',
+                    count: 6,
+                    model: '隔离开关 1250A 40kA/4s',
+                    name_source: 'llm_extract',
+                    source_text: '隔离开关 1250A 40kA/4s',
+                    extraction_result: {
+                      remark: null,
+                      product_model: null,
+                      rated_current_a: '1250A',
+                      grounding_config: null,
+                      rated_voltage_kv: null,
+                      short_time_withstand_current: '40kA/4s'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191776.73125233882, -147994.10832407392,
+                        -191773.25390888035, -147988.08802469785
+                      ],
+                      [
+                        -191544.28270194132, -147994.10832407387,
+                        -191540.80535848284, -147988.0880246978
+                      ],
+                      [
+                        -191867.44346734212, -148103.98211224217,
+                        -191863.56280670303, -148099.1661874652
+                      ],
+                      [
+                        -191428.30104509863, -148103.98211224217,
+                        -191424.42038445952, -148099.1661874652
+                      ],
+                      [
+                        -191774.0222173206, -148155.66065077673,
+                        -191770.00774076008, -148149.77452049378
+                      ],
+                      [
+                        -191541.57366692304, -148155.66065077673,
+                        -191537.55919036252, -148149.77452049378
+                      ]
+                    ]
+                  },
+                  {
+                    name: '隔离开关',
+                    count: 2,
+                    model: '隔离开关 1250A 40kA',
+                    name_source: 'llm_extract',
+                    source_text: '隔离开关 1250A 40kA',
+                    extraction_result: {
+                      remark: null,
+                      product_model: null,
+                      rated_current_a: '1250A',
+                      grounding_config: null,
+                      rated_voltage_kv: null,
+                      short_time_withstand_current: '40kA'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191916.44493251725, -148152.3162585705,
+                        -191912.83515351996, -148146.29635259928
+                      ],
+                      [
+                        -191327.44698322372, -148155.66065077673,
+                        -191323.7001384339, -148150.30962324678
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 6,
+                    model:
+                      '电流互感器\n2*200/5A 0.2S 20VA\n2*300/5A 0.5/5P30/5P30',
+                    name_source: 'llm_extract',
+                    source_text:
+                      '电流互感器\n2*200/5A 0.2S 20VA\n2*300/5A 0.5/5P30/5P30',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '2*200/5A',
+                      product_model: null,
+                      burden_va_config: '20VA',
+                      accuracy_class_config: '0.2S'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191778.12441878853, -148016.38410598584,
+                        -191772.99613736494, -148002.93065367758
+                      ],
+                      [
+                        -191783.39130241275, -148016.38410598584,
+                        -191778.67882759107, -148003.06934906222
+                      ],
+                      [
+                        -191788.51958383634, -148016.52280137045,
+                        -191783.80710901465, -148002.93065367758
+                      ],
+                      [
+                        -191545.67586839103, -148016.3841059858,
+                        -191540.54758696744, -148002.93065367755
+                      ],
+                      [
+                        -191550.94275201525, -148016.3841059858,
+                        -191546.23027719356, -148003.06934906216
+                      ],
+                      [
+                        -191555.9324312382, -148016.52280137042,
+                        -191551.35855861715, -148002.93065367755
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 12,
+                    model: '电流互感器2*150/5A\n5P30/5P30/0.5',
+                    name_source: 'llm_extract',
+                    source_text: '电流互感器2*150/5A\n5P30/5P30/0.5',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '2*150/5A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: '5P30/5P30/0.5'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191921.39166669868, -148113.8616560997,
+                        -191916.9797145909, -148103.83079190218
+                      ],
+                      [
+                        -191916.57862803564, -148113.72791124374,
+                        -191912.16667592787, -148103.6970470462
+                      ],
+                      [
+                        -191911.6318938542, -148113.72791124374,
+                        -191906.2840731175, -148103.96453675814
+                      ],
+                      [
+                        -191778.0366938811, -148113.59416638777,
+                        -191773.2193220085, -148103.6970470462
+                      ],
+                      [
+                        -191783.25551340976, -148113.72791124374,
+                        -191778.5719574225, -148103.83079190218
+                      ],
+                      [
+                        -191788.2067011677, -148113.8616560997,
+                        -191783.6569610658, -148103.6970470462
+                      ],
+                      [
+                        -191545.58814348353, -148113.72791124374,
+                        -191540.63695572558, -148103.6970470462
+                      ],
+                      [
+                        -191550.8069630122, -148113.72791124374,
+                        -191546.12340702495, -148103.6970470462
+                      ],
+                      [
+                        -191555.75815077018, -148113.8616560997,
+                        -191551.20841066827, -148103.6970470462
+                      ],
+                      [
+                        -191331.99672332563, -148113.72791124374,
+                        -191326.51027202627, -148103.6970470462
+                      ],
+                      [
+                        -191336.94791108358, -148113.72791124374,
+                        -191332.53198686702, -148103.83079190218
+                      ],
+                      [
+                        -191341.89909884153, -148113.72791124374,
+                        -191337.61699051035, -148103.83079190218
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 2,
+                    model: 'LRB-60\n100/5A,10P20',
+                    name_source: 'llm_cache',
+                    source_text: 'LRB-60\n100/5A,10P20',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '100/5A',
+                      product_model: 'LRB-60',
+                      burden_va_config: null,
+                      accuracy_class_config: '10P20'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191815.3669272491, -148223.3011173648,
+                        -191808.94450263935, -148217.28288028273
+                      ],
+                      [
+                        -191582.91837685154, -148223.3011173648,
+                        -191576.4959522418, -148217.28288028273
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 2,
+                    model: '间隙105-115mm\n间隙CT 100/5A,10P20',
+                    name_source: 'llm_extract',
+                    source_text: '间隙105-115mm\n间隙CT 100/5A,10P20',
+                    extraction_result: null,
+                    evidence_world_bboxes: [
+                      [
+                        -191815.3669272491, -148223.45069718995,
+                        -191808.94450263935, -148217.42871139382
+                      ],
+                      [
+                        -191582.91837685154, -148223.45069718995,
+                        -191576.4959522418, -148217.42871139382
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 3,
+                    model: '电流互感器\n3000/5A\n0.5/5P20/5P20',
+                    name_source: 'llm_extract',
+                    source_text: '电流互感器\n3000/5A\n0.5/5P20/5P20',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '3000/5A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: '0.5/5P20/5P20'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191789.30459694433, -148308.9302844578,
+                        -191784.59406727593, -148299.6314563328
+                      ],
+                      [
+                        -191784.32489415203, -148309.0650500828,
+                        -191779.88353760756, -148299.4966907078
+                      ],
+                      [
+                        -191779.4797779217, -148308.9302844578,
+                        -191774.90383481528, -148299.6314563328
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 1,
+                    model: '电流互感器\n400/5A\n0.2/0.5/5P20',
+                    name_source: 'llm_extract',
+                    source_text: '电流互感器\n400/5A\n0.2/0.5/5P20',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '400/5A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: '0.2/0.5/5P20'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191921.77349378457, -148311.5729943968,
+                        -191916.5151499326, -148308.4733850218
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 3,
+                    model: '电流互感器\n300/5A\n0.5/5P20',
+                    name_source: 'llm_extract',
+                    source_text: '电流互感器\n300/5A\n0.5/5P20',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '300/5A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: '0.5/5P20'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191367.45722352574, -148311.5729943968,
+                        -191362.46853833282, -148305.1042443968
+                      ],
+                      [
+                        -191362.19887967373, -148311.5729943968,
+                        -191357.4798531399, -148305.1042443968
+                      ],
+                      [
+                        -191357.4798531399, -148311.7077600218,
+                        -191352.6259972765, -148305.2390100218
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 2,
+                    model: '电流互感器\n100/5A\n0.5/5P20',
+                    name_source: 'llm_extract',
+                    source_text: '电流互感器\n100/5A\n0.5/5P20',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '100/5A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: '0.5/5P20'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191751.55332161358, -148389.1476616616,
+                        -191746.2949777616, -148382.6789116616
+                      ],
+                      [
+                        -191741.84560988683, -148389.4171929116,
+                        -191736.4524367053, -148382.8136772866
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电流互感器',
+                    count: 3,
+                    model: '电流互感器\n3000/5A\n0.5/5P20',
+                    name_source: 'llm_extract',
+                    source_text: '电流互感器\n3000/5A\n0.5/5P20',
+                    extraction_result: {
+                      remark: null,
+                      current_ratio: '3000/5A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: '0.5/5P20'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191801.79156739984, -148391.3117241616,
+                        -191796.52852447712, -148385.1808647866
+                      ],
+                      [
+                        -191796.10179126717, -148391.4543022866,
+                        -191791.69221476433, -148384.8957085366
+                      ],
+                      [
+                        -191791.54997036103, -148391.5968804116,
+                        -191786.99814945488, -148385.0382866616
+                      ]
+                    ]
+                  },
+                  {
+                    name: '断路器',
+                    count: 6,
+                    model: '断路器\n1250A 40kA',
+                    name_source: 'llm_extract',
+                    source_text: '断路器\n1250A 40kA',
+                    extraction_result: {
+                      remark: null,
+                      product_model: null,
+                      rated_current_a: '1250A',
+                      rated_voltage_kv: null,
+                      breaking_current_ka: '40kA'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191551.07003420146, -148037.49203857675,
+                        -191546.5871600711, -148027.29532087536
+                      ],
+                      [
+                        -191783.51858459896, -148037.4920385768,
+                        -191779.0357104686, -148027.43127711143
+                      ],
+                      [
+                        -191916.8460190725, -148127.8695981893,
+                        -191912.70145800154, -148120.6478212739
+                      ],
+                      [
+                        -191782.98788163907, -148128.00333479885,
+                        -191779.1072209639, -148120.91529449297
+                      ],
+                      [
+                        -191550.67314712686, -148128.13707140842,
+                        -191546.524854681, -148120.78155788343
+                      ],
+                      [
+                        -191336.81409519824, -148130.00938394203,
+                        -191332.7996186377, -148120.78155788343
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电力变压器',
+                    count: 2,
+                    model:
+                      'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n附有载调压开关',
+                    name_source: 'llm_cache',
+                    source_text:
+                      'SZ11-20000/110\n110±8*1.25%/10.5kV\nYN.d11\nUk%=10.5\n附有载调压开关',
+                    extraction_result: {
+                      remark: '附有载调压开关',
+                      wiring_group: 'YN.d11',
+                      product_model: 'SZ11-20000/110',
+                      voltage_ratio: '110±8*1.25%/10.5kV',
+                      cooling_method: null,
+                      short_circuit_impedance_config: 'Uk%=10.5'
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191797.81284850018, -148235.07651187014,
+                        -191765.80430332405, -148177.61053095447
+                      ],
+                      [
+                        -191565.36429810262, -148235.07651187014,
+                        -191533.35575292652, -148177.45352007766
+                      ]
+                    ]
+                  },
+                  {
+                    name: '电力变压器',
+                    count: 1,
+                    model: 'DKSC-350/10.5\n-100/0.4 ZNyn11',
+                    name_source: 'llm_cache',
+                    source_text: 'DKSC-350/10.5\n-100/0.4 ZNyn11',
+                    extraction_result: {
+                      remark: 'ZNyn11',
+                      wiring_group: 'ZNyn11',
+                      product_model: 'DKSC-350/10.5',
+                      voltage_ratio: '100/0.4',
+                      cooling_method: null,
+                      short_circuit_impedance_config: null
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191699.6457652988, -148381.70610291313,
+                        -191692.96061626292, -148370.20759266155
+                      ]
+                    ]
+                  },
+                  {
+                    name: '中性点零序CT',
+                    count: 4,
+                    model: '零序CT∅120 100/1A',
+                    name_source: 'llm_extract',
+                    source_text: '零序CT∅120 100/1A',
+                    extraction_result: {
+                      remark: '零序CT∅120',
+                      current_ratio: '100/1A',
+                      product_model: null,
+                      burden_va_config: null,
+                      accuracy_class_config: null
+                    },
+                    evidence_world_bboxes: [
+                      [
+                        -191915.66017115323, -148270.60942443323,
+                        -191910.84683745203, -148265.79450459505
+                      ],
+                      [
+                        -191361.47873022393, -148270.60942443323,
+                        -191356.66539652273, -148265.79450459505
+                      ],
+                      [
+                        -191751.4397818745, -148389.12741330435,
+                        -191746.22533703153, -148382.97501573333
+                      ],
+                      [
+                        -191741.81311447208, -148389.12741330435,
+                        -191736.33126220127, -148382.84126796006
+                      ]
+                    ]
                   }
-                },
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: ['38EFE4', '38FBA3', '3FAE43']
+                ],
+                filtered_equipment_list_devices: []
               },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查接地开关 2kV,31.5kA，配置电动接地刀，配置2只微动开关，满足一键顺控功能的数量!'
-              ],
-              description:
-                "设备清册中'接地开关'（2kV,31.5kA，配置电动接地刀，配置2只微动开关，满足一键顺控功能）数量为1，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: [
-                '请核查隔离开关 GW4-40.5DW/1250A-4，附钢支架的数量!'
-              ],
-              description:
-                "设备清册中'隔离开关'（GW4-40.5DW/1250A-4，附钢支架）数量为1，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            },
-            {
-              risk_level: 'high',
-              suggestion: ['请核查隔离开关(单接地) GN19-12/630A的数量!'],
-              description:
-                "设备清册中'隔离开关(单接地)'（GN19-12/630A）数量为1，CAD图中找到0处。",
-              geometry_ref: {
-                chapter: null,
-                extents: null,
-                file_id: '52abc84b-eb98-44c3-b751-7b73dc77a245',
-                handles: null
-              },
-              review_trace: null
-            }
-          ]
-        },
-        {
-          id: '0',
-          title: '电流审查',
-          origin: 'GB/T 15544.1-2023',
-          content: '电流审查',
-          violations: [
-            {
-              risk_level: 'high',
-              suggestion: [
-                "在设计说明的'短路电流计算'章节中补充以下参数：基准容量, 高压侧基准电压, 低压侧基准电压, 架空线路长度, 电缆线路长度, 变压器容量, 变压器短路阻抗百分比, 系统短路容量, 上级系统主变压器容量, 上级系统主变压器短路阻抗比"
-              ],
-              description: '缺少短路电流计算的关键参数，无法进行计算验证。',
-              geometry_ref: {
-                chapter:
-                  '序号 | 短路点编号 | 计 算 值 | 计 算 值 | 计 算 值 | 计 算 值 | 断路器型式 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 保 证 值 | 备  注\n序号 | 短路点编号 | 标称电压 | 工作电流 | 热稳定电流值 | 短路电流冲击值 | 断路器型式 | 额定电压 | 额定电流 | 额定开断电流 | 热稳定电流 | 极限通过电流峰值 | 备  注\n序号 | 短路点编号 | (kV) | (A) | (kA) | (kA) | 断路器型式 | (kV) | (A) | (kA) | (kA/s) | (kA) | 备  注\n1 | k1 | 110 | 551 | 8.93 | 222.77 | SF6断路器 | 126 | 3150 | 40 | 7/3 | 100 | \n2 | k2 | 10 | 3031 | 16.87 | 43.01 | 真空断路器 | 12 | 4000 | 40 | 40/4 | 100 | 主变、分段\n2 | k2 | 10 | 600 | 16.87 | 43.01 | 真空断路器 | 12 | 1250 | 31.5 | 31.5/4 | 80 | 出线、电容器',
-                extents: null,
-                file_id: '880abdad-f514-4de6-9b85-cd96752c4fc3',
-                handles: null
-              },
-              review_trace: {
-                defaults_applied: {
-                  cable_unit_reactance_ohm_per_km: 0.12,
-                  overhead_line_unit_reactance_ohm_per_km: 0.4
-                },
-                extracted_parameters: {
-                  cable_length_km: null,
-                  base_capacity_mva: null,
-                  hv_base_voltage_kv: null,
-                  lv_base_voltage_kv: null,
-                  overhead_line_length_km: null,
-                  transformer_capacity_mva: null,
-                  normal_supply_hv_bus_Isc_ka: 8.93,
-                  normal_supply_lv_bus_Isc_ka: 16.87,
-                  transformer_impedance_percent: null,
-                  cable_unit_reactance_ohm_per_km: 0.12,
-                  upstream_short_circuit_capacity_mva: null,
-                  upstream_main_transformer_capacity_mva: null,
-                  overhead_line_unit_reactance_ohm_per_km: 0.4,
-                  upstream_main_transformer_impedance_percent: null
-                }
-              },
-              param_key_map: {
-                calculation_data_map: {
-                  hv_bus_Isc_ka: '高压侧母线短路电流 (kA)',
-                  lv_bus_Isc_ka: '低压侧母线短路电流 (kA)'
-                },
-                calculation_details_map: {
-                  Ij_hv: '高压侧基准电流 (kA)',
-                  Ij_lv: '低压侧基准电流 (kA)',
-                  Zj_hv: '高压侧基准电抗 (Ω)',
-                  Zj_lv: '低压侧基准电抗 (Ω)',
-                  X_line_ohm: '线路有名电抗 (Ω)',
-                  X_sys_star: '系统标幺电抗',
-                  X_line_star: '线路标幺电抗',
-                  X_total_hv_star: '高压侧总标幺电抗',
-                  X_total_lv_star: '低压侧总标幺电抗',
-                  X_transformer_star: '变压器标幺电抗'
-                },
-                extracted_parameters_map: {
-                  cable_length_km: '电缆长度 (km)',
-                  base_capacity_mva: '基准容量 (MVA)',
-                  hv_base_voltage_kv: '高压侧基准电压 (kV)',
-                  lv_base_voltage_kv: '低压侧基准电压 (kV)',
-                  overhead_line_length_km: '架空线长度 (km)',
-                  transformer_capacity_mva: '变压器容量 (MVA)',
-                  normal_supply_hv_bus_Isc_ka:
-                    '正常运行高压侧母线短路电流 (kA)',
-                  normal_supply_lv_bus_Isc_ka:
-                    '正常运行低压侧母线短路电流 (kA)',
-                  transformer_impedance_percent: '变压器短路阻抗百分比 (%)',
-                  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω/km)',
-                  upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
-                  upstream_main_transformer_capacity_mva:
-                    '上级系统主变容量 (MVA)',
-                  overhead_line_unit_reactance_ohm_per_km:
-                    '架空线单位电抗 (Ω/km)',
-                  upstream_main_transformer_impedance_percent:
-                    '上级系统主变短路阻抗百分比 (%)'
-                }
-              }
+              param_key_map: null
             }
           ]
         }
@@ -1023,7 +1691,7 @@ reviewReportData.value = {
       category: '设备材料清册'
     }
   ],
-  discipline_id: 'cdbff4a3-0233-46e2-97d9-444326aed3fb'
+  discipline_id: '5a584a7f-b999-4f61-9344-216c51bbb736'
 }
 // import FileUpload from './components/FileUpload.vue'
 
