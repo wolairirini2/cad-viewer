@@ -26,126 +26,6 @@
       </div>
     </div>
 
-    <!-- 提取参数 -->
-    <div class="detail-section" v-if="reviewTrace?.extracted_parameters">
-      <h4>提取参数</h4>
-      <div class="detail-content">
-        <el-descriptions :column="2" size="small" border>
-          <el-descriptions-item
-            v-for="(label, key) in extractedParamsMap"
-            :key="key"
-            :label="label"
-          >
-            {{ formatValue(reviewTrace.extracted_parameters[key], key) }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-    </div>
-
-    <!-- 计算公式 (新增) -->
-    <div class="detail-section" v-if="calculationSteps.length">
-      <div class="section-header">
-        <h4>计算过程</h4>
-        <el-button
-          v-if="calculationSteps.length > MAX_COLLAPSED_STEPS"
-          type="text"
-          size="small"
-          @click="toggleCalculationSteps"
-          class="toggle-btn"
-        >
-          {{ isCalculationStepsExpanded ? '折叠' : '展开' }}
-          <el-icon :class="{ 'rotate-icon': isCalculationStepsExpanded }">
-            <ArrowDown />
-          </el-icon>
-        </el-button>
-      </div>
-      <div
-        class="detail-content formula-content"
-        :class="{ collapsed: !isCalculationStepsExpanded }"
-      >
-        <div
-          v-for="(step, index) in displayCalculationSteps"
-          :key="index"
-          class="formula-step"
-        >
-          <div class="formula-step-title">
-            <span class="step-number">({{ getStepNumber(index) }})</span>
-            {{ step.title }}
-          </div>
-          <div class="formula-latex" v-html="renderFormula(step.formula)"></div>
-        </div>
-
-        <!-- 折叠时的提示 -->
-        <div
-          v-if="
-            !isCalculationStepsExpanded &&
-            calculationSteps.length > MAX_COLLAPSED_STEPS
-          "
-          class="collapse-hint"
-        >
-          <span class="hint-text"
-            >还有
-            {{ calculationSteps.length - MAX_COLLAPSED_STEPS }}
-            个计算步骤</span
-          >
-          <el-button
-            type="text"
-            size="small"
-            @click="expandCalculationSteps"
-            class="expand-btn"
-          >
-            点击展开查看全部
-          </el-button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 计算结果 -->
-    <div
-      class="detail-section"
-      v-if="reviewTrace?.calculation_result?.calculation_data"
-    >
-      <h4>计算结果</h4>
-      <div class="detail-content">
-        <!-- 主要计算结果 -->
-        <el-descriptions
-          :column="2"
-          size="small"
-          border
-          class="calc-result-main"
-        >
-          <el-descriptions-item
-            v-for="(label, key) in calculationDataMap"
-            :key="key"
-            :label="label"
-          >
-            {{
-              formatCalcDetail(
-                reviewTrace.calculation_result.calculation_data?.[key],
-                2
-              )
-            }}
-          </el-descriptions-item>
-        </el-descriptions>
-
-        <!-- 详细计算过程 -->
-        <div class="calc-details-title">详细计算参数</div>
-        <el-descriptions :column="2" size="small" border>
-          <el-descriptions-item
-            v-for="(label, key) in calculationDetailsMap"
-            :key="key"
-            :label="label"
-          >
-            {{
-              formatCalcDetail(
-                reviewTrace.calculation_result.calculation_details?.[key]
-              )
-            }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-    </div>
-
     <!-- 设备材料清册和电气主接线图对比 -->
     <div
       class="detail-section compare-table"
@@ -197,23 +77,6 @@
             </el-tooltip>
           </template>
         </el-table-column>
-
-        <!-- 型号匹配列 -->
-        <!-- <el-table-column
-          prop="model_matched"
-          label="型号匹配"
-          width="80"
-          align="center"
-        >
-          <template #default="{ row }">
-            <el-tag
-              :type="row.model_matched ? 'success' : 'danger'"
-              size="small"
-            >
-              {{ row.model_matched ? '匹配' : '不匹配' }}
-            </el-tag>
-          </template>
-        </el-table-column> -->
 
         <!-- 清册数量列 -->
         <el-table-column
@@ -267,48 +130,234 @@
         </el-table-column>
       </el-table>
     </div>
-    <!-- 文档专有详情 -->
+
     <template v-else>
-      <!-- 问题描述 -->
-      <div class="detail-section" v-if="descriptions.length">
-        <h4>问题描述</h4>
-        <div class="detail-content description-content">
-          <div
-            v-for="(desc, index) in descriptions"
-            :key="index"
-            class="description-item"
+      <!-- 违规项列表表格 -->
+      <div class="detail-section" v-if="allViolationsList.length > 0">
+        <h4>问题列表 ({{ allViolationsList.length }}条)</h4>
+        <div class="violation-list-table">
+          <el-table
+            ref="violationTableRef"
+            :data="allViolationsList"
+            highlight-current-row
+            @current-change="handleCurrentChange"
+            border
+            stripe
+            size="small"
           >
-            <span class="item-number">{{ +index + 1 }}.</span>
-            <span class="item-content" v-html="desc.text"></span>
-            <el-button
-              v-if="data.category == '设备材料'"
-              type="text"
-              @click="handleLocate(desc.violation)"
-              icon="Location"
+            <el-table-column
+              type="index"
+              label="序号"
+              width="50"
+              align="center"
+            />
+            <el-table-column
+              prop="risk_level"
+              label="风险等级"
+              width="80"
+              align="center"
             >
-            </el-button>
+              <template #default="{ row }">
+                <el-tag :type="getRiskTagType(row.risk_level)" size="small">
+                  {{ getRiskText(row.risk_level) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="description"
+              label="问题描述"
+              min-width="200"
+              show-overflow-tooltip
+            >
+              <template #default="{ row }">
+                <span v-if="row.description">{{ row.description }}</span>
+                <span v-else style="color: #999">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              label="操作"
+              width="80"
+              align="center"
+              fixed="right"
+            >
+              <template #default="{ row }">
+                <el-button
+                  :disabled="!row.geometry_ref?.extents && row.risk_level === 0"
+                  type="info"
+                  plain
+                  size="small"
+                  @click.stop="handleWordLocate(row)"
+                >
+                  定位
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+
+      <!-- 选中条目的详细信息 -->
+      <div v-if="selectedViolation" class="selected-detail-section">
+        <!-- 提取参数 -->
+        <div
+          class="detail-section"
+          v-if="selectedViolationReviewTrace?.extracted_parameters"
+        >
+          <h4>提取参数</h4>
+          <div class="detail-content">
+            <el-descriptions :column="2" size="small" border>
+              <el-descriptions-item
+                v-for="(label, key) in selectedExtractedParamsMap"
+                :key="key"
+                :label="label"
+              >
+                {{
+                  formatValue(
+                    selectedViolationReviewTrace.extracted_parameters[key],
+                    key
+                  )
+                }}
+              </el-descriptions-item>
+            </el-descriptions>
           </div>
         </div>
-      </div>
 
-      <!-- 修改建议 -->
-      <div class="detail-section" v-if="suggestions.length">
-        <h4>修改建议</h4>
-        <div class="detail-content suggestion">
-          <ol class="suggestion-ol">
-            <li v-for="(sug, index) in suggestions" :key="index">
-              {{ sug }}
-            </li>
-          </ol>
+        <!-- 计算公式 -->
+        <div class="detail-section" v-if="selectedCalculationSteps.length">
+          <div class="section-header">
+            <h4>计算过程</h4>
+            <el-button
+              v-if="selectedCalculationSteps.length > MAX_COLLAPSED_STEPS"
+              type="text"
+              size="small"
+              @click="toggleCalculationSteps"
+              class="toggle-btn"
+            >
+              {{ isCalculationStepsExpanded ? '折叠' : '展开' }}
+              <el-icon :class="{ 'rotate-icon': isCalculationStepsExpanded }">
+                <ArrowDown />
+              </el-icon>
+            </el-button>
+          </div>
+          <div
+            class="detail-content formula-content"
+            :class="{ collapsed: !isCalculationStepsExpanded }"
+          >
+            <div
+              v-for="(step, index) in displayCalculationSteps"
+              :key="index"
+              class="formula-step"
+            >
+              <div class="formula-step-title">
+                <span class="step-number">({{ getStepNumber(index) }})</span>
+                {{ step.title }}
+              </div>
+              <div
+                class="formula-latex"
+                v-html="renderFormula(step.formula)"
+              ></div>
+            </div>
+
+            <!-- 折叠时的提示 -->
+            <div
+              v-if="
+                !isCalculationStepsExpanded &&
+                selectedCalculationSteps.length > MAX_COLLAPSED_STEPS
+              "
+              class="collapse-hint"
+            >
+              <span class="hint-text"
+                >还有
+                {{ selectedCalculationSteps.length - MAX_COLLAPSED_STEPS }}
+                个计算步骤</span
+              >
+              <el-button
+                type="text"
+                size="small"
+                @click="expandCalculationSteps"
+                class="expand-btn"
+              >
+                点击展开查看全部
+              </el-button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- 相关规范条文 -->
-      <div class="detail-section" v-if="data.origin">
-        <h4>相关规范条文</h4>
-        <div class="related-article">
-          <div class="article-content">
-            {{ data.origin || '未找到条文信息' }}
+        <!-- 计算结果 -->
+        <div
+          class="detail-section"
+          v-if="
+            selectedViolationReviewTrace?.calculation_result?.calculation_data
+          "
+        >
+          <h4>计算结果</h4>
+          <div class="detail-content">
+            <!-- 主要计算结果 -->
+            <el-descriptions
+              :column="2"
+              size="small"
+              border
+              class="calc-result-main"
+            >
+              <el-descriptions-item
+                v-for="(label, key) in selectedCalculationDataMap"
+                :key="key"
+                :label="label"
+              >
+                {{
+                  formatCalcDetail(
+                    selectedViolationReviewTrace.calculation_result
+                      .calculation_data?.[key],
+                    2
+                  )
+                }}
+              </el-descriptions-item>
+            </el-descriptions>
+
+            <!-- 详细计算过程 -->
+            <div class="calc-details-title">详细计算参数</div>
+            <el-descriptions :column="2" size="small" border>
+              <el-descriptions-item
+                v-for="(label, key) in selectedCalculationDetailsMap"
+                :key="key"
+                :label="label"
+              >
+                {{
+                  formatCalcDetail(
+                    selectedViolationReviewTrace.calculation_result
+                      .calculation_details?.[key]
+                  )
+                }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </div>
+        </div>
+
+        <!-- 修改建议 - 仅显示选中条目的 -->
+        <div
+          class="detail-section"
+          v-if="selectedViolation?.suggestion?.length"
+        >
+          <h4>修改建议</h4>
+          <div class="detail-content suggestion">
+            <ol class="suggestion-ol">
+              <li
+                v-for="(sug, index) in selectedViolation.suggestion"
+                :key="index"
+              >
+                {{ sug }}
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 相关规范条文 - 使用 article 级别的 origin -->
+        <div class="detail-section" v-if="data.origin">
+          <h4>相关规范条文</h4>
+          <div class="related-article">
+            <div class="article-content">
+              {{ data.origin || '未找到条文信息' }}
+            </div>
           </div>
         </div>
       </div>
@@ -317,7 +366,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { ArrowDown } from '@element-plus/icons-vue'
@@ -335,6 +384,12 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'locate', violation: any): void
 }>()
+
+// 表格引用
+const violationTableRef = ref<any>(null)
+
+// 当前选中的 violation
+const selectedViolation = ref<any>(null)
 
 // 折叠/展开状态
 const isCalculationStepsExpanded = ref(false)
@@ -354,11 +409,11 @@ const expandCalculationSteps = () => {
 const displayCalculationSteps = computed(() => {
   if (
     isCalculationStepsExpanded.value ||
-    calculationSteps.value.length <= MAX_COLLAPSED_STEPS
+    selectedCalculationSteps.value.length <= MAX_COLLAPSED_STEPS
   ) {
-    return calculationSteps.value
+    return selectedCalculationSteps.value
   }
-  return calculationSteps.value.slice(0, MAX_COLLAPSED_STEPS)
+  return selectedCalculationSteps.value.slice(0, MAX_COLLAPSED_STEPS)
 })
 
 // 获取步骤编号（考虑折叠状态）
@@ -367,17 +422,55 @@ const getStepNumber = (index: number) => {
     return index + 1
   }
   // 折叠时，如果步骤数超过最大折叠步骤数，显示实际编号
-  if (calculationSteps.value.length > MAX_COLLAPSED_STEPS) {
+  if (selectedCalculationSteps.value.length > MAX_COLLAPSED_STEPS) {
     return index + 1
   }
   return index + 1
 }
 
-// 提取参数映射表
-const extractedParamsMap = computed(() => {
+// 所有 violations 列表（用于表格显示）
+const allViolationsList = computed(() => {
+  return props.data?.allViolations || []
+})
+
+// 监听数据变化，默认选中第一个
+watch(
+  () => props.data?.allViolations,
+  newVal => {
+    if (newVal && newVal.length > 0) {
+      nextTick(() => {
+        selectedViolation.value = newVal[0]
+        violationTableRef.value?.setCurrentRow(newVal[0])
+      })
+    } else {
+      selectedViolation.value = null
+    }
+  },
+  { immediate: true }
+)
+
+// 处理表格行变化
+const handleCurrentChange = (row: any) => {
+  if (row) {
+    selectedViolation.value = row
+  }
+}
+
+// 获取选中条目的 review_trace
+const selectedViolationReviewTrace = computed(() => {
+  return selectedViolation.value?.review_trace || null
+})
+
+// 获取选中条目的 param_key_map
+const selectedParamKeyMap = computed(() => {
+  return selectedViolation.value?.param_key_map || null
+})
+
+// 选中条目的提取参数映射表
+const selectedExtractedParamsMap = computed(() => {
   let result: { [key: string]: string } = {}
-  if (paramKeyMap.value?.extracted_parameters_map) {
-    result = paramKeyMap.value.extracted_parameters_map
+  if (selectedParamKeyMap.value?.extracted_parameters_map) {
+    result = selectedParamKeyMap.value.extracted_parameters_map
     if (Object.keys(result).length % 2 !== 0) {
       result[''] = ''
     }
@@ -385,10 +478,11 @@ const extractedParamsMap = computed(() => {
   return result
 })
 
-const calculationDataMap = computed(() => {
+// 选中条目的计算数据映射表
+const selectedCalculationDataMap = computed(() => {
   let result: { [key: string]: string } = {}
-  if (paramKeyMap.value?.calculation_data_map) {
-    result = paramKeyMap.value.calculation_data_map
+  if (selectedParamKeyMap.value?.calculation_data_map) {
+    result = selectedParamKeyMap.value.calculation_data_map
     if (Object.keys(result).length % 2 !== 0) {
       result[''] = ''
     }
@@ -396,11 +490,11 @@ const calculationDataMap = computed(() => {
   return result
 })
 
-// 计算详情映射表
-const calculationDetailsMap = computed(() => {
+// 选中条目的计算详情映射表
+const selectedCalculationDetailsMap = computed(() => {
   let result: { [key: string]: string } = {}
-  if (paramKeyMap.value?.calculation_details_map) {
-    result = paramKeyMap.value.calculation_details_map
+  if (selectedParamKeyMap.value?.calculation_details_map) {
+    result = selectedParamKeyMap.value.calculation_details_map
     if (Object.keys(result).length % 2 !== 0) {
       result[''] = ''
     }
@@ -408,21 +502,12 @@ const calculationDetailsMap = computed(() => {
   return result
 })
 
-// 获取第一条violation的review_trace（所有条目一致）
-const reviewTrace = computed(() => {
-  if (!props.data?.allViolations?.length) return null
-  return props.data.allViolations[0]?.review_trace || null
-})
-
-// 参数映射表
-const paramKeyMap = computed(() => {
-  if (!props.data?.allViolations?.length) return null
-  return props.data.allViolations[0]?.param_key_map || null
-})
-
-// 计算步骤列表
-const calculationSteps = computed<CalculationStep[]>(() => {
-  return reviewTrace.value?.calculation_result?.calculation_steps || []
+// 选中条目的计算步骤列表
+const selectedCalculationSteps = computed<CalculationStep[]>(() => {
+  return (
+    selectedViolationReviewTrace.value?.calculation_result?.calculation_steps ||
+    []
+  )
 })
 
 // 渲染 LaTeX 公式
@@ -449,8 +534,8 @@ const renderFormula = (formula: string): string => {
 const formatValue = (value: any, key: string | number): string => {
   if (value === undefined || value === null) return ''
   if (
-    reviewTrace.value.defaults_applied &&
-    reviewTrace.value.defaults_applied[key]
+    selectedViolationReviewTrace.value?.defaults_applied &&
+    selectedViolationReviewTrace.value.defaults_applied[key]
   ) {
     return `${value.toString()} (根据工程经验取典型值)`
   }
@@ -472,13 +557,22 @@ const formatCalcDetail = (
   }
   return value
 }
-
+const handleWordLocate = (row: any) => {
+  emit('locate', { ...row, category: '设计说明' })
+  console.log('handleWordLocate',  { ...row, category: '设计说明' })
+}
 // 处理定位点击
 const handleLocate = (rowOrViolation: any) => {
   const diagramWorldBboxes = rowOrViolation.diagram_world_bboxes
-  const extents = rowOrViolation.extents
+  const extents = rowOrViolation.extents || rowOrViolation.geometry_ref?.extents
 
-  if (!diagramWorldBboxes || diagramWorldBboxes.length === 0) return
+  if (!diagramWorldBboxes || diagramWorldBboxes.length === 0) {
+    // 如果没有 diagram_world_bboxes，尝试使用 geometry_ref.extents
+    if (extents) {
+      emit('locate', rowOrViolation)
+    }
+    return
+  }
 
   // 将多组 bbox 转换为 extents 数组
   const extentsArray = diagramWorldBboxes.map((bbox: number[]) => ({
@@ -489,7 +583,9 @@ const handleLocate = (rowOrViolation: any) => {
   // 构建定位数据对象
   const locateData = {
     geometry_ref: {
-      file_id: props.data?.allViolations?.[0]?.geometry_ref?.file_id,
+      file_id:
+        rowOrViolation.geometry_ref?.file_id ||
+        props.data?.allViolations?.[0]?.geometry_ref?.file_id,
       extents, // 用于缩放定位
       all_extents: extentsArray // 所有区域用于绘制多个方框
     }
@@ -521,6 +617,12 @@ const getCategoryType = (category: string) => {
   const map: Record<string, any> = { 设计说明: 'primary', 设计图纸: 'danger' }
   return map[category] || 'info'
 }
+
+// 获取第一条violation的review_trace（用于设备对比表）
+const reviewTrace = computed(() => {
+  if (!props.data?.allViolations?.length) return null
+  return props.data.allViolations[0]?.review_trace || null
+})
 
 // 类型定义
 interface ComparisonItem {
@@ -615,28 +717,6 @@ const getResultType = (result: string): string => {
   return typeMap[result] || 'info'
 }
 
-const suggestions = computed(() => {
-  if (!props.data?.allViolations) return []
-  const result: string[] = []
-  props.data.allViolations.forEach((v: any) => {
-    if (v.suggestion?.length) {
-      result.push(...v.suggestion)
-    }
-  })
-  return result
-})
-
-// 修改 descriptions 计算属性，保留完整的 violation 数据
-const descriptions = computed(() => {
-  if (!props.data?.allViolations) return []
-  return props.data.allViolations
-    .filter((v: any) => v.description)
-    .map((v: any) => ({
-      text: v.description,
-      violation: v
-    }))
-})
-
 // 判断文本是否溢出
 const isOverflow = (text: string, maxWidth: number): boolean => {
   if (!text) return false
@@ -669,11 +749,24 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 .detail-section {
   padding-bottom: 16px;
   border-bottom: 1px dashed #f0f0f0;
+  h4 {
+    margin: 12px 0;
+  }
+  .violation-list-table {
+    :deep(.el-table__row) {
+      cursor: pointer;
+    }
+  }
 }
 
 .detail-section:last-child {
   border-bottom: none;
   margin-bottom: 0;
+}
+
+.selected-detail-section {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .compare-table {
@@ -743,22 +836,6 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
   border-radius: 4px;
   border-left: 3px solid var(--color-primary-dark);
   background: #f5f5f5;
-}
-
-.description-item {
-  display: flex;
-  margin-bottom: 8px;
-  line-height: 1.6;
-}
-
-.item-number {
-  flex-shrink: 0;
-  font-weight: 500;
-  margin-right: 8px;
-}
-
-.item-content {
-  flex: 1;
 }
 
 .suggestion-ol {
@@ -977,6 +1054,11 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 :deep(.el-table th:last-child),
 :deep(.el-table td:last-child) {
   border-right: none;
+}
+
+/* 高亮选中行样式 */
+:deep(.el-table__body tr.current-row > td) {
+  background-color: #ecf5ff !important;
 }
 
 .ellipsis-text {

@@ -309,10 +309,10 @@
     draggable
   >
     <div style="margin-bottom: 20px">
-      请帮助我们改进审查结果。您认为此条“<span
+      请帮助我们改进审查结果。您认为此条"<span
         style="color: var(--color-primary); font-weight: bold"
         >{{ currentFeedbackRow?.articleTitle }}</span
-      >”的审查存在什么问题？
+      >"的审查存在什么问题？
     </div>
     <el-radio-group
       v-model="feedbackOption"
@@ -403,14 +403,36 @@ const selection = ref<any[]>([])
 const locating = ref<Record<string, boolean>>({})
 const isFullscreen = ref(false) // 新增：全屏状态
 
+// 风险等级权重映射
+const riskWeightMap: Record<string, number> = {
+  high: 3,
+  medium: 2,
+  low: 1,
+  pass: 0,
+  '0': 0
+}
+
+// 获取最高风险等级的 violation
+const getHighestRiskViolation = (violations: any[]) => {
+  if (!violations || violations.length === 0) return null
+  if (violations.length === 1) return violations[0]
+
+  return violations.reduce((highest, current) => {
+    const highestWeight = riskWeightMap[highest.risk_level] ?? 0
+    const currentWeight = riskWeightMap[current.risk_level] ?? 0
+    return currentWeight > highestWeight ? current : highest
+  })
+}
+
 const riskCounts = computed(() => {
   const counts = { high: 0, medium: 0, low: 0 }
   props.reportData?.rules?.forEach((rule: any) => {
     rule.articles?.forEach((article: any) => {
-      const v = article.violations?.[0]
-      if (v?.risk_level === 'high') counts.high++
-      else if (v?.risk_level === 'medium') counts.medium++
-      else if (v?.risk_level === 'low') counts.low++
+      const violations = article.violations || []
+      const highestRiskV = getHighestRiskViolation(violations)
+      if (highestRiskV?.risk_level === 'high') counts.high++
+      else if (highestRiskV?.risk_level === 'medium') counts.medium++
+      else if (highestRiskV?.risk_level === 'low') counts.low++
     })
   })
   return counts
@@ -428,17 +450,23 @@ const flattenedViolations = computed(() => {
   const violations: any[] = []
   props.reportData?.rules?.forEach((rule: any) => {
     rule.articles?.forEach((article: any) => {
-      const firstV = article.violations?.[0]
+      const allViolations = article.violations || []
+      // 取风险等级最高的 violation 作为代表
+      const highestRiskV = getHighestRiskViolation(allViolations)
+
       violations.push({
-        ...(firstV || {}),
+        ...(highestRiskV || {}),
         ruleName: rule.name,
         ruleCode: rule.code,
         articleId: article.id,
         articleTitle: article.title,
         category: rule.category?.slice(0, 4),
-        allViolations: article.violations || [],
+        allViolations: allViolations, // 保留所有 violations 用于详情展示
         origin: article.origin,
-        risk_level: firstV?.risk_level || 0
+        risk_level: highestRiskV?.risk_level || 0,
+        // 使用最高风险等级的描述和建议
+        description: highestRiskV?.description || '',
+        suggestion: highestRiskV?.suggestion || []
       })
     })
   })
@@ -446,15 +474,13 @@ const flattenedViolations = computed(() => {
 })
 
 const sortedViolations = computed(() => {
-  const riskOrder = { high: 3, medium: 2, low: 1, 0: 0, pass: 0 }
   return flattenedViolations.value
     .filter(
       v => currentFilter.value === null || v.risk_level === currentFilter.value
     )
     .sort(
       (a, b) =>
-        riskOrder[b.risk_level as keyof typeof riskOrder] -
-        riskOrder[a.risk_level as keyof typeof riskOrder]
+        (riskWeightMap[b.risk_level] ?? 0) - (riskWeightMap[a.risk_level] ?? 0)
     )
 })
 

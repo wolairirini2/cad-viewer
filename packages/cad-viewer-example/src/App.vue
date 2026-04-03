@@ -1689,6 +1689,183 @@ reviewReportData.value = {
         }
       ],
       category: '设备材料清册'
+    },
+    {
+      code: 'DESIGN-SPEC-001',
+      name: '工程设计说明编制规范',
+      type: '行业标准',
+      articles: [
+        {
+          id: '0',
+          title: '核查设计分界点',
+          origin: 'Q/GDW 10166-2025',
+          content: '设计分界点应定义明确，责任边界无模糊或遗漏',
+          violations: []
+        },
+        {
+          id: '5',
+          title:
+            '检查是否具备事件顺序记录（SOE）、事故追忆、无功电压自动控制（VQC）、防误闭锁、操作票、GPS对时等功能',
+          origin: 'DL/T 5149-2020',
+          content:
+            '检查是否具备事件顺序记录（SOE）、事故追忆、无功电压自动控制（VQC）、防误闭锁、操作票、GPS对时等功能',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                '在设计说明中明确是否配置无功电压自动控制（VQC）功能',
+                '如配置VQC，应说明其控制策略、调节范围、与无功补偿装置的配合方式',
+                '如不配置，应说明原因及替代方案'
+              ],
+              description:
+                "设计说明中缺少关于'无功电压自动控制（VQC）'功能的具体描述，无法确认是否配置该功能。",
+              geometry_ref: {
+                chapter:
+                  '本工程采用支持DL/T860标准的数字式继电保护装置，保护装置以DL/T860规约直接接入站控层和过程层的以太网，在过程层通过光纤以DL/T860.92（IEC61850-9-2）协议接收合并单元发出电流、电压采样信号；保护跳闸采用直接跳闸方式，保护之间的联闭锁信息、失灵启动等信息采用GOOSE网络传输方式；保护柜中不配置操作箱，采用智能终端就地安装模式；110kV采用保护测控一体化装置。\n\n根据本变电站接入系统情况和《继电保护和安全自动装置技术规程（GB/T 14285）》、《国家电网公司2011年新建变电站设计补充规定》（国家电网基建〔2011〕58号）、《智能变电站继电保护技术规范（Q/GDW441）》的规定，系统继电保护装置配置如下：',
+                extents: null,
+                file_id: '4b6b2033-8c4a-4b24-a762-d7240b9c511d',
+                handles: null
+              },
+              review_trace: null,
+              param_key_map: null
+            },
+            {
+              risk_level: 'medium',
+              suggestion: [
+                '在设计说明中明确是否具备操作票功能',
+                '如具备操作票功能，应说明其实现方式（如基于监控系统的操作票管理、与五防系统的集成等）',
+                '如不具备，应说明原因及替代方案'
+              ],
+              description:
+                "设计说明中缺少关于'操作票'功能的具体描述，无法确认是否具备操作票功能。",
+              geometry_ref: {
+                chapter:
+                  '本工程采用支持DL/T860标准的数字式继电保护装置，保护装置以DL/T860规约直接接入站控层和过程层的以太网，在过程层通过光纤以DL/T860.92（IEC61850-9-2）协议接收合并单元发出电流、电压采样信号；保护跳闸采用直接跳闸方式，保护之间的联闭锁信息、失灵启动等信息采用GOOSE网络传输方式；保护柜中不配置操作箱，采用智能终端就地安装模式；110kV采用保护测控一体化装置。\n\n根据本变电站接入系统情况和《继电保护和安全自动装置技术规程（GB/T 14285）》、《国家电网公司2011年新建变电站设计补充规定》（国家电网基建〔2011〕58号）、《智能变电站继电保护技术规范（Q/GDW441）》的规定，系统继电保护装置配置如下：',
+                extents: null,
+                file_id: '4b6b2033-8c4a-4b24-a762-d7240b9c511d',
+                handles: null
+              },
+              review_trace: null,
+              param_key_map: null
+            }
+          ]
+        },
+        {
+          id: '6',
+          title:
+            '检查电流回路导线截面是否不小于4mm²，电压回路不小于2.5mm²。控制电缆是否为屏蔽铠装电缆',
+          origin: 'DL/T 5136-2012',
+          content:
+            '检查电流回路导线截面是否不小于4mm²，电压回路不小于2.5mm²。控制电缆是否为屏蔽铠装电缆',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                '在设计说明中补充二次回路电缆选型章节',
+                '明确电流回路导线截面要求（一般测量回路二次电流为5A时不宜小于4mm²，二次电流为1A时不宜小于2.5mm²；计量回路不应小于4mm²）',
+                '明确电压回路导线截面不小于2.5mm²的要求',
+                '明确控制电缆应采用屏蔽电缆的要求，并说明是否采用铠装电缆',
+                '明确二次电缆屏蔽层接地要求（使用截面不小于4mm²多股铜质软导线可靠连接至接地铜排）'
+              ],
+              description:
+                "设计说明中缺少关于'检查电流回路导线截面是否不小于4mm²，电压回路不小于2.5mm²。控制电缆是否为屏蔽铠装电缆'的相关内容，无法进行审查。",
+              geometry_ref: {
+                chapter:
+                  '根据系统规划，本工程主变终期容量为4×240MVA。220kV远景出线10回，110kV远景出线14回，10kV远景出线30回。\n\n站址位于福清市江镜镇，根据《福建省电力系统污区分布图》（2024年版），本站处于e级污区，距海仅1km。为了提高变电站设备运行的可靠性，减少占地面积，减少对周围环境的影响，满足在规划用地中进行变电站总平面布置，并结合《基建技术〔2024〕54号 国网基建部关于发布输变电工程通用设计通用设备应用目录（2025年版）的通知》通用设计方案，考虑本工程系统规模、线路出线等工程实际情况，并结合可研阶段方案比选结论，本工程初设阶段方案采用省公司通用设计实施方案FJ-220-A2-7方案进行优化设计。',
+                extents: null,
+                file_id: '4b6b2033-8c4a-4b24-a762-d7240b9c511d',
+                handles: null
+              },
+              review_trace: null,
+              param_key_map: null
+            }
+          ]
+        },
+        {
+          id: '7',
+          title: '短路电流审查',
+          origin: 'GB/T 15544.1-2023',
+          content: '短路电流审查',
+          violations: [
+            {
+              risk_level: 'high',
+              suggestion: [
+                "在设计说明的'短路电流计算'章节中补充以下参数：基准容量, 高压侧基准电压, 低压侧基准电压, 架空线路长度, 电缆线路长度, 系统短路容量, 上级系统主变压器容量, 上级系统主变压器短路阻抗比"
+              ],
+              description: '缺少短路电流计算的关键参数，无法进行计算验证。',
+              geometry_ref: {
+                chapter:
+                  '根据系统规划，本工程主变终期容量为4×240MVA。220kV远景出线10回，110kV远景出线14回，10kV远景出线30回。\n\n站址位于福清市江镜镇，根据《福建省电力系统污区分布图》（2024年版），本站处于e级污区，距海仅1km。为了提高变电站设备运行的可靠性，减少占地面积，减少对周围环境的影响，满足在规划用地中进行变电站总平面布置，并结合《基建技术〔2024〕54号 国网基建部关于发布输变电工程通用设计通用设备应用目录（2025年版）的通知》通用设计方案，考虑本工程系统规模、线路出线等工程实际情况，并结合可研阶段方案比选结论，本工程初设阶段方案采用省公司通用设计实施方案FJ-220-A2-7方案进行优化设计。',
+                extents: null,
+                file_id: '4b6b2033-8c4a-4b24-a762-d7240b9c511d',
+                handles: null
+              },
+              review_trace: {
+                defaults_applied: {
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4
+                },
+                extracted_parameters: {
+                  cable_length_km: null,
+                  base_capacity_mva: null,
+                  hv_base_voltage_kv: null,
+                  lv_base_voltage_kv: null,
+                  overhead_line_length_km: null,
+                  transformer_capacity_mva: 240,
+                  normal_supply_hv_bus_Isc_ka: 45.5,
+                  normal_supply_lv_bus_Isc_ka: 24.07,
+                  transformer_impedance_percent: 14,
+                  cable_unit_reactance_ohm_per_km: 0.12,
+                  upstream_short_circuit_capacity_mva: null,
+                  upstream_main_transformer_capacity_mva: null,
+                  overhead_line_unit_reactance_ohm_per_km: 0.4,
+                  upstream_main_transformer_impedance_percent: null
+                }
+              },
+              param_key_map: {
+                calculation_data_map: {
+                  hv_bus_Isc_ka: '高压侧母线短路电流 (kA)',
+                  lv_bus_Isc_ka: '低压侧母线短路电流 (kA)'
+                },
+                calculation_details_map: {
+                  Ij_hv: '高压侧基准电流 (kA)',
+                  Ij_lv: '低压侧基准电流 (kA)',
+                  Zj_hv: '高压侧基准电抗 (Ω)',
+                  Zj_lv: '低压侧基准电抗 (Ω)',
+                  X_line_ohm: '线路有名电抗 (Ω)',
+                  X_sys_star: '系统标幺电抗',
+                  X_line_star: '线路标幺电抗',
+                  X_total_hv_star: '高压侧总标幺电抗',
+                  X_total_lv_star: '低压侧总标幺电抗',
+                  X_transformer_star: '变压器标幺电抗'
+                },
+                extracted_parameters_map: {
+                  cable_length_km: '电缆长度 (km)',
+                  base_capacity_mva: '基准容量 (MVA)',
+                  hv_base_voltage_kv: '高压侧基准电压 (kV)',
+                  lv_base_voltage_kv: '低压侧基准电压 (kV)',
+                  overhead_line_length_km: '架空线长度 (km)',
+                  transformer_capacity_mva: '变压器容量 (MVA)',
+                  normal_supply_hv_bus_Isc_ka:
+                    '正常运行高压侧母线短路电流 (kA)',
+                  normal_supply_lv_bus_Isc_ka:
+                    '正常运行低压侧母线短路电流 (kA)',
+                  transformer_impedance_percent: '变压器短路阻抗百分比 (%)',
+                  cable_unit_reactance_ohm_per_km: '电缆单位电抗 (Ω/km)',
+                  upstream_short_circuit_capacity_mva: '上级系统短路容量 (MVA)',
+                  upstream_main_transformer_capacity_mva:
+                    '上级系统主变容量 (MVA)',
+                  overhead_line_unit_reactance_ohm_per_km:
+                    '架空线单位电抗 (Ω/km)',
+                  upstream_main_transformer_impedance_percent:
+                    '上级系统主变短路阻抗百分比 (%)'
+                }
+              }
+            }
+          ]
+        }
+      ],
+      category: '设计说明'
     }
   ],
   discipline_id: '5a584a7f-b999-4f61-9344-216c51bbb736'

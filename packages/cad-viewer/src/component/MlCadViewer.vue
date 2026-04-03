@@ -518,7 +518,6 @@ const handleWordLocate = async (row: any) => {
  */
 const handleCadLocate = async (row: any) => {
   const geometry = row.geometry_ref
-  console.log('handleCadLocate', row)
 
   if (!geometry?.file_id) {
     ElMessage.warning('无法获取图纸信息')
