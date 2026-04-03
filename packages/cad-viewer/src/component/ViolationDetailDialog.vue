@@ -154,8 +154,9 @@
             <el-table-column
               prop="risk_level"
               label="风险等级"
-              width="80"
+              width="90"
               align="center"
+              :show-overflow-tooltip="false"
             >
               <template #default="{ row }">
                 <el-tag :type="getRiskTagType(row.risk_level)" size="small">
@@ -287,7 +288,8 @@
         <div
           class="detail-section"
           v-if="
-            selectedViolationReviewTrace?.calculation_result?.calculation_data
+            selectedViolationReviewTrace?.calculation_result
+              ?.calculation_data_map
           "
         >
           <h4>计算结果</h4>
@@ -313,7 +315,13 @@
                 }}
               </el-descriptions-item>
             </el-descriptions>
-
+            <template
+              v-if="
+                selectedViolationReviewTrace?.calculation_result
+                  ?.calculation_details_map
+              "
+            >
+            </template>
             <!-- 详细计算过程 -->
             <div class="calc-details-title">详细计算参数</div>
             <el-descriptions :column="2" size="small" border>
@@ -559,7 +567,7 @@ const formatCalcDetail = (
 }
 const handleWordLocate = (row: any) => {
   emit('locate', { ...row, category: '设计说明' })
-  console.log('handleWordLocate',  { ...row, category: '设计说明' })
+  console.log('handleWordLocate', { ...row, category: '设计说明' })
 }
 // 处理定位点击
 const handleLocate = (rowOrViolation: any) => {
