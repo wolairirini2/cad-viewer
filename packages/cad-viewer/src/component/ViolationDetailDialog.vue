@@ -765,8 +765,6 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 }
 
 .selected-detail-section {
-  flex: 1;
-  overflow-y: auto;
 }
 
 .compare-table {
