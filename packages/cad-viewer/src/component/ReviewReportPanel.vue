@@ -446,7 +446,7 @@ const flattenedViolations = computed(() => {
 })
 
 const sortedViolations = computed(() => {
-  const riskOrder = { high: 3, medium: 2, low: 1, 0: 0 }
+  const riskOrder = { high: 3, medium: 2, low: 1, 0: 0, pass: 0 }
   return flattenedViolations.value
     .filter(
       v => currentFilter.value === null || v.risk_level === currentFilter.value
