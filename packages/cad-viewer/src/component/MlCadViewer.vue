@@ -563,7 +563,11 @@ const locateInCad = async (geometry: any, noWriteRect: boolean = false) => {
   const extentsToUse = geometry.all_extents || [geometry.extents]
 
   // 支持多区域定位
-  const success = await AcApLocateCmd.locate(extentsToUse)
+  const success = await AcApLocateCmd.locate(
+    extentsToUse,
+    0.5,
+    geometry.extents
+  )
 
   if (success) {
     ElMessage.success(`已定位到 ${extentsToUse.length} 个区域`)
@@ -621,7 +625,6 @@ watch(
  * 检查是否是批注实体，如果是则从数据中移除
  */
 const handleEntityErased = (entity: any) => {
-  console.log('[handleEntityErased] 实体被删除: ', entity[0].objectId)
   const erasedId = entity[0].objectId
   if (!erasedId) return
 
@@ -630,9 +633,6 @@ const handleEntityErased = (entity: any) => {
 
   if (index !== -1) {
     const ann = annotations.value[index]
-    console.log(
-      `[handleEntityErased] 批注被删除: ${ann.id}, 类型: ${ann.annotationType}`
-    )
 
     // 从数组中移除
     annotations.value.splice(index, 1)

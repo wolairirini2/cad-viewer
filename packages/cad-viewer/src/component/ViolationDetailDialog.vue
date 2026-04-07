@@ -57,7 +57,7 @@
               :disabled="!isOverflow(row.equipment_list_model, 200)"
             >
               <div class="multiline-text ellipsis-text">
-                {{ row.equipment_list_model || '-' }}
+                {{ row.equipment_list_model || '无' }}
               </div>
             </el-tooltip>
           </template>
@@ -72,7 +72,7 @@
               :disabled="!isOverflow(row.diagram_model, 200)"
             >
               <div class="multiline-text ellipsis-text">
-                {{ row.diagram_model || '-' }}
+                {{ row.diagram_model || '无' }}
               </div>
             </el-tooltip>
           </template>
@@ -134,7 +134,7 @@
     <template v-else>
       <!-- 违规项列表表格 -->
       <div class="detail-section" v-if="allViolationsList.length > 0">
-        <h4>问题列表 ({{ allViolationsList.length }}条)</h4>
+        <h4>问题列表</h4>
         <div class="violation-list-table">
           <el-table
             ref="violationTableRef"
@@ -961,6 +961,10 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
   border-radius: 4px;
 }
 
+/* KaTeX 公式左对齐 */
+.formula-latex :deep(.katex-display > .katex) {
+  text-align: left;
+}
 /* KaTeX 渲染后的样式微调 */
 .formula-latex :deep(.katex) {
   font-size: 1.1em;
@@ -973,7 +977,7 @@ const isOverflow = (text: string, maxWidth: number): boolean => {
 .formula-latex :deep(.katex-html) {
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 4px 0;
+  padding: 4px 20px;
 }
 
 /* 折叠提示区域 */

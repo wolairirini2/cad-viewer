@@ -29,15 +29,22 @@ export class AcApLocateCmd extends AcEdCommand {
   // 实例属性存储定位参数
   private extents: SingleExtent | SingleExtent[]
   private padding: number
+  private viewExtents: SingleExtent
 
   /**
    * 构造函数接收定位参数
    */
-  constructor(extents: SingleExtent | SingleExtent[], padding: number = 0.5) {
+  constructor(
+    extents: SingleExtent | SingleExtent[],
+    padding: number = 0.5,
+    viewExtents: SingleExtent
+  ) {
     super()
     this.mode = AcEdOpenMode.Write
     this.extents = extents
     this.padding = padding
+    this.viewExtents = viewExtents
+
     console.log(this.padding)
   }
 
@@ -165,26 +172,37 @@ export class AcApLocateCmd extends AcEdCommand {
   private calculatePixelSizeInWorld(pixelSize: number): number {
     try {
       const view = AcApDocManager.instance.curView as any
-      const layoutView = view?.activeLayoutView
+      if (!view) return 1
 
-      if (layoutView?._camera) {
-        // 获取视图范围（世界坐标）
-        const viewExtents = layoutView._camera.viewExtents
-        if (viewExtents) {
-          // 视图对角线长度
-          const dx = viewExtents.max.x - viewExtents.min.x
-          const dy = viewExtents.max.y - viewExtents.min.y
-          const diagonal = Math.sqrt(dx * dx + dy * dy)
+      // 获取视图的世界坐标范围
+      const viewExtents = this.viewExtents
 
-          // 返回对角线的固定比例
-          return diagonal * pixelSize
-        }
-      }
+      // 获取视图的屏幕/像素尺寸（需要 view 提供这个方法）
+      // 假设 view 有 getViewportSize 或类似方法返回像素宽高
+      const viewportWidth = view.viewportWidth || view.width || 1000 // 像素宽度
+      const viewportHeight = view.viewportHeight || view.height || 800 // 像素高度
+      // 计算世界坐标与像素的比例
+      const worldWidth = viewExtents.max_point.x - viewExtents.min_point.x
+      const worldHeight = viewExtents.max_point.y - viewExtents.min_point.y
+
+      // 每像素对应的世界单位（取宽高的平均值或最小值保证一致性）
+      const worldUnitsPerPixelX = worldWidth / viewportWidth
+      const worldUnitsPerPixelY = worldHeight / viewportHeight
+      const worldUnitsPerPixel = Math.min(
+        worldUnitsPerPixelX,
+        worldUnitsPerPixelY
+      )
+
+      // 计算指定像素数对应的世界单位
+      const result = pixelSize * worldUnitsPerPixel
+
+      console.log(
+        `[AcApLocateCmd] ${pixelSize}px ≈ ${result.toFixed(4)} world units`
+      )
+      return result
     } catch (e) {
       console.warn('[AcApLocateCmd] Failed to calculate view relative size:', e)
     }
-
-    // 默认回退值
     return 1
   }
 
@@ -197,9 +215,9 @@ export class AcApLocateCmd extends AcEdCommand {
     textOffset: number
   } {
     // 基础像素尺寸
-    const BORDER_WIDTH_PIXELS = 1 // 边框 3 像素
-    const TEXT_HEIGHT_PIXELS = 14 // 文字 14 像素（与边框保持 4.67:1 比例）
-    const TEXT_OFFSET_PIXELS = 6 // 文字偏移 6 像素
+    const BORDER_WIDTH_PIXELS = 5 // 边框 3 像素
+    const TEXT_HEIGHT_PIXELS = 60 // 文字 14 像素（与边框保持 4.67:1 比例）
+    const TEXT_OFFSET_PIXELS = 50 // 文字偏移 6 像素
 
     const borderWidth = this.calculatePixelSizeInWorld(BORDER_WIDTH_PIXELS)
     const textHeight = this.calculatePixelSizeInWorld(TEXT_HEIGHT_PIXELS)
@@ -207,14 +225,16 @@ export class AcApLocateCmd extends AcEdCommand {
 
     // 确保文字和边框的比例始终合理（文字高度约为边框宽度的 4-5 倍）
     const ratio = textHeight / borderWidth
-    if (ratio < 3 || ratio > 8) {
+
+    if ( ratio > 8) {
       // 比例失调时，强制调整文字高度
       const adjustedTextHeight = borderWidth * 4.5
-      return {
-        borderWidth,
-        textHeight: adjustedTextHeight,
-        textOffset: adjustedTextHeight * 0.4
-      }
+      console.log('比例失调时，强制调整文字高度', adjustedTextHeight)
+      // return {
+      //   borderWidth,
+      //   textHeight: adjustedTextHeight,
+      //   textOffset: adjustedTextHeight
+      // }
     }
 
     return { borderWidth, textHeight, textOffset }
@@ -268,16 +288,19 @@ export class AcApLocateCmd extends AcEdCommand {
 
         // 位置设置在右上角，使用统一的偏移量
         const textPosition = new AcGePoint2d(
-          max_point.x + textOffset,
+          max_point.x + textOffset * 0.1,
           max_point.y + textOffset
         )
 
         text.location = { x: textPosition.x, y: textPosition.y, z: 0 }
-        text.contents = this.getCircledNumber(index + 1)
+        // text.contents = this.getCircledNumber(index + 1)
+        text.contents = `\\H${textHeight * 1.3};\\B${this.getCircledNumber(index + 1)}`
+
         text.height = textHeight // 统一计算后的文字高度
         text.width = textHeight * 1.2 // 宽度与高度成比例
         text.styleName = 'Standard'
 
+        text.lineWeight = 100
         // 设置文字颜色为橙色
         const textColor = new AcCmColor()
         textColor.setRGB(ORANGE_COLOR.r, ORANGE_COLOR.g, ORANGE_COLOR.b)
@@ -303,7 +326,8 @@ export class AcApLocateCmd extends AcEdCommand {
    */
   static async locate(
     extents: SingleExtent | SingleExtent[],
-    padding: number = 0.5
+    padding: number = 0.5,
+    viewExtents: SingleExtent
   ): Promise<boolean> {
     const context = AcApDocManager.instance.context
     if (!context) {
@@ -311,7 +335,7 @@ export class AcApLocateCmd extends AcEdCommand {
       return false
     }
 
-    const cmd = new AcApLocateCmd(extents, padding)
+    const cmd = new AcApLocateCmd(extents, padding, viewExtents)
     try {
       cmd.execute(context) // 执行同步方法
       return true
@@ -333,7 +357,8 @@ export function clearLocateBox(): void {
  */
 export async function locateInCad(
   extents: SingleExtent | SingleExtent[],
-  padding: number = 0.5
+  padding: number = 0.5,
+  viewExtents: SingleExtent
 ): Promise<boolean> {
-  return await AcApLocateCmd.locate(extents, padding)
+  return await AcApLocateCmd.locate(extents, padding, viewExtents)
 }

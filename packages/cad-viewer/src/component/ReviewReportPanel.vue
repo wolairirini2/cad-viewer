@@ -263,12 +263,6 @@
           <el-button icon="ArrowLeft" @click="handleBackToList"
             >返回列表</el-button
           >
-          <el-button
-            v-if="selectedDetailRow.category === '设计说明'"
-            icon="Location"
-            @click="handleLocate(selectedDetailRow)"
-            >定位</el-button
-          >
           <!-- 全屏切换按钮 -->
           <el-icon
             @click="toggleFullscreen"
