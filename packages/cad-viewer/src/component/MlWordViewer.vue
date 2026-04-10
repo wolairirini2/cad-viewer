@@ -486,6 +486,9 @@ onMounted(() => {
   background: white;
   position: relative;
 }
+:deep(.docx-preview-wrapper) {
+  align-items: flex-start!important;
+}
 
 :deep(.docx-preview) {
   padding: 20px;

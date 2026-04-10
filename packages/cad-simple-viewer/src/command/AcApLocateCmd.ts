@@ -288,7 +288,7 @@ export class AcApLocateCmd extends AcEdCommand {
 
         // 位置设置在右上角，使用统一的偏移量
         const textPosition = new AcGePoint2d(
-          max_point.x + textOffset * 0.1,
+          max_point.x + textOffset * 0.2,
           max_point.y + textOffset
         )
 
