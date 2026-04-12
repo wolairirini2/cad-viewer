@@ -565,9 +565,10 @@ const formatCalcDetail = (
   }
   return value
 }
+
 const handleWordLocate = (row: any) => {
-  emit('locate', { ...row, category: '设计说明' })
-  console.log('handleWordLocate', { ...row, category: '设计说明' })
+  emit('locate', { ...row, category: props.data.category })
+  console.log('handleWordLocate', { ...row, category: props.data.category })
 }
 // 处理定位点击
 const handleLocate = (rowOrViolation: any) => {
